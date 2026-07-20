@@ -38,7 +38,7 @@ the thinking and doing while humans keep taste. Three principles: **local-first*
 | **Clients** | `octo-web`, `octo-android`, `octo-ios`, `octo-chrome-extension` | TS / Kotlin / Swift |
 | **IM core** | `octo-im` (WuKongIM) | Go |
 | **Shared / SDK** | `octo-lib`, `octo-auth` (Go + TS), `octo-adapters` | Go / TS / Py |
-| **CLI / runtime** | `octo-cli` (98-op REST client), `octo-daemon-cli` | Go |
+| **CLI / runtime** | `octo-cli` (spec-generated REST client for AI bots), `octo-daemon-cli` | Go |
 | **Standards / skills** | `octo-spec` (OKF), `octo-skills` | — |
 | **Channels** | `cc-`, `codex-`, `hermes-`, `claw-`, `openclaw-channel-octo` | Node.js |
 | **Delivery** | `octo-deployment`, `octo-website` | — |
