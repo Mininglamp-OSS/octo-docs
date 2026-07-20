@@ -43,7 +43,8 @@ graph LR
   end
 
   subgraph pipe["Search & export · optional"]
-    idx["octo-search-indexer"]
+    prod["searchetl-producer"]
+    esi["es-indexer"]
     exp["octo-message-export-api"]
   end
 
@@ -80,9 +81,10 @@ graph LR
   chan --> server
   cli --> server
   daemon --> server
-  idx -. reads .-> my
-  idx -->|octo.message.v1| kf
-  kf -->|es-indexer| osx
+  prod -. reads .-> my
+  prod -->|octo.message.v1| kf
+  kf --> esi
+  esi --> osx
   osx -. read .-> server
   osx -. read .-> exp
   exp --> obj
@@ -94,9 +96,10 @@ graph LR
 Clients and sibling services **all speak to `octo-server`**; deploy and scale one backend and
 everything else talks to it. Storage and IM are pluggable: MySQL-compatible migrations and
 object-storage adapters ship in the box, and WuKongIM is driven over a thin control-plane
-boundary so the IM core stays swappable. The **search & export** pipeline is optional — it reads
-the message store, indexes into OpenSearch through Kafka, and serves batch exports to object
-storage.
+boundary so the IM core stays swappable. The **search & export** pipeline is optional —
+`octo-search-indexer`'s two binaries (`searchetl-producer` and `es-indexer`) move messages from
+the store through Kafka into OpenSearch, which `octo-server` queries and `octo-message-export-api`
+serves as batch exports to object storage.
 
 <Note>
   This is the **runtime** view. Dev-time standards ([octo-spec](/reference/octo-spec-okf),
