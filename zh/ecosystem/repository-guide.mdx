@@ -27,6 +27,7 @@ graph LR
     dhtml[octo-docs-html]
   end
   im[octo-im · WuKongIM]
+  osx[(OpenSearch)]
   subgraph searchgrp["搜索与导出"]
     idx[octo-search-indexer]
     exp[octo-message-export-api]
@@ -59,7 +60,9 @@ graph LR
   cli --> server
   daemon --> server
   server --> idx
-  idx --> exp
+  idx --> osx
+  osx -.查询.-> server
+  osx --> exp
   server -.uses.-> lib
   server -.uses.-> auth
   server --> adapters

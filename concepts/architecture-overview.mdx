@@ -73,6 +73,7 @@ graph LR
   server --> summary
   server --> speech
   server --> dbe
+  dhtml -. auth .-> server
   market -. auth .-> server
   web -. collab ws .-> dbe
   server --> my

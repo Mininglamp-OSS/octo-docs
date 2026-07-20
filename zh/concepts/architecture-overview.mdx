@@ -70,6 +70,7 @@ graph LR
   server --> summary
   server --> speech
   server --> dbe
+  dhtml -. 鉴权 .-> server
   market -. 鉴权 .-> server
   web -. 协作 ws .-> dbe
   server --> my
