@@ -10,38 +10,99 @@ and drives [WuKongIM](/concepts/messaging-and-im-core) for real-time messaging.
 
 ## Service map
 
-```mermaid
-graph TD
-  subgraph Clients
-    web[octo-web]
-    android[octo-android]
-    ios[octo-ios]
-    admin[octo-admin]
-  end
-  subgraph Core
-    server[octo-server<br/>REST + WS · orchestration]
-    summary[octo-smart-summary]
-  end
-  wk[WuKongIM]
-  db[(MySQL)]
-  redis[(Redis)]
-  obj[(MinIO / S3)]
+Everything meets at **`octo-server`**. Clients enter through nginx; the server orchestrates the
+core services, drives the messaging core, owns the data plane, and admits agents and integrations
+at well-defined seams.
 
-  web --> server
-  android --> server
-  ios --> server
-  admin --> server
-  server --> wk
+```mermaid
+graph LR
+  subgraph clients["Clients"]
+    web["octo-web · Web / PC"]
+    mob["octo-android · octo-ios"]
+    ext["octo-chrome-extension"]
+    adm["octo-admin"]
+  end
+
+  nginx["nginx · reverse proxy :28080"]
+
+  subgraph core["Application core"]
+    server["octo-server<br/>REST + WS · orchestration · Lobster scheduling"]
+    summary["octo-smart-summary"]
+    speech["octo-speech"]
+    market["octo-marketplace"]
+    dbe["octo-docs-backend · Yjs / Hocuspocus"]
+    dhtml["octo-docs-html"]
+  end
+
+  im["WuKongIM · octo-im<br/>messaging core"]
+
+  subgraph agents["Agent plane"]
+    chan["Channels · cc / codex / hermes / claw / openclaw"]
+    cli["octo-cli"]
+    daemon["octo-daemon-cli"]
+  end
+
+  subgraph pipe["Search & export · optional"]
+    idx["octo-search-indexer"]
+    exp["octo-message-export-api"]
+  end
+
+  subgraph data["Data plane"]
+    my[("MySQL")]
+    rd[("Redis")]
+    obj[("MinIO / S3")]
+    kf[("Kafka")]
+    osx[("OpenSearch")]
+  end
+
+  subgraph shared["Shared libraries & integration"]
+    lib["octo-lib"]
+    auth["octo-auth"]
+    adp["octo-adapters"]
+  end
+
+  web --> nginx
+  mob --> nginx
+  ext --> nginx
+  adm --> nginx
+  nginx --> server
+  nginx -->|/ws| im
+  server --> im
   server --> summary
-  server --> db
-  server --> redis
+  server --> speech
+  server --> market
+  server --> dbe
+  web -. collab ws .-> dbe
+  server --> my
+  server --> rd
   server --> obj
+  chan --> server
+  cli --> server
+  daemon --> server
+  idx -. reads .-> my
+  idx -->|octo.message.v1| kf
+  kf --> osx
+  exp --> osx
+  exp --> obj
+  server -. uses .-> lib
+  server -. uses .-> auth
+  server -. uses .-> adp
 ```
 
 Clients and sibling services **all speak to `octo-server`**; deploy and scale one backend and
 everything else talks to it. Storage and IM are pluggable: MySQL-compatible migrations and
 object-storage adapters ship in the box, and WuKongIM is driven over a thin control-plane
-boundary so the IM core stays swappable.
+boundary so the IM core stays swappable. The **search & export** pipeline is optional — it reads
+the message store, indexes into OpenSearch through Kafka, and serves batch exports to object
+storage.
+
+<Note>
+  This is the **runtime** view. Dev-time standards ([octo-spec](/reference/octo-spec-okf),
+  [octo-skills](/guides/bot-developers/publish-a-skill)), packaging
+  ([octo-deployment](/guides/operators/deploy-compose)), and the marketing site are part of the
+  ecosystem but not runtime components — see the [repository guide](/ecosystem/repository-guide)
+  for the full catalog.
+</Note>
 
 ## The request lifecycle
 
