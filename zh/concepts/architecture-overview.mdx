@@ -8,35 +8,99 @@ Octo 是一组职责聚焦的服务，它们汇聚于一个核心锚点：**`oct
 
 ## 服务图谱
 
-```mermaid
-graph TD
-  subgraph Clients
-    web[octo-web]
-    android[octo-android]
-    ios[octo-ios]
-    admin[octo-admin]
-  end
-  subgraph Core
-    server[octo-server<br/>REST + WS · orchestration]
-    summary[octo-smart-summary]
-  end
-  wk[WuKongIM]
-  db[(MySQL)]
-  redis[(Redis)]
-  obj[(MinIO / S3)]
+一切都汇聚于 **`octo-server`**。客户端经 nginx 进入;服务端编排各核心服务、驱动消息内核、掌管
+数据平面,并在清晰的接缝处接纳智能体与集成。
 
-  web --> server
-  android --> server
-  ios --> server
-  admin --> server
-  server --> wk
+```mermaid
+graph LR
+  subgraph clients["客户端"]
+    web["octo-web · Web / PC"]
+    mob["octo-android · octo-ios"]
+    ext["octo-chrome-extension"]
+    adm["octo-admin"]
+  end
+
+  nginx["nginx · 反向代理 :28080"]
+
+  subgraph core["应用核心"]
+    server["octo-server<br/>REST + WS · 编排 · Lobster 调度"]
+    summary["octo-smart-summary"]
+    speech["octo-speech"]
+    market["octo-marketplace"]
+    dbe["octo-docs-backend · Yjs / Hocuspocus"]
+    dhtml["octo-docs-html"]
+  end
+
+  im["WuKongIM · octo-im<br/>消息内核"]
+
+  subgraph agents["智能体平面"]
+    chan["Channel · cc / codex / hermes / claw / openclaw"]
+    cli["octo-cli"]
+    daemon["octo-daemon-cli"]
+  end
+
+  subgraph pipe["搜索与导出 · 可选"]
+    prod["searchetl-producer"]
+    esi["es-indexer"]
+    exp["octo-message-export-api"]
+  end
+
+  subgraph data["数据平面"]
+    my[("MySQL")]
+    rd[("Redis")]
+    obj[("MinIO / S3")]
+    kf[("Kafka")]
+    osx[("OpenSearch")]
+  end
+
+  subgraph shared["共享库与集成"]
+    lib["octo-lib"]
+    auth["octo-auth"]
+    adp["octo-adapters"]
+  end
+
+  web --> nginx
+  mob --> nginx
+  ext --> nginx
+  adm --> nginx
+  nginx --> server
+  nginx --> market
+  nginx -->|/ws| im
+  server --> im
   server --> summary
-  server --> db
-  server --> redis
+  server --> speech
+  server --> dbe
+  dhtml -. 鉴权 .-> server
+  market -. 鉴权 .-> server
+  web -. 协作 ws .-> dbe
+  server --> my
+  server --> rd
   server --> obj
+  chan --> server
+  cli --> server
+  daemon --> server
+  prod -. 读取 .-> my
+  prod -->|octo.message.v1| kf
+  kf --> esi
+  esi --> osx
+  osx -. 读取 .-> server
+  osx -. 读取 .-> exp
+  exp --> obj
+  server -. 依赖 .-> lib
+  server -. 依赖 .-> auth
+  server -. 依赖 .-> adp
 ```
 
-客户端与各兄弟服务**都与 `octo-server` 通信**；只需部署并扩展这一个后端，其余一切都与它交互。存储与 IM 都是可插拔的：内置了 MySQL 兼容的迁移脚本与对象存储适配器，而 WuKongIM 通过一层薄薄的控制面边界来驱动，使 IM 核心始终可替换。
+客户端与各兄弟服务**都与 `octo-server` 通信**；只需部署并扩展这一个后端，其余一切都与它交互。存储与 IM 都是可插拔的：内置了 MySQL 兼容的迁移脚本与对象存储适配器，而 WuKongIM 通过一层薄薄的控制面边界来驱动，使 IM 核心始终可替换。**搜索与导出**流水线是可选的——`octo-search-indexer` 的两个二进制(`searchetl-producer` 与
+`es-indexer`)把消息从存储经 Kafka 送入 OpenSearch,由 `octo-server` 查询,并由
+`octo-message-export-api` 以批量导出的形式提供给对象存储。
+
+<Note>
+  这是**运行时**视图。开发期标准([octo-spec](/zh/reference/octo-spec-okf)、
+  [octo-skills](/zh/guides/bot-developers/publish-a-skill))、打包
+  ([octo-deployment](/zh/guides/operators/deploy-compose))与营销站点属于生态的一部分,但不是运行时
+  组件——完整清单见[仓库指南](/zh/ecosystem/repository-guide)。
+</Note>
 
 ## 请求生命周期
 

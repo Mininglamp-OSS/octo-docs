@@ -7,23 +7,16 @@ icon: "sitemap"
 Octo 是一组职责聚焦的服务，它们汇聚于一个核心锚点——**`octo-server`**。客户端与各兄弟服务都与它通信；它编排业务逻辑与 Lobster 调度，并驱动 [WuKongIM](/zh/concepts/messaging-and-im-core) 实现实时消息。
 
 ```mermaid
-graph TD
-  subgraph Clients
-    web[octo-web]
-    mobile[android / ios]
-    admin[octo-admin]
-  end
-  server[octo-server<br/>REST + WS · orchestration]
-  wk[WuKongIM]
-  summary[octo-smart-summary]
-  stores[(MySQL · Redis · MinIO)]
-
-  web --> server
-  mobile --> server
-  admin --> server
-  server --> wk
-  server --> summary
-  server --> stores
+graph LR
+  clients["客户端<br/>web · 移动端 · 扩展 · 管理台"] --> nginx["nginx :28080"]
+  nginx --> server["octo-server<br/>编排 · Lobster 调度"]
+  nginx -->|/ws| im["WuKongIM"]
+  server --> im
+  server --> svc["核心服务<br/>smart-summary · speech<br/>docs · marketplace"]
+  server --> data[("MySQL · Redis · MinIO")]
+  agents["智能体平面<br/>channels · octo-cli · octo-daemon"] --> server
+  server -. 可选 .-> search["搜索与导出<br/>Kafka · OpenSearch"]
+  server -. 依赖 .-> shared["octo-lib · octo-auth · octo-adapters"]
 ```
 
 ## 请求生命周期
@@ -51,6 +44,6 @@ graph TD
     分布式 WuKongIM 的设计。
   </Card>
   <Card title="仓库指南" icon="diagram-project" href="/zh/ecosystem/repository-guide">
-    全部 31 个仓库及其相互连接方式。
+    所有仓库及其相互连接方式。
   </Card>
 </CardGroup>

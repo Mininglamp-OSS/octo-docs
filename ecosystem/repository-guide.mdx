@@ -1,6 +1,6 @@
 ---
 title: "Repository guide"
-description: "The 31-repository Octo ecosystem — every repo's role, language, and how the pieces fit together."
+description: "The Octo ecosystem — every repo's role, language, and how the pieces fit together."
 icon: "diagram-project"
 ---
 
@@ -11,28 +11,56 @@ to do*; this page is the map by *repo*, for contributors and anyone orienting th
 ## How the pieces fit
 
 ```mermaid
-graph TD
-  subgraph Clients
+graph LR
+  subgraph clients["Clients"]
     web[octo-web]
     android[octo-android]
     ios[octo-ios]
     ext[octo-chrome-extension]
-    admin[octo-admin]
+    adm[octo-admin]
   end
-  subgraph Core
+  subgraph coregrp["Core services"]
     server[octo-server]
     summary[octo-smart-summary]
+    speech[octo-speech]
+    market[octo-marketplace]
+    dbe[octo-docs-backend]
+    dhtml[octo-docs-html]
   end
-  im[octo-im / WuKongIM]
-  subgraph Shared
+  im[octo-im · WuKongIM]
+  osx[(OpenSearch)]
+  subgraph searchgrp["Search & export"]
+    idx[octo-search-indexer]
+    exp[octo-message-export-api]
+  end
+  subgraph agentgrp["Agent plane"]
+    channels[cc / codex / hermes / claw / openclaw channels]
+    cli[octo-cli]
+    daemon[octo-daemon-cli]
+  end
+  subgraph sharedgrp["Shared libraries"]
     lib[octo-lib]
     auth[octo-auth]
     adapters[octo-adapters]
   end
+
   web --> server
-  admin --> server
+  android --> server
+  ios --> server
+  ext --> server
+  adm --> server
   server --> im
   server --> summary
+  server --> speech
+  market -.auth.-> server
+  server --> dbe
+  server --> dhtml
+  channels --> server
+  cli --> server
+  daemon --> server
+  idx --> osx
+  osx -.read.-> server
+  osx --> exp
   server -.uses.-> lib
   server -.uses.-> auth
   server --> adapters

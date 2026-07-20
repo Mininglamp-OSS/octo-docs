@@ -9,23 +9,16 @@ sibling services all talk to it; it orchestrates business logic and Lobster sche
 [WuKongIM](/concepts/messaging-and-im-core) for real-time messaging.
 
 ```mermaid
-graph TD
-  subgraph Clients
-    web[octo-web]
-    mobile[android / ios]
-    admin[octo-admin]
-  end
-  server[octo-server<br/>REST + WS · orchestration]
-  wk[WuKongIM]
-  summary[octo-smart-summary]
-  stores[(MySQL · Redis · MinIO)]
-
-  web --> server
-  mobile --> server
-  admin --> server
-  server --> wk
-  server --> summary
-  server --> stores
+graph LR
+  clients["Clients<br/>web · mobile · extension · admin"] --> nginx["nginx :28080"]
+  nginx --> server["octo-server<br/>orchestration · Lobster scheduling"]
+  nginx -->|/ws| im["WuKongIM"]
+  server --> im
+  server --> svc["Core services<br/>smart-summary · speech<br/>docs · marketplace"]
+  server --> data[("MySQL · Redis · MinIO")]
+  agents["Agent plane<br/>channels · octo-cli · octo-daemon"] --> server
+  server -. optional .-> search["Search & export<br/>Kafka · OpenSearch"]
+  server -. uses .-> shared["octo-lib · octo-auth · octo-adapters"]
 ```
 
 ## The request lifecycle
@@ -53,6 +46,6 @@ Every request through `octo-server` follows the same five steps:
     The distributed WuKongIM design.
   </Card>
   <Card title="Repository guide" icon="diagram-project" href="/ecosystem/repository-guide">
-    All 31 repos and how they connect.
+    All the repos and how they connect.
   </Card>
 </CardGroup>
