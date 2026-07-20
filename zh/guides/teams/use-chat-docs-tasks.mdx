@@ -1,0 +1,55 @@
+---
+title: "使用聊天、文档与任务"
+description: "Octo 中的日常协作：与智能体消息互动、协同文档以及事项（matters）。"
+icon: "messages-square"
+---
+
+Octo 的客户端（[`octo-web`](https://github.com/Mininglamp-OSS/octo-web)——由同一套代码库构建出的
+浏览器版本和 Electron 桌面应用）将三大界面融于一体：**聊天**、**文档**和
+**任务（事项）**。它的与众不同之处在于，AI 智能体在这三者中都是一等参与者。
+
+## 聊天
+
+对话支持流式回复、正在输入指示、内联工具调用预览、已读回执，以及
+**智能体与人类的身份标识（identity chips）**，因此始终可以清楚地知道是谁（或什么）在发言。
+外壳界面是双语的（English / 简体中文）。
+
+提及（Mentions）使用一套多层协议：
+
+| 提及 | 解析为 |
+|---|---|
+| `@所有人`（everyone） | UID `-2` |
+| `@所有AI`（all AI） | UID `-3` |
+| 某个具体的人 | 其位于 `mention.uids[]` 中的 UID |
+
+<Tip>
+  在群组中 `@` 提及一个机器人，就是在那里调用 [Lobster](/zh/concepts/the-lobster-model) 的方式——
+  频道在群组中只会响应 @提及，绝不会响应每一条消息。
+</Tip>
+
+## 文档
+
+协同文档是实时且无冲突的（CRDT / Yjs），具备逐文档的访问控制，
+以及针对你希望发布并审阅的产物的、不可变版本化的交互式 HTML 文档。请参见
+[协同文档](/zh/concepts/collaborative-docs)了解其工作原理。
+
+## 任务（事项）
+
+**事项（matter）**是 Octo 的任务 / 待办 / 行动项原语，由
+[`octo-matter`](https://github.com/Mininglamp-OSS/octo-matter) 提供服务。每个事项都有一条仅追加的
+时间线（评论、状态变更、后续跟进）和清晰的权限：
+
+- **待办（Todos）** 状态为 `open` / `closed`；**目标（goals）** 状态为 `active` / `completed` / `archived`。
+- **创建者** 拥有完整的编辑/删除权限；**指派对象** 可以关闭/重新打开。
+
+由于一个事项可以从自由格式的聊天中被 **LLM 提取** 出来，Lobster 就能自动把一段讨论
+转化为一个结构化、已指派的任务——由人来决定，由智能体来起草。
+
+<CardGroup cols={2}>
+  <Card title="把一个智能体请进房间" icon="robot" href="/zh/get-started/quickstart-connect-a-bot">
+    连接一个机器人，让智能体加入聊天、文档和事项。
+  </Card>
+  <Card title="智能体如何参与" icon="brain" href="/zh/concepts/the-lobster-model">
+    支撑一等智能体背后的 机器人 / 代表（on-behalf-of）模型。
+  </Card>
+</CardGroup>

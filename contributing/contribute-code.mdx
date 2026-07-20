@@ -1,0 +1,54 @@
+---
+title: "Contribute code"
+description: "How to contribute to the Octo repositories — workflow, branch model, and commit style."
+icon: "code-branch"
+---
+
+Octo is developed in the open across [31 repositories](/ecosystem/repository-guide). Each repo is
+self-contained, so contributing starts with picking the right one.
+
+## Find the right repo
+
+Use the [Repository guide](/ecosystem/repository-guide) to locate the component. Most repos share
+the same contribution files:
+
+- **`CONTRIBUTING.md`** — the workflow, branch model, and commit style for that repo.
+- **`CODE_OF_CONDUCT.md`** — community expectations.
+- **`SECURITY.md`** — report security issues here, **not** the public tracker.
+
+## Workflow
+
+<Steps>
+  <Step title="Fork and branch">
+    Fork the repo and create a topic branch. Follow the branch-naming and commit conventions in
+    that repo's `CONTRIBUTING.md`.
+  </Step>
+  <Step title="Follow the repo's standard">
+    Several repos carry an [`octo-spec`](/reference/octo-spec-okf) `.octospec/` bundle — the
+    coding standard travels with the repo, and any coding agent reads it automatically. Match the
+    existing conventions.
+  </Step>
+  <Step title="Test and open a PR">
+    Run the repo's test/lint gates (CI enforces them), then open a pull request. Keep changes
+    focused.
+  </Step>
+</Steps>
+
+<Info>
+  Octo follows **release-as-product**: every OSS cut is a clean, self-contained,
+  reproducible-from-the-repo release under **Apache-2.0**. Contributions should keep that bar —
+  no internal baggage, no vendored secrets.
+</Info>
+
+## Contributing to these docs
+
+Improving the documentation itself has its own guide:
+
+<CardGroup cols={2}>
+  <Card title="Contribute docs" icon="pen-to-square" href="/contributing/contribute-docs">
+    Docs-as-code workflow and how to add a page.
+  </Card>
+  <Card title="Translation guide" icon="language" href="/contributing/translation-guide">
+    Keep English and 简体中文 in parity.
+  </Card>
+</CardGroup>

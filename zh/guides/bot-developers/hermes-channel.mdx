@@ -1,0 +1,52 @@
+---
+title: "桥接 Hermes"
+description: "用 Python 频道插件把一个 NousResearch hermes-agent 网关连接到 Octo。"
+icon: "robot"
+---
+
+**[`hermes-channel-octo`](https://github.com/Mininglamp-OSS/hermes-channel-octo)** 是一个 Python
+频道插件，它把一个
+[`hermes-agent`](https://github.com/NousResearch/hermes-agent)（NousResearch）网关连接到一个 Octo
+机器人。它直接使用 **WuKongIM binary WebSocket protocol**（ECDH 密钥交换 + AES），
+并支持私信、群组、线程、@提及、语音 / 视频 / 文件附件，以及流式
+响应。
+
+## 兼容性
+
+| hermes-agent | hermes-channel-octo |
+|---|---|
+| `>=0.14,<0.16` | `0.1.x` |
+
+已针对 `hermes-agent==0.15.2` 完成端到端验证。
+
+## 安装
+
+两种方式，均已验证：
+
+```bash
+# Option A — hermes plugin manager
+hermes plugins install Mininglamp-OSS/hermes-channel-octo
+hermes plugins enable octo
+
+# Option B — pip (Python entry-point discovery; loads on next gateway start)
+pip install "git+https://github.com/Mininglamp-OSS/hermes-channel-octo.git"
+```
+
+依赖：`websockets`、`aiohttp`、`cryptography`、`python-socks`。
+
+## 配置
+
+在 `$HERMES_HOME/.env` 中设置以下项：
+
+```bash
+OCTO_API_URL=https://your-octo-instance.com   # required
+OCTO_BOT_TOKEN=bf_your_bot_token              # required
+# optional: CDN base, allowed users, home channel
+```
+
+然后启动（或重启）hermes 网关——插件通过 entry-point discovery 加载，pip
+方式无需单独的启用步骤。
+
+<Card title="对比所有频道" icon="code-compare" href="/zh/guides/bot-developers/choose-a-channel">
+  看看 Hermes 相对于其他频道处于什么位置。
+</Card>

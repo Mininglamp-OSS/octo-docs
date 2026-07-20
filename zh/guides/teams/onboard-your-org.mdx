@@ -1,0 +1,58 @@
+---
+title: "为你的组织进行初始化配置"
+description: "在 Octo 中创建组织、以合适的角色邀请成员，并设置频道。"
+icon: "users"
+---
+
+一旦你的[技术栈完成部署](/zh/get-started/quickstart-deploy)，第一项工作就是把你的
+组织和成员接入进来。Octo 是多租户且以空间（space）为范围的，因此初始化配置的核心在于
+创建一个空间、以合适的角色邀请成员，并开放他们将要工作的频道。
+
+## 前置条件
+
+- 一个正在运行的 Octo 实例，以及一个管理员登录账号（由 `setup.sh` 打印出的 `superAdmin` 凭据）。
+- 可访问位于 `http://<your-host>:28080/admin/` 的[管理控制台](/zh/guides/teams/admin-console)。
+
+## 步骤
+
+<Steps>
+  <Step title="创建组织（空间）">
+    在管理控制台中，创建一个**空间（space）**——它是拥有所有频道、用户和数据的租户边界。
+    下面的一切都以它为范围。
+  </Step>
+  <Step title="以角色邀请成员">
+    通过电子邮件邀请成员。每位成员在空间内都带有一个**角色（role）**：
+
+    | 角色 | 取值 | 权限 |
+    |---|---|---|
+    | Member | `0` | 参与其所属的频道 |
+    | Admin | `1` | 管理成员、频道与内容审核 |
+    | Owner | `2` | 一切权限，包括空间级设置 |
+
+    你之后可以更新成员的角色——邀请本身带有 owner 与 member/admin 的区分。
+  </Step>
+  <Step title="设置频道">
+    创建团队所需的群组频道和话题频道。访问权限由每个频道之上的 ACL 结合空间角色共同管控——
+    参见[安全与鉴权模型](/zh/concepts/security-and-auth)。
+  </Step>
+  <Step title="添加 AI 机器人（可选）">
+    把一个 Lobster 引入工作区，让智能体从第一天起就成为一等公民——请遵循
+    [连接你的第一个 AI 机器人](/zh/get-started/quickstart-connect-a-bot)。
+  </Step>
+</Steps>
+
+<Info>
+  初始化配置操作是管理控制台的第 2 天日常工作。它是 `octo-server` 的 `/admin/*` API 之上的一层轻量前端——
+  每一次变更都会被后端 RBAC 重新校验，因此运维访问是在服务端强制执行的，而不仅仅体现在 UI 中。
+</Info>
+
+## 下一步
+
+<CardGroup cols={2}>
+  <Card title="使用聊天、文档与任务" icon="messages-square" href="/zh/guides/teams/use-chat-docs-tasks">
+    让你的团队在客户端中高效协作。
+  </Card>
+  <Card title="管理控制台" icon="shield" href="/zh/guides/teams/admin-console">
+    完整的运维操作界面。
+  </Card>
+</CardGroup>

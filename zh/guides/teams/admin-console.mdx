@@ -1,0 +1,58 @@
+---
+title: "使用管理控制台进行管理"
+description: "在 octo-admin 控制台中管理租户、组织、用户、频道和 Lobster 智能体。"
+icon: "shield"
+---
+
+**[`octo-admin`](https://github.com/Mininglamp-OSS/octo-admin)** 是 Octo 部署的运维控制台——
+在同一个面板中管理租户、组织、用户、频道和 Lobster 智能体配置。
+它是 `octo-server` 的 `/admin/*` REST API 之上的一层轻量 React 前端，自身不含业务逻辑或
+数据库。
+
+## 访问
+
+在 [Compose 部署](/zh/guides/operators/deploy-compose)中，控制台的服务地址为：
+
+```
+http://<your-host>:28080/admin/     # log in as superAdmin
+```
+
+运维认证被委托给 `octo-server`（SSO 或管理员令牌），并且**每一次变更都会经过后端侧的 RBAC**——
+UI 只是一种便利，而不是安全边界。请将它作为一个独立的、仅限内网/VPN 访问、由 SSO 把关的
+捆绑包来部署。
+
+## 你所管理的内容
+
+<CardGroup cols={2}>
+  <Card title="租户与组织" icon="building">
+    引导创建租户；审计各组织及其空间。
+  </Card>
+  <Card title="用户" icon="user">
+    审阅跨空间的用户、角色和成员关系。
+  </Card>
+  <Card title="频道" icon="hashtag">
+    对频道及其访问权限进行审核管理。
+  </Card>
+  <Card title="智能体" icon="robot">
+    切换 Lobster 智能体的功能开关并轮换 webhook。
+  </Card>
+</CardGroup>
+
+此外还有一个用于第 2 天运维的**审计日志（audit log）**视图。
+
+## 自托管该控制台
+
+它是一个 Vite 应用：
+
+```bash
+pnpm dev        # dev server; point VITE_ADMIN_API_* at your octo-server
+pnpm build      # static bundle → ./dist
+```
+
+通过 `.env.local`（`VITE_ADMIN_API_*`）重新指向 API。该控制台随附 EN / 中文 语言包。
+
+<Info>
+  由于管理控制台不持有任何数据、自身也不强制执行任何规则，其安全态势完全在于：
+  **私有地提供服务、用 SSO 把关、并依赖服务端的 RBAC。** 参见
+  [安全加固](/zh/guides/operators/security-hardening)。
+</Info>

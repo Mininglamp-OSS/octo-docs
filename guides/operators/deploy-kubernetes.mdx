@@ -1,0 +1,60 @@
+---
+title: "Deploy on Kubernetes"
+description: "Multi-node Octo with Kustomize or Helm, bringing your own backing services."
+icon: "dharmachakra"
+---
+
+For multi-node / production, `octo-deployment` ships **Kustomize** manifests and a **Helm**
+chart. Both deploy the app services; you decide whether to bring your own backing stores.
+
+## Option A — Kustomize
+
+`kustomize/base/` is the canonical multi-node reference: Deployments + Services, non-sensitive
+ConfigMaps, and `octo-*-secret.example.yaml` templates.
+
+<Steps>
+  <Step title="Fill in secrets">
+    Copy each `octo-*-secret.example.yaml`, replace every `CHANGE_ME_*`, and apply the three
+    secrets.
+  </Step>
+  <Step title="Apply the base (or an overlay)">
+    ```bash
+    kubectl apply -k kustomize/base
+    # or an overlay:
+    kubectl apply -k kustomize/overlays/prod   # multi-replica
+    kubectl apply -k kustomize/overlays/dev    # image tag "dev"
+    ```
+  </Step>
+  <Step title="Bring your own backing services">
+    Kustomize base expects **you** to provide MySQL, Redis, WuKongIM, and S3-compatible object
+    storage. Point the ConfigMaps/secrets at them.
+  </Step>
+</Steps>
+
+## Option B — Helm (batteries included)
+
+The Helm chart bundles MySQL, Redis, MinIO, WuKongIM, and nginx — a one-command full stack:
+
+```bash
+helm install octo oci://ghcr.io/mininglamp-oss/octo --version 0.3.1
+```
+
+Requires Kubernetes 1.24+, Helm 3.10+, and a default StorageClass. When healthy, all pods reach
+`1/1 Running`. To use an **external** backing service, set `<service>.enabled: false` and fill in
+its `external<Service>` block (it fails fast if that block is empty). `values-china.yaml` switches
+app images to a Tencent registry.
+
+## Exposing it
+
+nginx is the single entrypoint (`ClusterIP` by default). Expose it via a LoadBalancer, an Ingress
+(one catch-all rule → the `octo-nginx` Service), or `kubectl port-forward`. nginx handles rate
+limiting, WebSocket upgrade, and presigned-URL passthrough.
+
+<CardGroup cols={2}>
+  <Card title="Scale & observe" icon="chart-line" href="/guides/operators/scale-and-observe">
+    Health endpoints, metrics, and horizontal scaling.
+  </Card>
+  <Card title="Backup & restore" icon="database" href="/guides/operators/backup-and-restore">
+    PVCs and what state to protect.
+  </Card>
+</CardGroup>

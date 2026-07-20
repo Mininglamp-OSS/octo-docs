@@ -1,0 +1,52 @@
+---
+title: "Bridge Hermes"
+description: "Connect a NousResearch hermes-agent gateway to Octo with the Python channel plugin."
+icon: "robot"
+---
+
+**[`hermes-channel-octo`](https://github.com/Mininglamp-OSS/hermes-channel-octo)** is a Python
+channel plugin that connects a
+[`hermes-agent`](https://github.com/NousResearch/hermes-agent) (NousResearch) gateway to an Octo
+bot. It speaks the **WuKongIM binary WebSocket protocol** directly (ECDH key exchange + AES),
+and supports DM, group, threads, @-mentions, voice / video / file attachments, and streaming
+responses.
+
+## Compatibility
+
+| hermes-agent | hermes-channel-octo |
+|---|---|
+| `>=0.14,<0.16` | `0.1.x` |
+
+End-to-end verified against `hermes-agent==0.15.2`.
+
+## Install
+
+Two paths, both verified:
+
+```bash
+# Option A — hermes plugin manager
+hermes plugins install Mininglamp-OSS/hermes-channel-octo
+hermes plugins enable octo
+
+# Option B — pip (Python entry-point discovery; loads on next gateway start)
+pip install "git+https://github.com/Mininglamp-OSS/hermes-channel-octo.git"
+```
+
+Dependencies: `websockets`, `aiohttp`, `cryptography`, `python-socks`.
+
+## Configure
+
+Set the following in `$HERMES_HOME/.env`:
+
+```bash
+OCTO_API_URL=https://your-octo-instance.com   # required
+OCTO_BOT_TOKEN=bf_your_bot_token              # required
+# optional: CDN base, allowed users, home channel
+```
+
+Then start (or restart) the hermes gateway — the plugin loads via entry-point discovery, no
+separate enable step needed for the pip path.
+
+<Card title="Compare all channels" icon="code-compare" href="/guides/bot-developers/choose-a-channel">
+  See where Hermes sits relative to the other channels.
+</Card>

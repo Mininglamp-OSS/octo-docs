@@ -1,0 +1,60 @@
+---
+title: "调用 REST 与 WebSocket API"
+description: "用一个机器人令牌进行认证，并通过 HTTP 发起你的第一批 Octo API 调用。"
+icon: "plug"
+---
+
+Octo 从 `octo-server` 暴露一套 REST + WebSocket API，供各客户端以及你构建的任何
+集成使用。本指南带你从一个令牌走到一次可用的调用。
+
+## 获取一个凭据
+
+大多数集成都以一个 **机器人（bot）** 的身份、用一个 `bf_` User Bot 令牌进行认证——通过
+[BotFather](/zh/get-started/quickstart-connect-a-bot)（`/newbot`）创建一个。其他凭据种类
+（人类会话、`uk_` 用户 API 密钥）在
+[安全与鉴权](/zh/concepts/security-and-auth)中介绍。
+
+## 发起一次调用
+
+阻力最小的方式是 [`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)，它封装了
+每一个端点：
+
+```bash
+export OCTO_BOT_TOKEN="bf_your_token"
+export OCTO_API_BASE_URL="https://your-octo-instance.com"
+
+octo-cli group list
+```
+
+或者直接调用 HTTP——把令牌作为 bearer 凭据传入，并收发统一的 JSON
+信封：
+
+```bash
+curl -X POST "$OCTO_API_BASE_URL/v1/bot/sendMessage" \
+  -H "Authorization: Bearer $OCTO_BOT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"channel_id":"chat-1","channel_type":1,"payload":{"text":"hi"}}'
+```
+
+<Info>
+  `channel_type` 中 `1` = 私信、`2` = 群组、`5` = 线程——在整个
+  [Messages API](/zh/reference/api/message) 中都是同一套取值。每个响应都是一个结构化的 JSON 信封；错误
+  遵循[错误分类体系](/zh/reference/errors-and-envelopes)。
+</Info>
+
+## 实时
+
+浏览器和 SPA 客户端通过 WebSocket 界面（`/ws`，由 nginx 代理）接收消息，
+`octo-server` 在 [WuKongIM](/zh/concepts/messaging-and-im-core) 之上驱动它。对于大多数
+服务端集成，你会使用 REST 端点，并让某个频道来处理实时投递。
+
+## 接下来看哪里
+
+<CardGroup cols={2}>
+  <Card title="REST API 参考" icon="plug" href="/zh/reference/rest-websocket-api">
+    跨 9 个域的全部 98 项操作，从规范生成。
+  </Card>
+  <Card title="校验凭据" icon="key" href="/zh/guides/integrators/verify-credentials-with-octo-auth">
+    用 octo-auth SDK 保护你自己的服务。
+  </Card>
+</CardGroup>

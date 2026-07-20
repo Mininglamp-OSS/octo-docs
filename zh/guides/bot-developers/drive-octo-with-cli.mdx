@@ -1,0 +1,67 @@
+---
+title: "用 octo-cli 驱动 Octo"
+description: "让 AI 智能体操作 Octo——通过 octo-cli REST 客户端发送消息、管理群组、事项、文件。"
+icon: "terminal"
+---
+
+**[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli)** 是一个单一二进制的 REST 客户端，
+专为 **AI 智能体机器人通过 `exec` 调用** 而设计。如果说[频道](/zh/guides/bot-developers/choose-a-channel)
+让智能体能够*回复*，那么 `octo-cli` 就让它能够*行动*——发送消息、列出群组、管理事项、
+上传文件。每一次调用都会在 stdout 上输出一个结构化的 JSON 信封（envelope）；不存在
+交互式 I/O。
+
+## 安装
+
+```bash
+npm install -g @mininglamp-oss/octo-cli
+# or
+go install github.com/Mininglamp-OSS/octo-cli/cmd/octo-cli@latest
+```
+
+npm 包会解析出匹配的、预构建的平台二进制。
+
+## 认证
+
+`octo-cli` 仅面向机器人——没有用户登录。用两个环境变量把它指向你的实例：
+
+```bash
+export OCTO_BOT_TOKEN="bf_your_user_bot_token"    # or app_… (DM-only)
+export OCTO_API_BASE_URL="https://your-octo-instance.com"
+```
+
+可选：`OCTO_SPACE_ID`（面向平台级机器人的空间上下文）、`OCTO_FORMAT`
+（`json` | `table` | `csv` | `ndjson`）。
+
+## 使用它
+
+```bash
+octo-cli group list
+octo-cli message send --data '{"channel_id":"chat-1","channel_type":1,"payload":{"text":"hi"}}'
+octo-cli thread create --chat-id chat-1 --name "design review"
+octo-cli file upload --file ./report.pdf
+octo-cli docs list --sort updatedAt:desc
+octo-cli file download abc123 --jq '.data.url'
+```
+
+整个命令树——**跨 9 个域的 98 项操作**——是从内嵌在二进制中的 OpenAPI 规范
+自动注册的，因此它与服务器保持步调一致。每个命令都与一个 REST 操作 1:1 对应。
+
+<Info>
+  用 `--data '<json>'` 传入请求体，用 `--jq '<expr>'` 对 JSON 信封做后处理。
+  错误输出到 stderr，并带有确定性的分类体系——非常适合在智能体循环中编写脚本。
+</Info>
+
+## 将其接入智能体
+
+给智能体授予 `exec octo-cli` 的权限（例如，一个 Claude Code 机器人的 `allowedTools`，
+或 Claw 运行时的 Agent Skills）。随后智能体便调用 `octo-cli` 命令来直接操作 Octo——
+这正是 [Claw 频道](/zh/guides/bot-developers/openclaw-and-claw-channels)实现其“手”的方式。
+
+<CardGroup cols={2}>
+  <Card title="完整命令参考" icon="terminal" href="/zh/reference/octo-cli">
+    每一个命令、标志和参数——从内嵌的规范生成。
+  </Card>
+  <Card title="REST API 参考" icon="plug" href="/zh/reference/rest-websocket-api">
+    与之相同的 98 项操作，以 HTTP 端点形式呈现。
+  </Card>
+</CardGroup>

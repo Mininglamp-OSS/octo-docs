@@ -1,0 +1,165 @@
+---
+title: "Connect your first AI bot"
+description: "Register a bot and bridge Claude Code into Octo in minutes — Octo's signature path."
+icon: "robot"
+---
+
+This is the path that makes Octo _Octo_: putting an AI agent into your workspace as a
+first-class participant. You'll register a bot, then run
+[`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo) — an independent gateway
+that bridges **Claude Code** into Octo IM. When you're done, you can DM the bot (or @mention it
+in a group) and get streamed replies from a real coding agent.
+
+<Tip>
+  `cc-channel-octo` is the Claude Code edition. The same flow works for its siblings —
+  [Codex](/guides/bot-developers/codex-channel),
+  [OpenClaw / Claw](/guides/bot-developers/openclaw-and-claw-channels), and
+  [Hermes](/guides/bot-developers/hermes-channel). See
+  [Choose a channel](/guides/bot-developers/choose-a-channel) to compare them.
+</Tip>
+
+## Prerequisites
+
+- A running Octo instance — if you don't have one, do the
+  [Deploy in 10 minutes](/get-started/quickstart-deploy) quickstart first. You'll need its API
+  URL (e.g. `http://localhost:28080`).
+- **Node.js ≥ 22** (`node -v`).
+- The **Claude Code CLI**: `npm i -g @anthropic-ai/claude-code`.
+- An **`ANTHROPIC_API_KEY`** exported in your environment.
+
+## Set up the bot
+
+<Steps>
+  <Step title="Create a bot and get its token">
+    In Octo, bots are created by chatting with **BotFather** (the built-in bot registrar):
+
+    1. Open your Octo web client and start a DM with **BotFather**.
+    2. Send `/newbot` and follow the prompts to name your bot.
+    3. BotFather replies with a **User Bot token** that starts with `bf_`.
+
+    Copy that token somewhere safe — it's the bot's identity and full credential.
+
+    <Info>
+      A `bf_` **User Bot** token has DM + group + thread access and is what you want here. `app_`
+      **App Bot** tokens (from the admin console) are DM-only. See the
+      [Security & auth model](/concepts/security-and-auth) for the full picture.
+    </Info>
+  </Step>
+
+  <Step title="Install the gateway">
+    The fastest path is the prebuilt npm package:
+
+    ```bash
+    npm install -g @mininglamp-oss/cc-channel-octo
+    ```
+
+    This installs the `cc-channel-octo` command — no compile step.
+  </Step>
+
+  <Step title="Configure the bot">
+    `cc-channel-octo` uses a fixed layout under `~/.cc-channel-octo/`: a **global** config
+    (shared defaults + the list of bots, **no token**) and a **per-bot** config (the token +
+    overrides). Create both:
+
+    ```bash
+    mkdir -p ~/.cc-channel-octo/default
+    ```
+
+    Global `~/.cc-channel-octo/config.json` — point it at your Octo instance:
+
+    ```json
+    {
+      "apiUrl": "http://localhost:28080",
+      "bots": [{ "id": "default" }]
+    }
+    ```
+
+    Per-bot `~/.cc-channel-octo/default/config.json` — the token goes **only** here:
+
+    ```json
+    {
+      "botToken": "bf_YOUR_BOT_TOKEN",
+      "sdk": { "model": "vertexai/claude-opus-4-8" }
+    }
+    ```
+
+    Lock down the files so the token isn't world-readable:
+
+    ```bash
+    chmod 600 ~/.cc-channel-octo/config.json ~/.cc-channel-octo/default/config.json
+    ```
+
+    <Warning>
+      The token belongs only in the per-bot `config.json` (mode `600`) — never in the global
+      file, shell history, or version control.
+    </Warning>
+  </Step>
+
+  <Step title="Start the gateway">
+    ```bash
+    cc-channel-octo
+    ```
+
+    Watch the logs until you see:
+
+    ```
+    Ready — listening for messages
+    ```
+
+    That's it — the bot is online.
+  </Step>
+</Steps>
+
+## Talk to your bot
+
+Open Octo and either **DM the bot** directly, or **@mention it** in a group (it only responds
+to @mentions in groups). Send it something like _"write a Python function that reverses a
+string"_ and watch the reply **stream back in real time**, with typing indicators. Claude Code
+runs the task via the Agent SDK and posts the result into the conversation.
+
+Conversation history is persisted in SQLite (a 40-message sliding window per session). Useful
+in-chat commands:
+
+| Command | Effect |
+|---|---|
+| `/reset` | Clear your own session's stored history. |
+| `/config` | Show the active settings. |
+| `/help` | List available commands. |
+
+## Optional — let the agent _drive_ Octo
+
+So far the bot _replies_. You can also let the agent **act** on Octo — send messages, list
+groups, manage matters — by giving it
+[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli), a single-binary REST client built for
+agents to call via `exec`:
+
+```bash
+npm install -g @mininglamp-oss/octo-cli
+
+export OCTO_BOT_TOKEN="bf_YOUR_BOT_TOKEN"
+export OCTO_API_BASE_URL="http://localhost:28080"
+
+octo-cli group list
+octo-cli message send --data '{"channel_id":"...","channel_type":1,"payload":{}}'
+```
+
+Every command emits a structured JSON envelope on stdout — ideal for an agent runtime. Each
+command maps 1:1 to an API operation; see the [octo-cli reference](/reference/octo-cli) and
+[REST API reference](/reference/rest-websocket-api).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Choose a channel" icon="git-compare" href="/guides/bot-developers/choose-a-channel">
+    Compare all five agent channels.
+  </Card>
+  <Card title="Drive Octo with octo-cli" icon="terminal" href="/guides/bot-developers/drive-octo-with-cli">
+    The full agent-operates-Octo guide.
+  </Card>
+  <Card title="Build & publish a Skill" icon="puzzle" href="/guides/bot-developers/publish-a-skill">
+    Package reusable agent capabilities.
+  </Card>
+  <Card title="The Lobster model" icon="brain" href="/concepts/the-lobster-model">
+    How Octo treats agents as first-class participants.
+  </Card>
+</CardGroup>

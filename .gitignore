@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Mintlify local cache
+.mint/
+.mintlify/
+
+# OS / editor
+.DS_Store
+*.log

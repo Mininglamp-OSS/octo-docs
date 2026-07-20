@@ -1,0 +1,65 @@
+---
+title: "Upgrades and version sync"
+description: "Keep agent daemons and CLIs current with octo-version-sync and octo-daemon-cli."
+icon: "arrows-rotate"
+---
+
+Octo keeps a fleet of local runtimes (Claude Code, OpenClaw, Codex, Hermes daemons) current
+through two pieces: **`octo-version-sync`** publishes one source of truth for versions, and
+**`octo-daemon-cli`** runs on each machine to report inventory and apply upgrades.
+
+## octo-version-sync — one version.json
+
+**[`octo-version-sync`](https://github.com/Mininglamp-OSS/octo-version-sync)** is a long-lived
+service that polls **GitHub Releases** (Go binaries) and **npm** (OpenClaw plugins) on a
+configurable interval, normalizes each release, and writes a single `version.json` atomically to
+object storage:
+
+```json
+{ "latest_version": "…", "release_meta": { "assets": [] }, "checksums": {} }
+```
+
+It tracks `octo-daemon`, `claude`, `codex`, `hermes`, `openclaw`, and the `octo` plugin — edit
+`components.json` to change the set (no redeploy). `POST /trigger` (Bearer token) forces a scan.
+
+<Info>
+  **Fail-soft:** if one component's poll fails, it keeps the prior data and marks that entry
+  `status: stale`; a total failure skips the write entirely — daemons never see a half-written
+  truth.
+</Info>
+
+## octo-daemon-cli — the per-machine monitor
+
+**[`octo-daemon-cli`](https://github.com/Mininglamp-OSS/octo-daemon-cli)** runs on each box that
+hosts agent CLIs:
+
+```bash
+npm install -g @mininglamp-oss/octo-daemon
+octo-daemon config --server-url <fleet-url> --api-key uk_xxx
+octo-daemon run        # foreground
+octo-daemon start      # background via pm2
+```
+
+`config` verifies the key against `POST <fleet-url>/v1/runtimes/verify` and resolves the
+`space_id`. The daemon probes the Claude Code and OpenClaw CLIs, pushes inventory to
+[`octo-fleet`](/ecosystem/repository-guide), and supports **one-click remote upgrades** from the
+Octo web UI (atomic server claim + version-pinned downloads). Cadence: register < 5 s, 5 s
+heartbeat, 60 s rescan; the server marks a daemon offline after 45 s of silence and deletes it
+after 7 days. One daemon can serve multiple spaces.
+
+## Applying an upgrade
+
+```bash
+octo-daemon upgrade    # npm install -g @latest, then signals the process to restart
+```
+
+<Warning>
+  `upgrade` re-installs and signals the process — a supervisor **must** respawn it. pm2 does this
+  by default; under systemd set `Restart=always`.
+</Warning>
+
+## Upgrading the platform itself
+
+For the server/clients, pin `mininglamposs/octo-*` images to a release tag (never `:latest`),
+pull the new tags, and roll: `docker compose up -d` (Compose) or `helm upgrade` (Kubernetes).
+Review [Backup and restore](/guides/operators/backup-and-restore) before a major upgrade.

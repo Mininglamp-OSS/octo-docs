@@ -1,0 +1,68 @@
+---
+title: "Security hardening"
+description: "The pre-flight checklist before exposing an Octo deployment beyond your laptop."
+icon: "lock"
+---
+
+The [default deployment](/guides/operators/deploy-compose) is safe for local evaluation — one
+public port, everything else on loopback. Before you expose it beyond your machine, work through
+this checklist.
+
+<Warning>
+  Do all of this **before** the stack is reachable from an untrusted network. Several items (the
+  master key, Redis auth) are hard or impossible to fix after the fact.
+</Warning>
+
+## Checklist
+
+<Steps>
+  <Step title="Rotate every generated secret">
+    Replace every `CHANGE_ME_*` / `CHG_ME*` in `.env`. Fail-fast guards catch some placeholders
+    (`OCTO_MASTER_KEY` length, `MINIO_ROOT_PASSWORD` ≥ 8, and the `minio-init` / `preflight` /
+    `init-extra-dbs.sh` jobs abort on placeholders) — but don't rely on them for every field.
+  </Step>
+  <Step title="Keep backing services on loopback">
+    Leave `OCTO_MYSQL_BIND` / `OCTO_REDIS_BIND` / `OCTO_MINIO_API_BIND` /
+    `OCTO_MINIO_CONSOLE_BIND` at `127.0.0.1`.
+
+    <Warning>
+      **Redis runs with no auth.** Never widen its bind without also setting `--requirepass` and
+      `TS_DB_REDISPASS`.
+    </Warning>
+  </Step>
+  <Step title="Set the WuKongIM manager token">
+    Set a real `OCTO_WUKONGIM_MANAGER_TOKEN` — an empty value leaves the manager API usable
+    without auth. (`OCTO_NOTIFY_INTERNAL_TOKEN` and the manager token are HMAC-only and safe to
+    rotate later.)
+  </Step>
+  <Step title="Pick OCTO_MASTER_KEY once">
+    `OCTO_MASTER_KEY` provides AEAD at-rest encryption with **no re-encrypt pass** — rotating it
+    is destructive. Choose it at first deploy and back it up; losing it means losing access to
+    encrypted data.
+  </Step>
+  <Step title="Protect webhooks and the MinIO console">
+    Set `OCTO_WEBHOOK_SECRET_KEY` (HMAC) if you accept inbound webhooks. Keep the MinIO console
+    loopback-only (SSH-tunnel to `:29001`); it is not nginx-proxied.
+  </Step>
+  <Step title="Front with TLS and pin images">
+    Terminate TLS in front of nginx (`OCTO_HTTPS_PORT` `28443`, or a host nginx / Caddy /
+    Cloudflare Tunnel). Pin `mininglamposs/octo-*` images to a release tag, never `:latest`.
+  </Step>
+</Steps>
+
+## Why `.env` needs sudo
+
+`docker/.env` holds every high-value secret — MySQL, MinIO, `OCTO_MASTER_KEY`, admin password,
+the notify and WuKongIM tokens — so it stays `root:600`. That's why both `--up` and
+`--smoke-test` require sudo, and why `--up` never regenerates secrets.
+
+## Auth posture
+
+The platform's auth model — credential realms, RBAC, fail-closed verification, and
+anti-enumeration — is described in [Security & auth model](/concepts/security-and-auth). Protect
+your own companion services with the [octo-auth SDK](/guides/integrators/verify-credentials-with-octo-auth)
+rather than re-implementing verification.
+
+<Card title="Auth & RBAC model" icon="shield-halved" href="/concepts/security-and-auth">
+  How credentials, roles, and tenancy work under the hood.
+</Card>

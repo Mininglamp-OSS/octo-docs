@@ -1,0 +1,56 @@
+---
+title: "扩容与可观测"
+description: "Octo 部署的健康检查端点、指标、WebSocket 路由与水平扩容。"
+icon: "chart-line"
+---
+
+Octo 在单一 nginx 入口之后水平扩展。本指南涵盖健康检查暴露面、监控要点以及流量如何路由。
+
+## 健康检查端点
+
+nginx 位于所有服务前端；探测以下端点即可确认每一层是否存活：
+
+| 端点 | 层级 |
+|---|---|
+| `/_nginx_up` | nginx vhost |
+| `/api/v1/health` | `octo-server` REST |
+| `/matter/health` | `octo-matter` |
+| `/summary/health` | smart-summary（仅在启用 summary 配置档时） |
+| `/` | web SPA |
+
+[冒烟测试](/zh/guides/operators/deploy-compose)（`setup.sh --smoke-test`）会检验上述所有端点，
+外加一次真实的鉴权 + 预签名 PUT 往返。
+
+## 路由与限流
+
+nginx 是唯一入口（在 Kubernetes 上是一个 `ClusterIP` Service）。它负责 `/ws` 的 WebSocket
+升级、预签名 URL 透传，以及通过 `octo_api` 和
+`octo_auth` 区域进行限流。`octo-server` 又增加了三层限流（按 IP、按端点、
+按 UID）。要对外暴露技术栈，请在 nginx Service 前放置 LoadBalancer 或 Ingress。
+
+## 监控要点
+
+<CardGroup cols={2}>
+  <Card title="消息内核" icon="comments">
+    WuKongIM 暴露 **Prometheus** 指标和一个监控面（端口 `25300`，默认绑定回环——
+    它是可观测性 / `/route`，而非聊天传输）。
+  </Card>
+  <Card title="搜索流水线" icon="magnifying-glass">
+    若开启了搜索，请关注 **Kafka 消费者组延迟**、**DLQ topic 深度**、DLQ 溢出
+    目录以及 `es-indexer` 日志。
+  </Card>
+</CardGroup>
+
+## 扩容
+
+- **无状态应用层**（`octo-server`、`octo-matter`、summary、nginx）按副本数扩容——
+  使用 `overlays/prod` Kustomize overlay 或 Helm 副本数配置值。
+- **WuKongIM** 作为独立集群扩容（去中心化、自动扩展，并具备自动故障转移）
+  ——独立于 `octo-server` 扩容。参见 [消息与 IM 内核](/zh/concepts/messaging-and-im-core)。
+- **后端存储**（MySQL、Redis、对象存储）按各自的运维手册扩容；
+  在生产环境中，应将它们运行于集群外部，而非集群内部。
+
+<Note>
+  即便你扩容了公开层，也要将 WuKongIM 管理 API 和 MinIO 控制台保持在回环 / 私有网络上
+  ——参见 [安全加固](/zh/guides/operators/security-hardening)。
+</Note>

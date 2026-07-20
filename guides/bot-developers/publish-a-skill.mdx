@@ -1,0 +1,60 @@
+---
+title: "Build and publish a Skill"
+description: "Author an AgentSkill for Octo/OpenClaw and install it to your bot."
+icon: "puzzle"
+---
+
+A **Skill** is a self-contained, reusable capability an agent picks up automatically — packaged
+as a directory with a `SKILL.md` (and optional `references/`). Octo's skills live in
+**[`octo-skills`](https://github.com/Mininglamp-OSS/octo-skills)**, and the engineering standard
+they follow is **[`octo-spec`](https://github.com/Mininglamp-OSS/octo-spec)**.
+
+## Anatomy of a skill
+
+Each skill is a directory whose `SKILL.md` describes what it does. Agents (Claude Code,
+OpenClaw, Codex) discover a skill by reading that description — so the first lines matter. Most
+skills also ship a first-run onboarding flow.
+
+Existing skills in the collection:
+
+| Skill | What it does |
+|---|---|
+| `octo-multica-cloud` | Drive the cloud Multica SaaS — issues, agents, dispatch, comments — via a per-user `octo-multica-key`. |
+| `octo-loop` ⚗️ | An experimental OpenClaw loop-engineering standard: a three-ring orchestration / execution / verification contract with an uncheatable acceptance gate. |
+| `multica-squad-onboarding` | A conversational advisor that designs and provisions Multica squads via the `multica` CLI. |
+
+## Install a skill to your bot
+
+Drop it into your agent's skills directory. For OpenClaw / Octo:
+
+```bash
+# one-line installer
+curl -fsSL https://raw.githubusercontent.com/Mininglamp-OSS/octo-skills/main/install.sh | bash -s <skill>
+# or clone + copy into ~/.openclaw/skills/ (or a bot's skills/ dir)
+```
+
+For a [cc-channel-octo](/guides/bot-developers/claude-code-channel) bot, place the skill under
+`~/.cc-channel-octo/skills/` (shared) or `~/.cc-channel-octo/<botId>/skills/` (per-bot).
+
+## Author to the standard: octo-spec
+
+**`octo-spec`** is an out-of-the-box engineering standard for AI-assisted coding — **git-native
+and zero-service**. There's no server to run: standards live in the repo under `.octospec/` and
+travel via `git pull`, so any coding agent reads and follows them automatically.
+
+- **OKF (Open Knowledge Format)** — plain Markdown + YAML frontmatter: human-readable,
+  agent-parseable without SDKs, and diffable. An `.octospec/` directory is a valid OKF bundle.
+- **Two-layer constitution** — an org-wide *global* layer (commit / PR / review / security
+  conventions) plus a repo-local layer that inherits the global layer at a pinned version.
+
+Onboard a repo:
+
+```bash
+cp -r templates/octospec-init .octospec   # from the octo-spec repo
+# set GLOBAL_SRC, then:
+./octospec-sync.sh
+```
+
+<Card title="octo-spec (OKF) reference" icon="file-code" href="/reference/octo-spec-okf">
+  The format details for the AI-coding standard.
+</Card>

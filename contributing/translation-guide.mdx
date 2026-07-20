@@ -1,0 +1,50 @@
+---
+title: "Translation guide"
+description: "How Octo docs stay bilingual — keeping English and 简体中文 pages in parity."
+icon: "language"
+---
+
+The portal is bilingual (English + 简体中文) using Mintlify's `navigation.languages`. English is
+the default; Chinese pages live under a `zh/` path prefix and are listed in the `zh` language's
+own tabs in `docs.json`.
+
+## How localization works here
+
+- English pages live at the repo root (`get-started/…`, `guides/…`, `concepts/…`).
+- Chinese pages mirror them under `zh/` (e.g. `zh/get-started/quickstart-deploy.mdx`).
+- Each language has its **own navigation tree** in `docs.json` under `navigation.languages`.
+- Localization is **partial-friendly**: an untranslated page simply isn't listed in the `zh`
+  tabs. There's no per-page fallback, so only add a page to the `zh` nav once it's actually
+  translated.
+
+## Add a translation
+
+<Steps>
+  <Step title="Copy the English page">
+    Create the mirror under `zh/<same-path>.mdx`. Keep the same structure, components, and links.
+  </Step>
+  <Step title="Translate content, not code">
+    Translate prose and headings. Leave code blocks, commands, flags, env-var names, API paths,
+    and component names (`<Note>`, `<Steps>`, …) unchanged.
+  </Step>
+  <Step title="Use in-language links">
+    Point cross-links at the `zh` versions (e.g. `/zh/get-started/quickstart-deploy`) so a reader
+    stays in Chinese.
+  </Step>
+  <Step title="Register in the zh nav">
+    Add the page to the `zh` language's tabs/groups in `docs.json`, then run `mint validate` and
+    `mint broken-links`.
+  </Step>
+</Steps>
+
+## Style
+
+- Use natural, technical 简体中文 — match the tone of the existing translated quickstarts.
+- Keep product and repo names in their original form (`octo-server`, `cc-channel-octo`,
+  `BotFather`, `Lobster`).
+- Preserve number/port/version literals exactly.
+
+<Info>
+  This convention mirrors the repos themselves, which ship `README.md` + `README.zh.md` pairs —
+  bilingual parity is a project-wide norm, not just a docs feature.
+</Info>

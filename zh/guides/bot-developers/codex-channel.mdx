@@ -1,0 +1,55 @@
+---
+title: "桥接 OpenAI Codex"
+description: "运行 codex-channel-octo 网关，把一个 OpenAI Codex 智能体接入 Octo。"
+icon: "robot"
+---
+
+**[`codex-channel-octo`](https://github.com/Mininglamp-OSS/codex-channel-octo)** 是一个
+独立的 Node.js 网关，它把 [OpenAI Codex](https://developers.openai.com/codex)
+（通过 `@openai/codex-sdk`，其中已捆绑运行时）桥接进 Octo IM。它镜像其同胞
+[`cc-channel-octo`](/zh/guides/bot-developers/claude-code-channel)；只是智能体内核不同。
+
+<Warning>
+  **早期测试版本（v0.1.0）。** 核心路径——注册、连接、多轮聊天、
+  多机器人——已经过验证，但**尚无 cron，也尚无技能**。若需一个功能完整的
+  频道，请使用 [cc-channel-octo](/zh/guides/bot-developers/claude-code-channel)。
+</Warning>
+
+## 运行它
+
+```bash
+npm install -g @mininglamp-oss/codex-channel-octo
+codex-channel-octo start
+```
+
+需要 Node ≥ 22 以及一个 Octo 机器人令牌（`bf_…`）。该网关注册为一个 Octo 机器人、
+通过 WebSocket 连接、用本地 Codex 运行一项编码任务，然后把回复回发。它
+支持私信（DM）、群组（@提及）和社区话题、多轮对话、在一个进程中运行多个机器人，
+以及配置热重载。
+
+## Codex 线程互通
+
+每个 Octo 会话都映射到一个 **Codex 线程（thread）**，因此一个会话可以从你的
+终端恢复：
+
+```bash
+codex exec resume <threadId>
+```
+
+这种 IM ↔ 终端 的互通是可选启用的——你可以在本地 Codex
+会话中接续一段聊天对话，反之亦然。
+
+## 流式行为
+
+与 cc-channel-octo 的逐块流式不同，Codex 会**整体投递最终消息**，
+中间步骤则作为进度更新呈现（而非逐 token）。
+
+## 安全
+
+- `sandboxMode` 默认为 **`read-only`**；启用写入需要经过一次刻意的双重切换。
+- `danger-full-access` 会被直接拒绝。
+- 每个机器人拥有自己的 `CODEX_HOME`，从而按机器人隔离 Codex 状态。
+
+<Card title="对比所有频道" icon="code-compare" href="/zh/guides/bot-developers/choose-a-channel">
+  看看 Codex 相对于其他四个频道处于什么位置。
+</Card>

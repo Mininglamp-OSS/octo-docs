@@ -1,0 +1,52 @@
+---
+title: "选择一个频道"
+description: "对比 Octo 的五个智能体频道——Claude Code、Codex、OpenClaw、Claw、Hermes——并选出合适的那个。"
+icon: "code-compare"
+---
+
+**频道（channel）**是一个独立的网关，它把一个 AI 智能体运行时桥接进 Octo IM：它
+注册为一个机器人、连接以接收消息、运行智能体，并把回复回发。Octo
+随附五个频道，每个都封装了不同的智能体内核。它们全部使用同一个
+[机器人令牌](/zh/concepts/security-and-auth)（`bf_…`）以及同一套
+[BotFather 流程](/zh/get-started/quickstart-connect-a-bot)。
+
+## 一览
+
+| 频道 | 智能体内核 | 传输 | 流式 | 技能 | 成熟度 |
+|---|---|---|---|---|---|
+| **[cc-channel-octo](/zh/get-started/quickstart-connect-a-bot)** | Claude Code / Claude Agent SDK | WuKongIM binary WS (DH + AES) | 逐块，800 ms 节流 | 支持——AgentSkills + cron | 已发布至 npm，功能丰富 |
+| **[codex-channel-octo](/zh/guides/bot-developers/codex-channel)** | OpenAI Codex (`@openai/codex-sdk`) | Octo WebSocket | 最终消息 + 步骤进度 | 暂无 | 早期测试（v0.1.0） |
+| **[openclaw-channel-octo](/zh/guides/bot-developers/openclaw-and-claw-channels)** | OpenClaw 框架 | Octo WebSocket | 进度 / 展示卡片 | `octo_management` 工具 + 技能 | 已发布至 ClawHub |
+| **[claw-channel-octo](/zh/guides/bot-developers/openclaw-and-claw-channels)** | WorkBuddy Claw 运行时 | WebSocket，JSON-RPC over WS | send → edit → final | 4 个 octo-cli Agent Skills | 阶段 1–2 完成；UI 待定 |
+| **[hermes-channel-octo](/zh/guides/bot-developers/hermes-channel)** | hermes-agent (NousResearch) | WuKongIM binary WS (ECDH + AES) | 支持 | 通过 hermes-agent | 0.1.x，已端到端验证 |
+
+## 如何选择
+
+<CardGroup cols={2}>
+  <Card title="你想要一个编码智能体，而且要快" icon="robot" href="/zh/get-started/quickstart-connect-a-bot">
+    **cc-channel-octo** 最为成熟：预构建的 npm 二进制、逐块流式、技能，以及
+    定时任务。如果拿不准，从这里开始。
+  </Card>
+  <Card title="你已经在运行 OpenClaw" icon="paw" href="/zh/guides/bot-developers/openclaw-and-claw-channels">
+    **openclaw-channel-octo** 从 ClawHub 安装，并融入你现有的 OpenClaw 智能体
+    和技能中。
+  </Card>
+  <Card title="你想要 Codex" icon="code" href="/zh/guides/bot-developers/codex-channel">
+    **codex-channel-octo** 封装了 OpenAI Codex，具备 IM ↔ 终端 的线程互通。它是一个早期
+    测试版本——尚无 cron/技能。
+  </Card>
+  <Card title="你运行 hermes-agent" icon="feather" href="/zh/guides/bot-developers/hermes-channel">
+    **hermes-channel-octo** 是面向 NousResearch hermes-agent 网关的 Python 插件。
+  </Card>
+</CardGroup>
+
+<Note>
+  这五个都是**独立的网关**——它们作为独立进程运行在你的智能体运行时旁边，
+  并通过网络与 Octo 通信。它们都不要求 fork `octo-server`。你可以同时运行
+  多个，甚至每个网关运行多个机器人。
+</Note>
+
+## 想构建自己的？
+
+如果这些都没有封装你的智能体，那就针对同一套信封契约（envelope contract）编写一个适配器——参见
+[编写适配器](/zh/guides/integrators/write-an-adapter)。

@@ -1,0 +1,68 @@
+---
+title: "安全加固"
+description: "在把 Octo 部署暴露到你的笔记本之外前，需要完成的上线前检查清单。"
+icon: "lock"
+---
+
+[默认部署](/zh/guides/operators/deploy-compose) 对本地评估是安全的——一个
+公开端口，其余全部在回环地址上。在把它暴露到你的机器之外前，请逐项完成
+这份检查清单。
+
+<Warning>
+  在技术栈能被不受信任网络访问**之前**完成所有这些事项。有几项（主密钥、
+  Redis 鉴权）事后很难或根本无法修复。
+</Warning>
+
+## 检查清单
+
+<Steps>
+  <Step title="轮换每一个生成的密钥">
+    替换 `.env` 中每一个 `CHANGE_ME_*` / `CHG_ME*`。快速失败守卫能拦住一些占位符
+    （`OCTO_MASTER_KEY` 长度、`MINIO_ROOT_PASSWORD` ≥ 8，以及 `minio-init` / `preflight` /
+    `init-extra-dbs.sh` 任务在遇到占位符时会中止）——但不要指望它们覆盖每个字段。
+  </Step>
+  <Step title="将后端服务保持在回环地址">
+    保持 `OCTO_MYSQL_BIND` / `OCTO_REDIS_BIND` / `OCTO_MINIO_API_BIND` /
+    `OCTO_MINIO_CONSOLE_BIND` 为 `127.0.0.1`。
+
+    <Warning>
+      **Redis 运行时无鉴权。** 在不同时设置 `--requirepass` 和
+      `TS_DB_REDISPASS` 的情况下，切勿放宽它的绑定。
+    </Warning>
+  </Step>
+  <Step title="设置 WuKongIM 管理令牌">
+    设置一个真实的 `OCTO_WUKONGIM_MANAGER_TOKEN`——空值会让管理 API 在无鉴权的
+    情况下即可使用。（`OCTO_NOTIFY_INTERNAL_TOKEN` 和管理令牌仅用于 HMAC，之后
+    轮换是安全的。）
+  </Step>
+  <Step title="一次性选定 OCTO_MASTER_KEY">
+    `OCTO_MASTER_KEY` 提供 AEAD 静态加密，且**没有重新加密流程**——轮换它
+    具有破坏性。请在首次部署时选定并备份好它；丢失它意味着丢失对
+    加密数据的访问权限。
+  </Step>
+  <Step title="保护 webhook 和 MinIO 控制台">
+    如果你接收入站 webhook，请设置 `OCTO_WEBHOOK_SECRET_KEY`（HMAC）。将 MinIO 控制台
+    保持为仅回环访问（通过 SSH 隧道连到 `:29001`）；它不经由 nginx 代理。
+  </Step>
+  <Step title="前置 TLS 并固定镜像">
+    在 nginx 前端终结 TLS（`OCTO_HTTPS_PORT` `28443`，或使用宿主机 nginx / Caddy /
+    Cloudflare Tunnel）。将 `mininglamposs/octo-*` 镜像固定到某个 release 标签，切勿用 `:latest`。
+  </Step>
+</Steps>
+
+## 为什么 `.env` 需要 sudo
+
+`docker/.env` 保存着每一个高价值密钥——MySQL、MinIO、`OCTO_MASTER_KEY`、admin 密码、
+notify 和 WuKongIM 令牌——因此它始终保持 `root:600`。这就是为什么 `--up` 和
+`--smoke-test` 都需要 sudo，以及为什么 `--up` 从不重新生成密钥。
+
+## 鉴权姿态
+
+平台的鉴权模型——凭据域、RBAC、失败即关闭的校验，以及
+防枚举——在 [安全与鉴权模型](/zh/concepts/security-and-auth) 中有描述。请使用
+[octo-auth SDK](/zh/guides/integrators/verify-credentials-with-octo-auth) 保护你自己的配套服务，
+而不是重新实现校验逻辑。
+
+<Card title="鉴权与 RBAC 模型" icon="shield-halved" href="/zh/concepts/security-and-auth">
+  凭据、角色与租户在底层是如何运作的。
+</Card>

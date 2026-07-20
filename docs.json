@@ -1,72 +1,343 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "Octo",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#D6482B",
+    "light": "#F4795F",
+    "dark": "#B63B22"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon-mark.png",
+  "logo": {
+    "light": "/logo/octo-light.png",
+    "dark": "/logo/octo-dark.png",
+    "href": "https://github.com/Mininglamp-OSS"
+  },
   "navigation": {
-    "pages": [
+    "languages": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
+        "language": "en",
+        "default": true,
+        "tabs": [
+          {
+            "tab": "Get Started",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "index",
+                  "get-started/what-is-octo",
+                  "get-started/architecture-at-a-glance",
+                  "get-started/core-concepts"
+                ]
+              },
+              {
+                "group": "Quickstarts",
+                "pages": [
+                  "get-started/quickstart-deploy",
+                  "get-started/quickstart-connect-a-bot"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Guides",
+            "groups": [
+              {
+                "group": "For Teams",
+                "pages": [
+                  "guides/teams/onboard-your-org",
+                  "guides/teams/use-chat-docs-tasks",
+                  "guides/teams/admin-console"
+                ]
+              },
+              {
+                "group": "For Bot Developers",
+                "pages": [
+                  "guides/bot-developers/choose-a-channel",
+                  "guides/bot-developers/claude-code-channel",
+                  "guides/bot-developers/codex-channel",
+                  "guides/bot-developers/openclaw-and-claw-channels",
+                  "guides/bot-developers/hermes-channel",
+                  "guides/bot-developers/drive-octo-with-cli",
+                  "guides/bot-developers/publish-a-skill"
+                ]
+              },
+              {
+                "group": "For Integrators",
+                "pages": [
+                  "guides/integrators/call-the-rest-api",
+                  "guides/integrators/verify-credentials-with-octo-auth",
+                  "guides/integrators/write-an-adapter",
+                  "guides/integrators/export-and-search-messages",
+                  "guides/integrators/marketplace"
+                ]
+              },
+              {
+                "group": "For Operators",
+                "pages": [
+                  "guides/operators/deploy-compose",
+                  "guides/operators/deploy-kubernetes",
+                  "guides/operators/scale-and-observe",
+                  "guides/operators/backup-and-restore",
+                  "guides/operators/upgrades-and-version-sync",
+                  "guides/operators/subsystems-mail-speech-search",
+                  "guides/operators/security-hardening"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Reference",
+            "groups": [
+              {
+                "group": "Overview",
+                "pages": [
+                  "reference/rest-websocket-api",
+                  "reference/octo-cli",
+                  "reference/configuration",
+                  "reference/errors-and-envelopes",
+                  "reference/auth-verify-api",
+                  "reference/sdks",
+                  "reference/octo-spec-okf"
+                ]
+              },
+              {
+                "group": "REST API by domain",
+                "pages": [
+                  "reference/api/message",
+                  "reference/api/thread",
+                  "reference/api/group",
+                  "reference/api/file",
+                  "reference/api/event",
+                  "reference/api/bot",
+                  "reference/api/matter",
+                  "reference/api/docs",
+                  "reference/api/html"
+                ]
+              },
+              {
+                "group": "CLI commands by domain",
+                "pages": [
+                  "reference/cli/message",
+                  "reference/cli/thread",
+                  "reference/cli/group",
+                  "reference/cli/file",
+                  "reference/cli/event",
+                  "reference/cli/bot",
+                  "reference/cli/matter",
+                  "reference/cli/docs",
+                  "reference/cli/html"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Concepts",
+            "groups": [
+              {
+                "group": "Concepts",
+                "pages": [
+                  "concepts/architecture-overview",
+                  "concepts/the-lobster-model",
+                  "concepts/security-and-auth",
+                  "concepts/messaging-and-im-core",
+                  "concepts/collaborative-docs",
+                  "concepts/search-and-export-pipeline",
+                  "concepts/design-philosophy"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Ecosystem",
+            "groups": [
+              {
+                "group": "Ecosystem",
+                "pages": ["ecosystem/repository-guide"]
+              },
+              {
+                "group": "Contributing",
+                "pages": [
+                  "contributing/contribute-code",
+                  "contributing/contribute-docs",
+                  "contributing/translation-guide"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "zh",
+        "tabs": [
+          {
+            "tab": "开始使用",
+            "groups": [
+              {
+                "group": "开始使用",
+                "pages": [
+                  "zh/index",
+                  "zh/get-started/what-is-octo",
+                  "zh/get-started/architecture-at-a-glance",
+                  "zh/get-started/core-concepts"
+                ]
+              },
+              {
+                "group": "快速开始",
+                "pages": [
+                  "zh/get-started/quickstart-deploy",
+                  "zh/get-started/quickstart-connect-a-bot"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "指南",
+            "groups": [
+              {
+                "group": "面向团队",
+                "pages": [
+                  "zh/guides/teams/onboard-your-org",
+                  "zh/guides/teams/use-chat-docs-tasks",
+                  "zh/guides/teams/admin-console"
+                ]
+              },
+              {
+                "group": "面向机器人开发者",
+                "pages": [
+                  "zh/guides/bot-developers/choose-a-channel",
+                  "zh/guides/bot-developers/claude-code-channel",
+                  "zh/guides/bot-developers/codex-channel",
+                  "zh/guides/bot-developers/openclaw-and-claw-channels",
+                  "zh/guides/bot-developers/hermes-channel",
+                  "zh/guides/bot-developers/drive-octo-with-cli",
+                  "zh/guides/bot-developers/publish-a-skill"
+                ]
+              },
+              {
+                "group": "面向集成开发者",
+                "pages": [
+                  "zh/guides/integrators/call-the-rest-api",
+                  "zh/guides/integrators/verify-credentials-with-octo-auth",
+                  "zh/guides/integrators/write-an-adapter",
+                  "zh/guides/integrators/export-and-search-messages",
+                  "zh/guides/integrators/marketplace"
+                ]
+              },
+              {
+                "group": "面向运维",
+                "pages": [
+                  "zh/guides/operators/deploy-compose",
+                  "zh/guides/operators/deploy-kubernetes",
+                  "zh/guides/operators/scale-and-observe",
+                  "zh/guides/operators/backup-and-restore",
+                  "zh/guides/operators/upgrades-and-version-sync",
+                  "zh/guides/operators/subsystems-mail-speech-search",
+                  "zh/guides/operators/security-hardening"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "参考",
+            "groups": [
+              {
+                "group": "概览",
+                "pages": [
+                  "zh/reference/rest-websocket-api",
+                  "zh/reference/octo-cli",
+                  "zh/reference/configuration",
+                  "zh/reference/errors-and-envelopes",
+                  "zh/reference/auth-verify-api",
+                  "zh/reference/sdks",
+                  "zh/reference/octo-spec-okf"
+                ]
+              },
+              {
+                "group": "REST API（按领域）",
+                "pages": [
+                  "zh/reference/api/message",
+                  "zh/reference/api/thread",
+                  "zh/reference/api/group",
+                  "zh/reference/api/file",
+                  "zh/reference/api/event",
+                  "zh/reference/api/bot",
+                  "zh/reference/api/matter",
+                  "zh/reference/api/docs",
+                  "zh/reference/api/html"
+                ]
+              },
+              {
+                "group": "CLI 命令（按领域）",
+                "pages": [
+                  "zh/reference/cli/message",
+                  "zh/reference/cli/thread",
+                  "zh/reference/cli/group",
+                  "zh/reference/cli/file",
+                  "zh/reference/cli/event",
+                  "zh/reference/cli/bot",
+                  "zh/reference/cli/matter",
+                  "zh/reference/cli/docs",
+                  "zh/reference/cli/html"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "概念",
+            "groups": [
+              {
+                "group": "概念",
+                "pages": [
+                  "zh/concepts/architecture-overview",
+                  "zh/concepts/the-lobster-model",
+                  "zh/concepts/security-and-auth",
+                  "zh/concepts/messaging-and-im-core",
+                  "zh/concepts/collaborative-docs",
+                  "zh/concepts/search-and-export-pipeline",
+                  "zh/concepts/design-philosophy"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "生态",
+            "groups": [
+              {
+                "group": "生态",
+                "pages": ["zh/ecosystem/repository-guide"]
+              },
+              {
+                "group": "参与贡献",
+                "pages": [
+                  "zh/contributing/contribute-code",
+                  "zh/contributing/contribute-docs",
+                  "zh/contributing/translation-guide"
+                ]
+              }
+            ]
+          }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    ]
   },
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "GitHub",
+        "href": "https://github.com/Mininglamp-OSS"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "label": "Deploy Octo",
+      "href": "https://github.com/Mininglamp-OSS/octo-deployment"
     }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
-    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/Mininglamp-OSS"
     }
   }
 }

@@ -1,0 +1,62 @@
+---
+title: "导出与搜索消息"
+description: "在消息搜索索引上提交一个异步批量导出，并下载结果。"
+icon: "magnifying-glass"
+---
+
+Octo 的[搜索与导出流水线](/zh/concepts/search-and-export-pipeline)把消息索引进
+OpenSearch，并暴露一个 **异步批量导出** API，
+[`octo-message-export-api`](https://github.com/Mininglamp-OSS/octo-message-export-api)。本
+指南走一遍调用方这一侧的流程：提交 → 轮询 → 下载。
+
+<Info>
+  搜索是**可选启用**的，必须先在部署上启用它——参见
+  [运维邮件、语音与搜索](/zh/guides/operators/subsystems-mail-speech-search)。导出 API
+  读取索引；它并不构建索引。
+</Info>
+
+## 提交一个任务
+
+每一次提交都是异步的——没有内联的同步路径。你总是会得到
+**HTTP 202** 以及一个 `task_id`：
+
+```bash
+curl -X POST "$EXPORT_API/v1/messages/batch" \
+  -H "Authorization: Bearer $S2S_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "channels": ["chat-1", "group-2"],
+        "start": "2026-01-01T00:00:00Z",
+        "end":   "2026-02-01T00:00:00Z"
+      }'
+# → 202 { "task_id": "..." }
+```
+
+## 轮询状态
+
+```bash
+curl "$EXPORT_API/v1/messages/batch/$TASK_ID" -H "Authorization: Bearer $S2S_TOKEN"
+```
+
+对同一路径执行 `DELETE` 会取消一个任务（幂等）。
+
+## 下载结果
+
+任务完成后，通过状态响应中的预签名 S3 兼容 URL 获取 **gzip 压缩的 NDJSON**
+分片。写入器会在 **解压后 ≥ 500 MB 或 ≥ 30 000 行** 时滚动出一个新分片，
+因此一次大型导出会以若干分片的形式到达。
+
+## 需要为之设计的限制
+
+| 信号 | 含义 |
+|---|---|
+| `413` | 该任务将超过 **300 000 条命中**——请收窄频道列表或时间范围。 |
+| `503` | 进程内任务上限（v1 中为 50）已满——请带退避重试。 |
+
+内部分页使用 OpenSearch PIT + `search_after`（5 分钟保活）以获得一份稳定的
+快照，因此即便新消息不断到来，结果也保持一致。认证采用一个长期有效的
+服务到服务 bearer 令牌（v1 中为单调用方模型）。
+
+<Card title="流水线如何工作" icon="magnifying-glass-chart" href="/zh/concepts/search-and-export-pipeline">
+  端到端的 写入/索引 与 读取/导出 架构。
+</Card>

@@ -1,0 +1,62 @@
+---
+title: "Export and search messages"
+description: "Submit an async batch export over the message-search index and download the results."
+icon: "magnifying-glass"
+---
+
+Octo's [search & export pipeline](/concepts/search-and-export-pipeline) indexes messages into
+OpenSearch and exposes an **async batch export** API,
+[`octo-message-export-api`](https://github.com/Mininglamp-OSS/octo-message-export-api). This
+guide walks the caller side: submit → poll → download.
+
+<Info>
+  Search is **opt-in** and must be enabled on the deployment first — see
+  [Operate mail, speech & search](/guides/operators/subsystems-mail-speech-search). The export API
+  reads the index; it does not build it.
+</Info>
+
+## Submit a task
+
+Every submission is asynchronous — there is no inline synchronous path. You always get
+**HTTP 202** with a `task_id`:
+
+```bash
+curl -X POST "$EXPORT_API/v1/messages/batch" \
+  -H "Authorization: Bearer $S2S_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "channels": ["chat-1", "group-2"],
+        "start": "2026-01-01T00:00:00Z",
+        "end":   "2026-02-01T00:00:00Z"
+      }'
+# → 202 { "task_id": "..." }
+```
+
+## Poll for status
+
+```bash
+curl "$EXPORT_API/v1/messages/batch/$TASK_ID" -H "Authorization: Bearer $S2S_TOKEN"
+```
+
+`DELETE` the same path cancels a task (idempotent).
+
+## Download results
+
+When the task completes, fetch the **gzipped NDJSON** parts via the presigned S3-compatible URLs
+in the status response. The writer rolls a new part at **≥ 500 MB decompressed or ≥ 30 000 rows**,
+so a large export arrives as several parts.
+
+## Limits to design for
+
+| Signal | Meaning |
+|---|---|
+| `413` | The task would exceed **300 000 hits** — narrow the channel list or time range. |
+| `503` | The in-process task cap (50 in v1) is full — retry with backoff. |
+
+Paging internally uses OpenSearch PIT + `search_after` (5-minute keep-alive) for a stable
+snapshot, so results are consistent even as new messages arrive. Auth is a long-lived
+service-to-service bearer token (single-caller model in v1).
+
+<Card title="How the pipeline works" icon="magnifying-glass-chart" href="/concepts/search-and-export-pipeline">
+  The write/index and read/export architecture end to end.
+</Card>

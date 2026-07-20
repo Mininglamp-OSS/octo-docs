@@ -1,0 +1,58 @@
+---
+title: "Backup and restore"
+description: "What state to protect in an Octo deployment — MySQL, object storage, IM data — and where it lives."
+icon: "database"
+---
+
+Octo's durable state lives in a handful of well-defined places. Back those up and you can rebuild
+the stack from a fresh clone.
+
+<Warning>
+  The Compose file does **not** ship a backup job — backups are your responsibility. And
+  `docker compose down -v` **deletes** the named volumes (scoped by `COMPOSE_PROJECT_NAME`), so
+  never run it against a stack whose data you want to keep.
+</Warning>
+
+## What holds state (Compose)
+
+State lives in named Docker volumes, templated `${COMPOSE_PROJECT_NAME:-octo}_*`:
+
+| Volume | Contents |
+|---|---|
+| `mysql-data` | relational data — orgs, users, channels, matters, doc binaries |
+| `redis-data` | cache / sessions (Redis) |
+| `minio-data` | object storage — files, attachments |
+| `wukongim-data` | IM message queues and channel state |
+| `opensearch-data` / `kafka-data` / `search-dlq-spill` | only if the search profile is on |
+
+Backing services bind to loopback: MySQL `23306`, MinIO API `29000`.
+
+## Backing up
+
+- **MySQL** — take a consistent dump (e.g. `mysqldump` / `xtrabackup`) against `23306`, or
+  snapshot the `mysql-data` volume with the container stopped.
+- **Object storage** — mirror the MinIO `minio-data` bucket contents (e.g. `mc mirror`) to a
+  second location.
+- **WuKongIM** — snapshot `wukongim-data`; in a cluster, rely on inter-node redundancy plus
+  periodic snapshots.
+- **Redis** — usually rebuildable (cache), but snapshot if you rely on persisted sessions.
+
+## On Kubernetes
+
+Each stateful component (`mysql`, `redis`, `minio`, `wukongim`) is backed by a **PVC** with a
+configurable `storage.size` and `storageClass` (Helm defaults 20 / 10 / 50 / 10 Gi). Back up via
+your cluster's volume-snapshot mechanism. Deleting the release does not remove PVCs unless you
+`kubectl delete pvc` explicitly.
+
+## Restore
+
+1. Bring up a fresh stack (`./setup.sh` → `--up`) or a fresh Helm release.
+2. Stop the app tier, restore the MySQL dump and object-storage contents, restore
+   `wukongim-data`.
+3. Start the app tier and run `--smoke-test` to confirm the external surface works.
+
+<Info>
+  Keep your `docker/.env` (or K8s secrets) backed up too — especially `OCTO_MASTER_KEY`, which
+  provides at-rest encryption and **cannot be rotated without data loss**. Losing it means losing
+  access to encrypted data. See [Security hardening](/guides/operators/security-hardening).
+</Info>

@@ -1,0 +1,57 @@
+---
+title: "Scale and observe"
+description: "Health endpoints, metrics, WebSocket routing, and horizontal scaling for an Octo deployment."
+icon: "chart-line"
+---
+
+Octo scales horizontally behind a single nginx entrypoint. This guide covers the health surface,
+what to monitor, and how traffic routes.
+
+## Health endpoints
+
+nginx fronts everything; probe these to know each layer is alive:
+
+| Endpoint | Layer |
+|---|---|
+| `/_nginx_up` | nginx vhost |
+| `/api/v1/health` | `octo-server` REST |
+| `/matter/health` | `octo-matter` |
+| `/summary/health` | smart-summary (only with the summary profile) |
+| `/` | web SPA |
+
+The [smoke test](/guides/operators/deploy-compose) (`setup.sh --smoke-test`) exercises all of
+these plus a real auth + presigned-PUT round trip.
+
+## Routing & rate limiting
+
+nginx is the single entrypoint (a `ClusterIP` Service on Kubernetes). It handles the WebSocket
+upgrade for `/ws`, presigned-URL passthrough, and rate limiting via the `octo_api` and
+`octo_auth` zones. `octo-server` adds three more rate-limit layers (per-IP, per-endpoint,
+per-UID). To expose the stack, put a LoadBalancer or Ingress in front of the nginx Service.
+
+## What to monitor
+
+<CardGroup cols={2}>
+  <Card title="Messaging core" icon="comments">
+    WuKongIM exposes **Prometheus** metrics and a monitor surface (port `25300`, loopback by
+    default — it's observability/`/route`, not a chat transport).
+  </Card>
+  <Card title="Search pipeline" icon="magnifying-glass">
+    If search is on, watch **Kafka consumer-group lag**, **DLQ topic depth**, the DLQ spill
+    directory, and the `es-indexer` logs.
+  </Card>
+</CardGroup>
+
+## Scaling
+
+- **Stateless app tiers** (`octo-server`, `octo-matter`, summary, nginx) scale by replica count —
+  use the `overlays/prod` Kustomize overlay or Helm replica values.
+- **WuKongIM** scales as its own cluster (decentralized, auto-expanding, with automatic failover)
+  — scale it independently of `octo-server`. See [Messaging & IM core](/concepts/messaging-and-im-core).
+- **Backing stores** (MySQL, Redis, object storage) scale per their own operational playbooks;
+  in production, run them externally rather than in-cluster.
+
+<Note>
+  Keep the WuKongIM manager API and MinIO console on loopback/private networks even as you scale
+  the public tiers — see [Security hardening](/guides/operators/security-hardening).
+</Note>

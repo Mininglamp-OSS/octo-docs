@@ -1,0 +1,51 @@
+---
+title: "octo-spec (OKF format)"
+description: "The git-native, zero-service AI-coding standard and its Open Knowledge Format."
+icon: "file-code"
+---
+
+**[`octo-spec`](https://github.com/Mininglamp-OSS/octo-spec)** is an out-of-the-box engineering
+standard for AI-assisted coding. It's **git-native and zero-service**: there's no server to run.
+Standards live in the repo under `.octospec/` and travel via `git pull`, so any coding agent
+(Claude Code, Codex, OpenClaw) reads and follows them automatically — no re-explaining your
+conventions every session.
+
+## OKF — Open Knowledge Format
+
+The standards are stored in **OKF (Open Knowledge Format)**: plain **Markdown + YAML
+frontmatter**. That makes them:
+
+- **human-readable** — review them like any doc,
+- **agent-parseable without SDKs** — an agent reads the files directly,
+- **diffable** — changes show up in normal git diffs.
+
+An `.octospec/` directory is a valid OKF bundle.
+
+## Two-layer constitution
+
+```mermaid
+graph TD
+  global[Global layer — "constitution"<br/>cross-repo conventions] --> local[Per-repo layer — "local law"<br/>.octospec/ inherits global at a pinned version]
+```
+
+- **Global** — org-wide conventions: commit / PR / review / security rules.
+- **Per-repo** — a repo's own `.octospec/`, inheriting the global layer at a **pinned version** so
+  updates are deliberate.
+
+## No runtime engine
+
+`octo-spec` ships only three scripts (sync, lint, learning-reflow) — there is no runtime engine.
+The 4-phase loop (**Plan → Implement → Verify → Finish**) is executed by the *agent* via slash
+commands, not by a service.
+
+Onboard a repo:
+
+```bash
+cp -r templates/octospec-init .octospec   # from the octo-spec repo
+# set GLOBAL_SRC, then:
+./octospec-sync.sh
+```
+
+<Card title="Build & publish a Skill" icon="puzzle" href="/guides/bot-developers/publish-a-skill">
+  Skills authored to this standard install straight into your bot.
+</Card>

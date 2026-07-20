@@ -1,0 +1,38 @@
+---
+title: "SDK"
+description: "octo-auth 校验器 SDK（Go + TypeScript）与 octo-lib 共享库。"
+icon: "cubes"
+---
+
+在基于该平台构建时，你会用到 Octo 提供的两个库。
+
+## octo-auth——凭据校验器
+
+**[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** 在单一 `Verifier` 接口之后校验 Octo 凭据（会话、`bf_` 机器人令牌、`uk_` 用户密钥），并支持可插拔的缓存与指标。它以 **Go 和 TypeScript** 两种形态发布，以在各服务间保持一致。
+
+```bash
+go get github.com/Mininglamp-OSS/octo-auth/go       # Go 1.25+
+npm install @mininglamp-oss/octo-auth               # Node ≥ 20, pure ESM
+```
+
+- **领域**——`sessionVerifier`、`botTokenVerifier`、`userKeyVerifier`，外加一个按凭据前缀分派的 `MultiVerifier`。
+- **中间件**——Go：`net/http`、`gin`、`echo`、`wkhttp`；TS：`express`、`@hocuspocus/server`。
+- 默认提供**故障即关闭**的类型化错误与反枚举。
+
+传输层契约位于 `octo-auth/contract/*.yaml`，也是自动生成的[鉴权校验 API](/zh/reference/auth-verify-api) 与[错误参考](/zh/reference/errors-and-envelopes)的来源。
+
+<Card title="校验凭据——操作指南" icon="key" href="/zh/guides/integrators/verify-credentials-with-octo-auth">
+  把 octo-auth 接入你自己的服务。
+</Card>
+
+## octo-lib——共享 Go 库
+
+**[`octo-lib`](https://github.com/Mininglamp-OSS/octo-lib)** 是跨各服务使用的共享核心 Go 库——协议类型、加密、存储与 HTTP 辅助工具。值得注意的是，它拥有 `contract/searchmsg` 消息契约，[搜索流水线](/zh/concepts/search-and-export-pipeline)的生产者与索引器都依赖于它。适配器与服务都会 import 它，使横切的基础原语保持一致（且精简）。
+
+```bash
+go get github.com/Mininglamp-OSS/octo-lib
+```
+
+<Note>
+  对于 REST API 与 CLI，请使用[自动生成的参考](/zh/reference/rest-websocket-api)——这些界面由内嵌的 OpenAPI 规范驱动，而非某个独立的 SDK。
+</Note>

@@ -1,0 +1,60 @@
+---
+title: "Call the REST & WebSocket API"
+description: "Authenticate with a bot token and make your first Octo API calls over HTTP."
+icon: "plug"
+---
+
+Octo exposes a REST + WebSocket API from `octo-server`, consumed by the clients and by any
+integration you build. This guide gets you from a token to a working call.
+
+## Get a credential
+
+Most integrations authenticate as a **bot** with a `bf_` User Bot token — create one via
+[BotFather](/get-started/quickstart-connect-a-bot) (`/newbot`). Other credential kinds
+(human session, `uk_` user API key) are covered in
+[Security & auth](/concepts/security-and-auth).
+
+## Make a call
+
+The lowest-friction way is [`octo-cli`](/guides/bot-developers/drive-octo-with-cli), which wraps
+every endpoint:
+
+```bash
+export OCTO_BOT_TOKEN="bf_your_token"
+export OCTO_API_BASE_URL="https://your-octo-instance.com"
+
+octo-cli group list
+```
+
+Or call HTTP directly — pass the token as a bearer credential and send/receive the unified JSON
+envelope:
+
+```bash
+curl -X POST "$OCTO_API_BASE_URL/v1/bot/sendMessage" \
+  -H "Authorization: Bearer $OCTO_BOT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"channel_id":"chat-1","channel_type":1,"payload":{"text":"hi"}}'
+```
+
+<Info>
+  `channel_type` is `1` = DM, `2` = group, `5` = thread — the same values throughout the
+  [Messages API](/reference/api/message). Every response is a structured JSON envelope; errors
+  follow the [error taxonomy](/reference/errors-and-envelopes).
+</Info>
+
+## Real-time
+
+Browser and SPA clients receive messages over the WebSocket surface (`/ws`, proxied by nginx),
+which `octo-server` drives on top of [WuKongIM](/concepts/messaging-and-im-core). For most
+server-side integrations you'll use the REST endpoints and let a channel handle live delivery.
+
+## Where to look next
+
+<CardGroup cols={2}>
+  <Card title="REST API reference" icon="plug" href="/reference/rest-websocket-api">
+    All 98 operations across 9 domains, generated from the specs.
+  </Card>
+  <Card title="Verify credentials" icon="key" href="/guides/integrators/verify-credentials-with-octo-auth">
+    Protect your own service with the octo-auth SDK.
+  </Card>
+</CardGroup>

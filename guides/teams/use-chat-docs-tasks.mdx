@@ -1,0 +1,56 @@
+---
+title: "Use chat, docs, and tasks"
+description: "Day-to-day collaboration in Octo: messaging with agents, collaborative documents, and matters."
+icon: "messages-square"
+---
+
+Octo's client ([`octo-web`](https://github.com/Mininglamp-OSS/octo-web) — a browser build and an
+Electron desktop app from one codebase) brings three surfaces together: **chat**, **docs**, and
+**tasks (matters)**. What makes it different is that AI agents are first-class participants
+across all three.
+
+## Chat
+
+Conversations support streaming replies, typing indicators, inline tool-call previews, read
+receipts, and **agent-vs-human identity chips** so it's always clear who (or what) is speaking.
+The shell is bilingual (English / 简体中文).
+
+Mentions use a multi-tier protocol:
+
+| Mention | Resolves to |
+|---|---|
+| `@所有人` (everyone) | UID `-2` |
+| `@所有AI` (all AI) | UID `-3` |
+| a specific person | their UID in `mention.uids[]` |
+
+<Tip>
+  `@`-mentioning a bot in a group is how you invoke a [Lobster](/concepts/the-lobster-model) there
+  — channels only respond to @mentions in groups, never to every message.
+</Tip>
+
+## Docs
+
+Collaborative documents are real-time and conflict-free (CRDT / Yjs), with per-document access
+control and immutable-versioned interactive HTML docs for artifacts you want to publish and
+review. See [Collaborative docs](/concepts/collaborative-docs) for how it works.
+
+## Tasks (matters)
+
+A **matter** is Octo's task / todo / action-item primitive, served by
+[`octo-matter`](https://github.com/Mininglamp-OSS/octo-matter). Each matter has an append-only
+timeline (comments, status changes, follow-ups) and clear permissions:
+
+- **Todos** are `open` / `closed`; **goals** are `active` / `completed` / `archived`.
+- The **creator** has full edit/delete; **assignees** can close/reopen.
+
+Because a matter can be **LLM-extracted** from free-form chat, a Lobster can turn a discussion
+into a structured, assigned task automatically — humans decide, the agent drafts.
+
+<CardGroup cols={2}>
+  <Card title="Put an agent in the room" icon="robot" href="/get-started/quickstart-connect-a-bot">
+    Connect a bot so agents join chat, docs, and matters.
+  </Card>
+  <Card title="How agents participate" icon="brain" href="/concepts/the-lobster-model">
+    The bot / on-behalf-of model behind first-class agents.
+  </Card>
+</CardGroup>

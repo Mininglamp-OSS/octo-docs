@@ -1,0 +1,84 @@
+---
+title: "桥接 Claude Code"
+description: "运行 cc-channel-octo 网关，把一个 Claude Code 智能体接入 Octo。"
+icon: "robot"
+---
+
+**[`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo)** 通过 Claude Agent
+SDK 把 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 桥接进 Octo IM。它是最成熟的
+频道——预构建的 npm 二进制、实时逐块流式、智能体
+技能，以及定时任务。
+
+<Note>
+  端到端的首次运行已在
+  [连接你的第一个 AI 机器人](/zh/get-started/quickstart-connect-a-bot)中介绍。本页是
+  其功能与配置的参考。
+</Note>
+
+## 运行它
+
+```bash
+npm install -g @mininglamp-oss/cc-channel-octo
+cc-channel-octo        # after writing the config files below
+```
+
+需要 Node ≥ 22、一个 Octo 机器人令牌（`bf_…`）、Claude Code CLI
+（`npm i -g @anthropic-ai/claude-code`），以及 `ANTHROPIC_API_KEY`。
+
+## 配置布局
+
+一切都位于 `~/.cc-channel-octo/` 之下：
+
+```
+~/.cc-channel-octo/
+├── config.json          GLOBAL: shared defaults + the list of bots (no token)
+├── skills/              optional: skills shared by ALL bots
+└── <botId>/             one self-contained subtree per bot ("default" for one bot)
+    ├── config.json      THIS bot: botToken (required) + per-bot overrides
+    ├── SOUL.md          optional personality (overrides sdk.systemPrompt)
+    ├── skills/          optional: skills for THIS bot
+    ├── data/            SQLite history
+    ├── workspace/       per-session cwd sandboxes
+    └── memory/          long-term auto-memory
+```
+
+配置**仅为 JSON 文件**——没有环境变量覆盖机制。一个机器人的
+`data`/`workspace`/`memory` 是从 `<baseDir>/<id>/…` *派生* 出来的、不可配置，因此一个
+机器人永远无法逃离它自己的子树。
+
+## 功能
+
+<CardGroup cols={2}>
+  <Card title="流式输出" icon="bolt">
+    通过 Octo 的 stream API 实时投递，带 800 ms 节流刷新、正在输入指示，
+    并在必要时自动回退到普通消息。
+  </Card>
+  <Card title="工具进度" icon="wrench">
+    可选启用的 `🔧 Running <tool>(…)` 提示，在智能体调用工具时显示，按回合去重并设上限。
+  </Card>
+  <Card title="群组感知" icon="users">
+    在群组中仅响应 @提及；注入最近的群组上下文，以便 Claude 跟上
+    讨论。
+  </Card>
+  <Card title="会话持久化" icon="database">
+    由 SQLite 支撑的历史记录（40 条消息的滑动窗口），有 7 天过期期限。
+  </Card>
+</CardGroup>
+
+聊天内命令：`/reset`（清除你的会话）、`/config`（显示设置）、`/help`。一个逐会话的
+令牌桶对请求进行限流（默认 5/min）。
+
+## 安全模型
+
+- **`allowedTools` 白名单**——智能体只能调用你允许的工具。
+- **工作区隔离**——每个会话获得一个派生的 `workspace/` 沙箱。
+- **机器人循环防护**——网关不会响应它自己或其他机器人的消息。
+
+## 多机器人与定时任务
+
+在全局的 `bots[]` 下列出多个机器人（每个都有自己的 `<id>/config.json`），即可在一个进程中运行多个。
+定时任务让机器人可以按类 cron 的触发器运行。完整的字段参考请见仓库 README。
+
+<Card title="让智能体操作 Octo" icon="terminal" href="/zh/guides/bot-developers/drive-octo-with-cli">
+  给智能体配上 `octo-cli`，让它能发送消息、管理群组等等。
+</Card>

@@ -1,0 +1,85 @@
+---
+title: "Bridge Claude Code"
+description: "Run the cc-channel-octo gateway to put a Claude Code agent into Octo."
+icon: "robot"
+---
+
+**[`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo)** bridges
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) into Octo IM via the Claude Agent
+SDK. It's the most mature channel — prebuilt npm binary, real-time per-chunk streaming, agent
+skills, and scheduled tasks.
+
+<Note>
+  The end-to-end first run is covered in
+  [Connect your first AI bot](/get-started/quickstart-connect-a-bot). This page is the reference
+  for its features and configuration.
+</Note>
+
+## Run it
+
+```bash
+npm install -g @mininglamp-oss/cc-channel-octo
+cc-channel-octo        # after writing the config files below
+```
+
+Requires Node ≥ 22, an Octo bot token (`bf_…`), the Claude Code CLI
+(`npm i -g @anthropic-ai/claude-code`), and `ANTHROPIC_API_KEY`.
+
+## Configuration layout
+
+Everything lives under `~/.cc-channel-octo/`:
+
+```
+~/.cc-channel-octo/
+├── config.json          GLOBAL: shared defaults + the list of bots (no token)
+├── skills/              optional: skills shared by ALL bots
+└── <botId>/             one self-contained subtree per bot ("default" for one bot)
+    ├── config.json      THIS bot: botToken (required) + per-bot overrides
+    ├── SOUL.md          optional personality (overrides sdk.systemPrompt)
+    ├── skills/          optional: skills for THIS bot
+    ├── data/            SQLite history
+    ├── workspace/       per-session cwd sandboxes
+    └── memory/          long-term auto-memory
+```
+
+Config is **JSON files only** — there are no environment-variable overrides. A bot's
+`data`/`workspace`/`memory` are *derived* from `<baseDir>/<id>/…` and aren't configurable, so a
+bot can never escape its own subtree.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Streaming output" icon="bolt">
+    Real-time delivery via Octo's stream API with 800 ms throttled flushes, typing indicators,
+    and automatic fallback to plain messages.
+  </Card>
+  <Card title="Tool progress" icon="wrench">
+    Opt-in `🔧 Running <tool>(…)` notices as the agent invokes tools, deduped and capped per turn.
+  </Card>
+  <Card title="Group awareness" icon="users">
+    Responds only to @mentions in groups; injects recent group context so Claude follows the
+    discussion.
+  </Card>
+  <Card title="Session persistence" icon="database">
+    SQLite-backed history (40-message sliding window) with 7-day expiry.
+  </Card>
+</CardGroup>
+
+In-chat commands: `/reset` (clear your session), `/config` (show settings), `/help`. A per-session
+token bucket rate-limits requests (default 5/min).
+
+## Security model
+
+- **`allowedTools` whitelist** — the agent can only invoke tools you permit.
+- **Workspace isolation** — each session gets a derived `workspace/` sandbox.
+- **Bot-loop prevention** — the gateway won't respond to its own or other bots' messages.
+
+## Multi-bot & scheduled tasks
+
+List several bots under the global `bots[]` (each with its own `<id>/config.json`) to run many
+in one process. Scheduled tasks let a bot run on a cron-like trigger. See the repo README for
+the full field reference.
+
+<Card title="Let the agent operate Octo" icon="terminal" href="/guides/bot-developers/drive-octo-with-cli">
+  Give the agent `octo-cli` so it can send messages, manage groups, and more.
+</Card>

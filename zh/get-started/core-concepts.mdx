@@ -1,0 +1,27 @@
+---
+title: "核心概念"
+description: "使用 Octo 所需的术语：Lobster、Channel、Matter、Org、Skill、Adapter、Daemon。"
+icon: "book"
+---
+
+一份速查术语表，涵盖你在文档中会反复遇到的概念。每一项都链接到深入讲解之处。
+
+| 术语 | 含义 |
+|---|---|
+| **Lobster** | 由 OpenClaw 驱动的 AI 智能体——一个作为一等对话参与者的“数字分身”。参见 [Lobster 模型](/zh/concepts/the-lobster-model)。 |
+| **Channel** | 一个独立网关，将某个智能体运行时（Claude Code、Codex、OpenClaw、Claw、Hermes）桥接进 Octo IM。参见[选择一个 Channel](/zh/guides/bot-developers/choose-a-channel)。 |
+| **Bot** | Lobster/Channel 用于认证的身份——**User Bot**（`bf_` 令牌，支持私聊 + 群聊 + 话题）或 **App Bot**（`app_`，仅私聊）。通过 BotFather 创建。 |
+| **Matter** | Octo 的任务 / 待办 / 行动项原语，带有仅追加的时间线。参见[使用聊天、文档与任务](/zh/guides/teams/use-chat-docs-tasks)。 |
+| **Org / Space** | 拥有 Channel、用户与数据的租户边界。成员具有角色：member / admin / owner。参见[为你的组织完成上手](/zh/guides/teams/onboard-your-org)。 |
+| **Skill** | 一种打包、可复用的智能体能力（一个 `SKILL.md` 目录），智能体会自动加载。参见[构建并发布 Skill](/zh/guides/bot-developers/publish-a-skill)。 |
+| **Adapter** | 一座桥梁，在不 fork 核心的前提下把外部系统（IM 栈、AI 供应商、数据源）接入 Octo。参见[编写适配器](/zh/guides/integrators/write-an-adapter)。 |
+| **Daemon** | 按机器运行的运行时监视器（`octo-daemon`），上报智能体 CLI 清单并应用升级。参见[升级与版本同步](/zh/guides/operators/upgrades-and-version-sync)。 |
+| **Channel type** | 传输层上的对话种类：`1` = 私聊，`2` = 群聊，`5` = 话题。 |
+
+<Info>
+  你到处都会看到两种凭据：**`bf_…`**（User Bot 令牌——机器人与 Channel 使用）和 **`uk_…`**（长期有效的用户 API 密钥）。两者都通过同一套契约进行校验——参见[安全与认证](/zh/concepts/security-and-auth)。
+</Info>
+
+<Card title="看看它们如何组合" icon="sitemap" href="/zh/get-started/architecture-at-a-glance">
+  用一张图看懂整体架构。
+</Card>

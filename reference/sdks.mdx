@@ -1,0 +1,48 @@
+---
+title: "SDKs"
+description: "The octo-auth verifier SDK (Go + TypeScript) and the octo-lib shared library."
+icon: "cubes"
+---
+
+Octo ships two libraries you'll reach for when building on the platform.
+
+## octo-auth — credential verifier
+
+**[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** verifies Octo credentials
+(session, `bf_` bot token, `uk_` user key) behind one `Verifier` interface, with pluggable cache
+and metrics. It ships in **Go and TypeScript** for parity across the services.
+
+```bash
+go get github.com/Mininglamp-OSS/octo-auth/go       # Go 1.25+
+npm install @mininglamp-oss/octo-auth               # Node ≥ 20, pure ESM
+```
+
+- **Realms** — `sessionVerifier`, `botTokenVerifier`, `userKeyVerifier`, plus a `MultiVerifier`
+  that dispatches by credential prefix.
+- **Middleware** — Go: `net/http`, `gin`, `echo`, `wkhttp`; TS: `express`,
+  `@hocuspocus/server`.
+- **Fail-closed** typed errors and anti-enumeration by default.
+
+The wire contract lives in `octo-auth/contract/*.yaml` and is the source for the generated
+[Auth Verify API](/reference/auth-verify-api) and [error reference](/reference/errors-and-envelopes).
+
+<Card title="Verify credentials — how-to" icon="key" href="/guides/integrators/verify-credentials-with-octo-auth">
+  Wire octo-auth into your own service.
+</Card>
+
+## octo-lib — shared Go library
+
+**[`octo-lib`](https://github.com/Mininglamp-OSS/octo-lib)** is the shared core Go library used
+across the services — protocol types, crypto, storage, and HTTP helpers. Notably it owns the
+`contract/searchmsg` message contract that the
+[search pipeline](/concepts/search-and-export-pipeline) producer and indexer both depend on.
+Adapters and services import it so cross-cutting primitives stay consistent (and thin).
+
+```bash
+go get github.com/Mininglamp-OSS/octo-lib
+```
+
+<Note>
+  For the REST API and CLI, use the [generated reference](/reference/rest-websocket-api) — those
+  surfaces are driven by the embedded OpenAPI specs, not a separate SDK.
+</Note>
