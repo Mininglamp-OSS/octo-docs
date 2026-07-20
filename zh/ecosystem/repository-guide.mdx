@@ -37,12 +37,10 @@ graph LR
     cli[octo-cli]
     daemon[octo-daemon-cli]
   end
-  subgraph sharedgrp["共享库与标准"]
+  subgraph sharedgrp["共享库"]
     lib[octo-lib]
     auth[octo-auth]
     adapters[octo-adapters]
-    spec[octo-spec]
-    skills[octo-skills]
   end
 
   web --> server
@@ -59,12 +57,11 @@ graph LR
   channels --> server
   cli --> server
   daemon --> server
-  server --> idx
   idx --> osx
   osx -.查询.-> server
   osx --> exp
-  server -.uses.-> lib
-  server -.uses.-> auth
+  server -.依赖.-> lib
+  server -.依赖.-> auth
   server --> adapters
 ```
 

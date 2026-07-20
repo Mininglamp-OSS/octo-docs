@@ -38,12 +38,10 @@ graph LR
     cli[octo-cli]
     daemon[octo-daemon-cli]
   end
-  subgraph sharedgrp["Shared & standards"]
+  subgraph sharedgrp["Shared libraries"]
     lib[octo-lib]
     auth[octo-auth]
     adapters[octo-adapters]
-    spec[octo-spec]
-    skills[octo-skills]
   end
 
   web --> server
@@ -60,7 +58,6 @@ graph LR
   channels --> server
   cli --> server
   daemon --> server
-  server --> idx
   idx --> osx
   osx -.read.-> server
   osx --> exp
