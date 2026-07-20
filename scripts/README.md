@@ -5,8 +5,8 @@ never drifts from the code. See `DESIGN.md` §4. They share helpers from `_lib.m
 
 | Generator | Input (source of truth) | Output |
 |---|---|---|
-| `gen-api.mjs` | `octo-cli/internal/registry/specs/*.json` (9 domains, 98 ops) + `octo-auth/contract/errors-v1.yaml` | `reference/api/<domain>.mdx` + `reference/rest-websocket-api.mdx` + `reference/errors-and-envelopes.mdx` |
-| `gen-cli.mjs` | the same octo-cli specs (metadata-driven CLI) | `reference/cli/<domain>.mdx` + `reference/octo-cli.mdx` (98 commands) |
+| `gen-api.mjs` | `octo-cli/internal/registry/specs/*.json` (`matter` excluded → 8 domains, 84 ops) + `octo-auth/contract/errors-v1.yaml` | `reference/api/<domain>.mdx` + `reference/rest-websocket-api.mdx` + `reference/errors-and-envelopes.mdx` |
+| `gen-cli.mjs` | the same octo-cli specs (metadata-driven CLI) | `reference/cli/<domain>.mdx` + `reference/octo-cli.mdx` (84 commands) |
 | `gen-config.mjs` | `octo-server/configs/tsdd.yaml` | `reference/configuration.mdx` (133 keys / 14 sections) |
 
 ## Commands

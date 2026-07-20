@@ -43,7 +43,7 @@ octo-cli docs list --sort updatedAt:desc
 octo-cli file download abc123 --jq '.data.url'
 ```
 
-整个命令树——**跨 9 个域的 98 项操作**——是从内嵌在二进制中的 OpenAPI 规范
+整个命令树——**覆盖所有域的每一个 REST 操作**——是从内嵌在二进制中的 OpenAPI 规范
 自动注册的，因此它与服务器保持步调一致。每个命令都与一个 REST 操作 1:1 对应。
 
 <Info>
@@ -62,6 +62,6 @@ octo-cli file download abc123 --jq '.data.url'
     每一个命令、标志和参数——从内嵌的规范生成。
   </Card>
   <Card title="REST API 参考" icon="plug" href="/zh/reference/rest-websocket-api">
-    与之相同的 98 项操作，以 HTTP 端点形式呈现。
+    与之相同的操作，以 HTTP 端点形式呈现。
   </Card>
 </CardGroup>
