@@ -55,14 +55,30 @@ only needed if you connect native chat clients directly.
 ./setup.sh --search    # message-search infra (Kafka + OpenSearch + es-indexer)
 ```
 
-See [Operate mail, speech & search](/guides/operators/subsystems) to turn
+See [Operate search, summary & speech](/guides/operators/subsystems) to turn
 search on end-to-end.
 
-<CardGroup cols={2}>
-  <Card title="Move to Kubernetes" icon="dharmachakra" href="/guides/operators/deploy-kubernetes">
-    Multi-node manifests and Helm.
+## Operate your deployment
+
+Once the stack is up, the operator journey continues:
+
+<CardGroup cols={3}>
+  <Card title="Scale & observe" icon="chart-line" href="/guides/operators/scale-and-observe">
+    Health endpoints, metrics, and horizontal scaling.
   </Card>
-  <Card title="Harden before exposing" icon="lock" href="/guides/operators/security-hardening">
-    The pre-flight checklist.
+  <Card title="Backup & restore" icon="database" href="/guides/operators/backup-and-restore">
+    Protect MySQL, object storage, and IM state.
+  </Card>
+  <Card title="Upgrades" icon="arrows-rotate" href="/guides/operators/upgrades">
+    Keep agent runtimes and services current.
+  </Card>
+  <Card title="Security hardening" icon="lock" href="/guides/operators/security-hardening">
+    The pre-flight checklist before exposing.
+  </Card>
+  <Card title="Troubleshooting" icon="wrench" href="/guides/operators/troubleshooting">
+    Diagnose startup, auth, and storage issues.
+  </Card>
+  <Card title="Deploy on Kubernetes" icon="dharmachakra" href="/guides/operators/deploy-kubernetes">
+    Multi-node manifests and Helm.
   </Card>
 </CardGroup>

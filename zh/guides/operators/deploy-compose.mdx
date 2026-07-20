@@ -54,13 +54,29 @@ sudo ./setup.sh --smoke-test   # 3. 11-probe end-to-end check
 ./setup.sh --search    # message-search infra (Kafka + OpenSearch + es-indexer)
 ```
 
-参见 [运维邮件、语音与搜索](/zh/guides/operators/subsystems) 了解如何端到端开启搜索。
+参见 [运维搜索、摘要与语音](/zh/guides/operators/subsystems) 了解如何端到端开启搜索。
 
-<CardGroup cols={2}>
-  <Card title="迁移到 Kubernetes" icon="dharmachakra" href="/zh/guides/operators/deploy-kubernetes">
-    多节点清单与 Helm。
+## 运维你的部署
+
+技术栈跑起来后，运维之旅继续：
+
+<CardGroup cols={3}>
+  <Card title="扩展与可观测" icon="chart-line" href="/zh/guides/operators/scale-and-observe">
+    健康端点、指标与水平扩展。
   </Card>
-  <Card title="暴露前先加固" icon="lock" href="/zh/guides/operators/security-hardening">
-    上线前检查清单。
+  <Card title="备份与恢复" icon="database" href="/zh/guides/operators/backup-and-restore">
+    保护 MySQL、对象存储与 IM 状态。
+  </Card>
+  <Card title="升级" icon="arrows-rotate" href="/zh/guides/operators/upgrades">
+    让智能体运行时与各服务保持最新。
+  </Card>
+  <Card title="安全加固" icon="lock" href="/zh/guides/operators/security-hardening">
+    对外暴露前的检查清单。
+  </Card>
+  <Card title="故障排查" icon="wrench" href="/zh/guides/operators/troubleshooting">
+    诊断启动、鉴权与存储问题。
+  </Card>
+  <Card title="在 Kubernetes 上部署" icon="dharmachakra" href="/zh/guides/operators/deploy-kubernetes">
+    多节点清单与 Helm。
   </Card>
 </CardGroup>
