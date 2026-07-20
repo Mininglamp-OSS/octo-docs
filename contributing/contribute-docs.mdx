@@ -14,9 +14,11 @@ navigation lives in `docs.json`.
 2. **Organize by journey.** Navigation follows audience + task, never one-page-per-repo.
 3. **[Diátaxis](https://diataxis.fr/).** Every page is exactly one of Tutorial, How-to,
    Reference, or Explanation — never a mix.
-4. **Single source of truth.** Reference pages are *generated* from specs — never hand-edit
-   anything in `reference/api/`, `reference/cli/`, `reference/configuration`, or
-   `reference/errors-and-envelopes` (each carries a `DO NOT EDIT` banner).
+4. **Single source of truth.** Reference pages are *generated* from specs — never hand-edit any
+   generated page (each carries a `DO NOT EDIT` banner): the `reference/api/` and `reference/cli/`
+   domain pages, `reference/rest-websocket-api`, `reference/octo-cli`, `reference/configuration`,
+   `reference/errors-and-envelopes`, `reference/auth-verify-api`, **and their `zh/` mirrors**. The
+   only hand-written reference pages are `reference/sdks` and `reference/octo-spec-okf`.
 
 ## Run the site locally
 
