@@ -66,12 +66,13 @@ graph LR
   ext --> nginx
   adm --> nginx
   nginx --> server
+  nginx --> market
   nginx -->|/ws| im
   server --> im
   server --> summary
   server --> speech
-  server --> market
   server --> dbe
+  market -. auth .-> server
   web -. collab ws .-> dbe
   server --> my
   server --> rd
@@ -81,8 +82,9 @@ graph LR
   daemon --> server
   idx -. reads .-> my
   idx -->|octo.message.v1| kf
-  kf --> osx
-  exp --> osx
+  kf -->|es-indexer| osx
+  osx -. read .-> server
+  osx -. read .-> exp
   exp --> obj
   server -. uses .-> lib
   server -. uses .-> auth

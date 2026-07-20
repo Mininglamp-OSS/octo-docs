@@ -63,12 +63,13 @@ graph LR
   ext --> nginx
   adm --> nginx
   nginx --> server
+  nginx --> market
   nginx -->|/ws| im
   server --> im
   server --> summary
   server --> speech
-  server --> market
   server --> dbe
+  market -. 鉴权 .-> server
   web -. 协作 ws .-> dbe
   server --> my
   server --> rd
@@ -78,8 +79,9 @@ graph LR
   daemon --> server
   idx -. 读取 .-> my
   idx -->|octo.message.v1| kf
-  kf --> osx
-  exp --> osx
+  kf -->|es-indexer| osx
+  osx -. 读取 .-> server
+  osx -. 读取 .-> exp
   exp --> obj
   server -. 依赖 .-> lib
   server -. 依赖 .-> auth

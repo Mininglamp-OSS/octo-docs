@@ -52,14 +52,14 @@ graph LR
   server --> im
   server --> summary
   server --> speech
-  server --> market
+  market -.鉴权.-> server
   server --> dbe
   server --> dhtml
   channels --> server
   cli --> server
   daemon --> server
-  idx --> server
-  exp --> server
+  server --> idx
+  idx --> exp
   server -.uses.-> lib
   server -.uses.-> auth
   server --> adapters
