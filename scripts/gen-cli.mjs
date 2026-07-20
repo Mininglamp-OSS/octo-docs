@@ -40,7 +40,8 @@ const RISK = {
 
 const S = {
   en: {
-    cmds: 'commands', genFrom: 'Generated from', envelope: 'Every invocation emits a structured JSON envelope on stdout.',
+    cmds: 'commands', genFrom: 'generated from', envelope: 'Every invocation emits a structured JSON envelope on stdout.',
+    domainNote: (link) => `Authenticate by exporting \`OCTO_BOT_TOKEN\` (\`bf_…\`) and \`OCTO_API_BASE_URL\`. See the [CLI overview](${link}/reference/octo-cli) for common flags and the output contract.`,
     domainDesc: (n) => `octo-cli commands in the ${n} domain — generated from the embedded OpenAPI spec.`,
     args: 'Arguments', flags: 'Flags', thArg: 'Arg', thDesc: 'Description', pathParam: 'path parameter',
     thFlag: 'Flag', thType: 'Type', thReq: 'Required',
@@ -54,6 +55,7 @@ const S = {
   },
   zh: {
     cmds: '条命令', genFrom: '由以下规范生成：', envelope: '每次调用都会在 stdout 输出结构化的 JSON 信封。',
+    domainNote: (link) => `鉴权方式：导出 \`OCTO_BOT_TOKEN\`(\`bf_…\`)与 \`OCTO_API_BASE_URL\`。通用标志与输出约定见 [CLI 总览](${link}/reference/octo-cli)。`,
     domainDesc: (n) => `${n} 领域的 octo-cli 命令 —— 由内嵌的 OpenAPI 规范生成。`,
     args: '位置参数', flags: '标志', thArg: '参数', thDesc: '说明', pathParam: '路径参数',
     thFlag: '标志', thType: '类型', thReq: '必填',
@@ -134,6 +136,8 @@ function generateDomain(name, spec, lang) {
     banner({ ...SRC, spec: specPath }),
     '',
     `> ${cmds.length} ${t.cmds}, ${t.genFrom} [\`${specPath}\`](https://github.com/Mininglamp-OSS/octo-cli/blob/main/internal/registry/specs/${name}.json). ${t.envelope}`,
+    '',
+    t.domainNote(L.link),
     '',
     cmds.map(([id, op]) => renderCommand(id, op, spec, t, riskMap)).join('\n---\n\n'),
     '',
