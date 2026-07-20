@@ -43,7 +43,7 @@ octo-cli docs list --sort updatedAt:desc
 octo-cli file download abc123 --jq '.data.url'
 ```
 
-The command tree — **98 operations across 9 domains** — is auto-registered from OpenAPI specs
+The command tree — **every REST operation, across every domain** — is auto-registered from OpenAPI specs
 embedded in the binary, so it stays in lock-step with the server. Each command maps 1:1 to a
 REST operation.
 
@@ -64,6 +64,6 @@ directly — this is exactly how the
     Every command, flag, and argument — generated from the embedded specs.
   </Card>
   <Card title="REST API reference" icon="plug" href="/reference/rest-websocket-api">
-    The same 98 operations as HTTP endpoints.
+    The same operations as HTTP endpoints.
   </Card>
 </CardGroup>
