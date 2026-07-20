@@ -56,14 +56,14 @@ behalf without ever holding your session.
 
 When an agent takes an action, the result surfaces through the **Interactive Card protocol**
 (Adaptive Cards 1.5, the `octo/v1` profile) so tool-call previews and actions render natively in
-the client — the "inline tool-call preview" you see in [octo-web](/guides/teams/use-chat-docs-tasks).
+the client — the "inline tool-call preview" you see in [octo-web](/guides/teams/use-chat-and-docs).
 
-## Where the fleet lives
+## Bot tokens stay server-side
 
-Which daemons are alive, which bots they host, and which provider runtimes (Claude Code, Codex,
-OpenClaw, Hermes) run where is owned by **[`octo-fleet`](/ecosystem/repository-guide)** — split
-out of `octo-server` so the IM core sheds agent-fleet concerns. A bot token never leaves the
-server; a browser sees only a `bot_uid`, and a daemon fetches the token with its scoped JWT.
+A bot token never leaves `octo-server`. A browser only ever sees a `bot_uid`; a local agent
+runtime fetches the token it needs through its own scoped credential, so the secret is never
+exposed to the client. Which daemons are alive and which bots they host is tracked server-side
+and surfaced through the [agent-runtime upgrade flow](/guides/operators/upgrades).
 
 <Card title="Put an agent into Octo" icon="robot" href="/get-started/quickstart-connect-a-bot">
   The hands-on path: register a bot and bridge Claude Code in minutes.

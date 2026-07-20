@@ -1,11 +1,11 @@
 ---
-title: "Operate mail, speech, and search"
-description: "Enable and run Octo's optional subsystems: message search, LLM summary, mail, and speech-to-text."
+title: "Operate search, summary, and speech"
+description: "Enable and run Octo's optional subsystems: message search, LLM summary, and speech-to-text."
 icon: "layer-group"
 ---
 
 Beyond the core stack, Octo has optional subsystems you turn on as needed. Search and summary are
-**deployment profiles**; mail and speech are **standalone services**.
+**deployment profiles** in `octo-deployment`; speech is a **standalone service**.
 
 ## Message search
 
@@ -43,13 +43,6 @@ The smart-summary services are off by default:
 On Helm, `summary.enabled: true`. The provider is configured via `LLM_API_KEY` (provider-agnostic
 in Compose). When enabled, `/summary/health` becomes a live probe.
 
-## Mail
-
-**[`octo-mail`](https://github.com/Mininglamp-OSS/octo-mail)** is a multi-tenant, horizontally
-scalable mail-server kernel (IMAP4rev2 · JMAP · SMTP · REST) built around an append-only,
-per-account change-log on PostgreSQL + S3. It runs as its own service; Helm exposes SMTP support
-configuration. Deploy and scale it independently of the IM stack.
-
 ## Speech-to-text
 
 **[`octo-speech`](https://github.com/Mininglamp-OSS/octo-speech)** is a standalone speech-to-text
@@ -57,8 +50,8 @@ microservice.
 
 <Note>
   Speech is **not** a Compose/Helm profile in `octo-deployment` — deploy `octo-speech` as its own
-  service and point `octo-server` at it. (The documented deployment profiles are summary and
-  search; mail and speech are separate services.)
+  service and point `octo-server` at it. The documented deployment profiles are **summary** and
+  **search**.
 </Note>
 
 <Card title="Observe these subsystems" icon="chart-line" href="/guides/operators/scale-and-observe">

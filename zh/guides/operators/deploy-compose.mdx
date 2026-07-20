@@ -5,7 +5,7 @@ icon: "docker"
 ---
 
 **[`octo-deployment`](https://github.com/Mininglamp-OSS/octo-deployment)** 的 Compose 技术栈是
-标准的单主机部署方案：server、admin、web、matter、smart-summary、WuKongIM、MySQL、
+标准的单主机部署方案：server、admin、web、smart-summary、WuKongIM、MySQL、
 Redis、MinIO 以及一个 nginx 反向代理，全部由一份 `docker-compose.yaml` 串联起来。
 
 <Info>
@@ -54,7 +54,7 @@ sudo ./setup.sh --smoke-test   # 3. 11-probe end-to-end check
 ./setup.sh --search    # message-search infra (Kafka + OpenSearch + es-indexer)
 ```
 
-参见 [运维邮件、语音与搜索](/zh/guides/operators/subsystems-mail-speech-search) 了解如何端到端开启搜索。
+参见 [运维邮件、语音与搜索](/zh/guides/operators/subsystems) 了解如何端到端开启搜索。
 
 <CardGroup cols={2}>
   <Card title="迁移到 Kubernetes" icon="dharmachakra" href="/zh/guides/operators/deploy-kubernetes">

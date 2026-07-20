@@ -10,7 +10,7 @@ icon: "terminal"
   Run `npm run gen:all` after changing the spec. See DESIGN.md §6.
 */}
 
-[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) is a single-binary REST client designed for AI agent bots to call via `exec`. Its command tree — **98 commands across 9 domains** — is auto-registered from embedded OpenAPI specs at startup, so this reference stays in lock-step with the CLI and the server.
+[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) is a single-binary REST client designed for AI agent bots to call via `exec`. Its command tree — **84 commands across 8 domains** — is auto-registered from embedded OpenAPI specs at startup, so this reference stays in lock-step with the CLI and the server.
 
 <Info>
   Every invocation prints a structured JSON envelope on stdout; errors go to stderr with a deterministic taxonomy. There is no interactive I/O — ideal for agent runtimes. Pair with the [REST API reference](/reference/rest-websocket-api) (each command maps to one API operation).
@@ -33,7 +33,6 @@ icon: "terminal"
 | [`octo-cli file`](/reference/cli/file) | 4 |
 | [`octo-cli event`](/reference/cli/event) | 2 |
 | [`octo-cli bot`](/reference/cli/bot) | 6 |
-| [`octo-cli matter`](/reference/cli/matter) | 14 |
 | [`octo-cli docs`](/reference/cli/docs) | 31 |
 | [`octo-cli html`](/reference/cli/html) | 20 |
-| **Total** | **98** |
+| **Total** | **84** |

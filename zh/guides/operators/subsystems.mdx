@@ -1,11 +1,11 @@
 ---
-title: "运维邮件、语音与搜索"
-description: "启用并运行 Octo 的可选子系统：消息搜索、LLM 摘要、邮件和语音转文字。"
+title: "运维搜索、摘要与语音"
+description: "启用并运行 Octo 的可选子系统：消息搜索、LLM 摘要和语音转文字。"
 icon: "layer-group"
 ---
 
 在核心技术栈之外，Octo 还有一些可按需开启的可选子系统。搜索和摘要是
-**部署配置档（profiles）**；邮件和语音是**独立服务**。
+`octo-deployment` 中的 **部署配置档（profiles）**；语音是一项 **独立服务**。
 
 ## 消息搜索
 
@@ -43,13 +43,6 @@ smart-summary 服务默认关闭：
 在 Helm 上，`summary.enabled: true`。提供商通过 `LLM_API_KEY` 配置（在 Compose 中
 与提供商无关）。启用后，`/summary/health` 会变为活跃探测端点。
 
-## 邮件
-
-**[`octo-mail`](https://github.com/Mininglamp-OSS/octo-mail)** 是一个多租户、可水平
-扩展的邮件服务器内核（IMAP4rev2 · JMAP · SMTP · REST），围绕基于 PostgreSQL + S3 的
-仅追加、按账户变更日志构建。它作为独立服务运行；Helm 暴露了 SMTP 支持
-配置。请独立于 IM 技术栈来部署和扩容它。
-
 ## 语音转文字
 
 **[`octo-speech`](https://github.com/Mininglamp-OSS/octo-speech)** 是一个独立的语音转文字
@@ -57,8 +50,8 @@ smart-summary 服务默认关闭：
 
 <Note>
   语音在 `octo-deployment` 中**不是** Compose/Helm 配置档——请将 `octo-speech` 作为独立
-  服务部署，并让 `octo-server` 指向它。（已文档化的部署配置档是 summary 和
-  search；邮件和语音是单独的服务。）
+  服务部署，并让 `octo-server` 指向它。已文档化的部署配置档是 **summary** 和
+  **search**。
 </Note>
 
 <Card title="观测这些子系统" icon="chart-line" href="/zh/guides/operators/scale-and-observe">

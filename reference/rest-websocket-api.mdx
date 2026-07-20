@@ -10,7 +10,7 @@ icon: "plug"
   Run `npm run gen:all` after changing the spec. See DESIGN.md §6.
 */}
 
-The Octo bot-facing REST API spans **98 operations across 9 domains**. Every domain page is generated directly from the OpenAPI 3.1 spec embedded in [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so this reference never drifts from the implementation.
+The Octo bot-facing REST API spans **84 operations across 8 domains**. Every domain page is generated directly from the OpenAPI 3.1 spec embedded in [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so this reference never drifts from the implementation.
 
 <Tip>
   The easiest way to call these endpoints is via [`octo-cli`](/guides/bot-developers/drive-octo-with-cli) (each operation maps to a `CLI op` shown on its domain page) or directly over HTTP with a bot token (`bf_…`). See [Verify credentials with octo-auth](/guides/integrators/verify-credentials-with-octo-auth).
@@ -26,10 +26,9 @@ The Octo bot-facing REST API spans **98 operations across 9 domains**. Every dom
 | [Files](/reference/api/file) | `file` | 4 |
 | [Events](/reference/api/event) | `event` | 2 |
 | [Bot Identity](/reference/api/bot) | `bot` | 6 |
-| [Matters](/reference/api/matter) | `matter` | 14 |
 | [Docs (collaborative)](/reference/api/docs) | `docs` | 31 |
 | [Docs (interactive HTML)](/reference/api/html) | `html` | 20 |
-| **Total** | | **98** |
+| **Total** | | **84** |
 
 ## Risk levels
 

@@ -28,7 +28,8 @@
                   "index",
                   "get-started/what-is-octo",
                   "get-started/architecture-at-a-glance",
-                  "get-started/core-concepts"
+                  "get-started/core-concepts",
+                  "get-started/faq"
                 ]
               },
               {
@@ -47,8 +48,9 @@
                 "group": "For Teams",
                 "pages": [
                   "guides/teams/onboard-your-org",
-                  "guides/teams/use-chat-docs-tasks",
-                  "guides/teams/admin-console"
+                  "guides/teams/use-chat-and-docs",
+                  "guides/teams/admin-console",
+                  "guides/teams/clients"
                 ]
               },
               {
@@ -80,8 +82,9 @@
                   "guides/operators/deploy-kubernetes",
                   "guides/operators/scale-and-observe",
                   "guides/operators/backup-and-restore",
-                  "guides/operators/upgrades-and-version-sync",
-                  "guides/operators/subsystems-mail-speech-search",
+                  "guides/operators/upgrades",
+                  "guides/operators/subsystems",
+                  "guides/operators/troubleshooting",
                   "guides/operators/security-hardening"
                 ]
               }
@@ -111,7 +114,6 @@
                   "reference/api/file",
                   "reference/api/event",
                   "reference/api/bot",
-                  "reference/api/matter",
                   "reference/api/docs",
                   "reference/api/html"
                 ]
@@ -125,7 +127,6 @@
                   "reference/cli/file",
                   "reference/cli/event",
                   "reference/cli/bot",
-                  "reference/cli/matter",
                   "reference/cli/docs",
                   "reference/cli/html"
                 ]
@@ -154,7 +155,9 @@
             "groups": [
               {
                 "group": "Ecosystem",
-                "pages": ["ecosystem/repository-guide"]
+                "pages": [
+                  "ecosystem/repository-guide"
+                ]
               },
               {
                 "group": "Contributing",
@@ -180,7 +183,8 @@
                   "zh/index",
                   "zh/get-started/what-is-octo",
                   "zh/get-started/architecture-at-a-glance",
-                  "zh/get-started/core-concepts"
+                  "zh/get-started/core-concepts",
+                  "zh/get-started/faq"
                 ]
               },
               {
@@ -199,8 +203,9 @@
                 "group": "面向团队",
                 "pages": [
                   "zh/guides/teams/onboard-your-org",
-                  "zh/guides/teams/use-chat-docs-tasks",
-                  "zh/guides/teams/admin-console"
+                  "zh/guides/teams/use-chat-and-docs",
+                  "zh/guides/teams/admin-console",
+                  "zh/guides/teams/clients"
                 ]
               },
               {
@@ -232,8 +237,9 @@
                   "zh/guides/operators/deploy-kubernetes",
                   "zh/guides/operators/scale-and-observe",
                   "zh/guides/operators/backup-and-restore",
-                  "zh/guides/operators/upgrades-and-version-sync",
-                  "zh/guides/operators/subsystems-mail-speech-search",
+                  "zh/guides/operators/upgrades",
+                  "zh/guides/operators/subsystems",
+                  "zh/guides/operators/troubleshooting",
                   "zh/guides/operators/security-hardening"
                 ]
               }
@@ -263,7 +269,6 @@
                   "zh/reference/api/file",
                   "zh/reference/api/event",
                   "zh/reference/api/bot",
-                  "zh/reference/api/matter",
                   "zh/reference/api/docs",
                   "zh/reference/api/html"
                 ]
@@ -277,7 +282,6 @@
                   "zh/reference/cli/file",
                   "zh/reference/cli/event",
                   "zh/reference/cli/bot",
-                  "zh/reference/cli/matter",
                   "zh/reference/cli/docs",
                   "zh/reference/cli/html"
                 ]
@@ -306,7 +310,9 @@
             "groups": [
               {
                 "group": "生态",
-                "pages": ["zh/ecosystem/repository-guide"]
+                "pages": [
+                  "zh/ecosystem/repository-guide"
+                ]
               },
               {
                 "group": "参与贡献",

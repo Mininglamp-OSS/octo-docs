@@ -23,6 +23,9 @@ const check = process.argv.includes('--check');
 const sink = createSink({ check, generator: 'gen-cli' });
 const SRC = { generator: 'gen-cli.mjs' };
 
+// Domains withheld from the docs (deprecated / internal). matter is deprecated.
+const EXCLUDE = new Set(['matter']);
+
 const LANGS = {
   en: { dir: DOCS_ROOT, link: '' },
   zh: { dir: path.join(DOCS_ROOT, 'zh'), link: '/zh' },
@@ -179,6 +182,7 @@ function main() {
   if (!fs.existsSync(CLI_SPECS_DIR)) { console.error(`[gen-cli] spec dir not found: ${CLI_SPECS_DIR}`); process.exit(2); }
   const names = fs.readdirSync(CLI_SPECS_DIR)
     .filter((f) => f.endsWith('.json')).map((f) => path.basename(f, '.json'))
+    .filter((n) => !EXCLUDE.has(n))
     .sort((a, b) => (ORDER[a] ?? 99) - (ORDER[b] ?? 99));
   const specs = Object.fromEntries(names.map((n) => [n, readJson(path.join(CLI_SPECS_DIR, `${n}.json`))]));
 

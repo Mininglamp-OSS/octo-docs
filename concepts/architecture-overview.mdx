@@ -20,8 +20,6 @@ graph TD
   end
   subgraph Core
     server[octo-server<br/>REST + WS · orchestration]
-    fleet[octo-fleet<br/>bot/daemon orchestration]
-    matter[octo-matter<br/>tasks]
     summary[octo-smart-summary]
   end
   wk[WuKongIM]
@@ -34,9 +32,7 @@ graph TD
   ios --> server
   admin --> server
   server --> wk
-  server --> matter
   server --> summary
-  server --> fleet
   server --> db
   server --> redis
   server --> obj
@@ -79,8 +75,6 @@ Every request through `octo-server` follows the same path:
 `octo-server` is organized as **27+ auto-registered modules** under `modules/` (each wires
 itself in via `init()` + `register.AddModule()`) rather than one monolith. Bot identity,
 on-behalf-of orchestration, spaces, threads, and BotFather each live in their own module.
-Runtime and bot-fleet orchestration is being extracted into
-[`octo-fleet`](/ecosystem/repository-guide) so the IM core evolves on its own clock.
 
 <Card title="Deploy the whole thing" icon="rocket" href="/get-started/quickstart-deploy">
   See every service running together in one Compose stack.

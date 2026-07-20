@@ -18,8 +18,6 @@ graph TD
   end
   subgraph Core
     server[octo-server<br/>REST + WS · orchestration]
-    fleet[octo-fleet<br/>bot/daemon orchestration]
-    matter[octo-matter<br/>tasks]
     summary[octo-smart-summary]
   end
   wk[WuKongIM]
@@ -32,9 +30,7 @@ graph TD
   ios --> server
   admin --> server
   server --> wk
-  server --> matter
   server --> summary
-  server --> fleet
   server --> db
   server --> redis
   server --> obj
@@ -66,7 +62,7 @@ graph TD
 
 ## 服务端如何构建
 
-`octo-server` 组织为 `modules/` 下的 **27+ 个自动注册模块**（每个模块通过 `init()` + `register.AddModule()` 自行接线），而非单一巨石。机器人身份、代理执行（on-behalf-of）编排、Space、话题以及 BotFather 各自独立成模块。运行时与机器人集群（bot-fleet）编排正在被抽取到 [`octo-fleet`](/zh/ecosystem/repository-guide) 中，使 IM 核心能够按自己的节奏演进。
+`octo-server` 组织为 `modules/` 下的 **27+ 个自动注册模块**（每个模块通过 `init()` + `register.AddModule()` 自行接线），而非单一巨石。机器人身份、代理执行（on-behalf-of）编排、Space、话题以及 BotFather 各自独立成模块。
 
 <Card title="部署整套系统" icon="rocket" href="/zh/get-started/quickstart-deploy">
   在一个 Compose 栈中看到所有服务协同运行。

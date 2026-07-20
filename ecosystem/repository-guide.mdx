@@ -4,7 +4,7 @@ description: "The 31-repository Octo ecosystem — every repo's role, language, 
 icon: "diagram-project"
 ---
 
-Octo is spread across **31 repositories** under
+Octo is spread across a family of focused repositories under
 [Mininglamp-OSS](https://github.com/Mininglamp-OSS). This portal is organized by *what you want
 to do*; this page is the map by *repo*, for contributors and anyone orienting themselves.
 
@@ -21,8 +21,6 @@ graph TD
   end
   subgraph Core
     server[octo-server]
-    fleet[octo-fleet]
-    matter[octo-matter]
     summary[octo-smart-summary]
   end
   im[octo-im / WuKongIM]
@@ -34,9 +32,7 @@ graph TD
   web --> server
   admin --> server
   server --> im
-  server --> matter
   server --> summary
-  server --> fleet
   server -.uses.-> lib
   server -.uses.-> auth
   server --> adapters
@@ -47,14 +43,10 @@ graph TD
 | Repo | Role |
 |---|---|
 | [`octo-server`](https://github.com/Mininglamp-OSS/octo-server) | Backend API · orchestration · Lobster scheduling · drives WuKongIM |
-| [`octo-fleet`](https://github.com/Mininglamp-OSS/octo-fleet) | Runtime & bot/daemon orchestration (split from server) |
-| [`octo-matter`](https://github.com/Mininglamp-OSS/octo-matter) | Task / todo / matter microservice |
 | [`octo-smart-summary`](https://github.com/Mininglamp-OSS/octo-smart-summary) | LLM conversation summarization |
-| [`octo-mail`](https://github.com/Mininglamp-OSS/octo-mail) | Multi-tenant mail-server kernel (IMAP/JMAP/SMTP/REST) |
 | [`octo-speech`](https://github.com/Mininglamp-OSS/octo-speech) | Speech-to-text microservice |
 | [`octo-search-indexer`](https://github.com/Mininglamp-OSS/octo-search-indexer) | Message search write + index layer |
 | [`octo-message-export-api`](https://github.com/Mininglamp-OSS/octo-message-export-api) | Async batch message export |
-| [`octo-version-sync`](https://github.com/Mininglamp-OSS/octo-version-sync) | Upstream version aggregator → `version.json` |
 | [`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace) | Skill / MCP marketplace control plane (scaffold) |
 
 ## Collaborative docs (Go)

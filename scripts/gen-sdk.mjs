@@ -30,6 +30,16 @@ const LANGS = {
   zh: { dir: path.join(DOCS_ROOT, 'zh'), link: '/zh' },
 };
 
+// Strip references to deprecated/internal modules from spec-derived prose so the
+// public docs don't mention them (octo-fleet is deprecated).
+function sanitize(s) {
+  return String(s ?? '')
+    .replace(/,?\s*\(e\.g\.\s*octo-fleet[^)]*\)/gi, '')
+    .replace(/octo-fleet's runtime daemon/gi, 'an agent runtime daemon')
+    .replace(/octo-fleet/gi, 'the agent runtime');
+}
+
+
 const S = {
   en: {
     title: 'Auth Verify API',
@@ -54,7 +64,7 @@ const S = {
 function renderEndpoint(route, op, root, t) {
   const out = [`## ${mdEscape(op.summary || op.operationId)}\n`];
   out.push(`\`POST ${route}\`` + (op.operationId ? ` · \`${op.operationId}\`` : '') + '\n');
-  if (op.description) out.push(mdEscape(op.description) + '\n');
+  if (op.description) out.push(mdEscape(sanitize(op.description)) + '\n');
 
   if (op.parameters?.length) {
     const rows = op.parameters.map((raw) => {

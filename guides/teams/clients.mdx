@@ -1,0 +1,51 @@
+---
+title: "Clients"
+description: "The ways people reach Octo: the Web & PC (Electron) app, native Android and iOS, and the browser extension."
+icon: "devices"
+---
+
+Octo meets people where they work. All clients talk to `octo-server` over REST + WebSocket and
+share the same conversations, docs, and agents.
+
+<CardGroup cols={2}>
+  <Card title="Web & PC" icon="browser">
+    **[`octo-web`](https://github.com/Mininglamp-OSS/octo-web)** — one TypeScript/React codebase
+    ships both the browser app and an Electron desktop client (tray, notifications, file-drop,
+    auto-update). Streaming replies, typing indicators, inline tool-call previews, and
+    agent-vs-human identity chips. Bilingual EN / 简体中文.
+  </Card>
+  <Card title="Android" icon="android">
+    **[`octo-android`](https://github.com/Mininglamp-OSS/octo-android)** — native Kotlin / Java
+    client.
+  </Card>
+  <Card title="iOS" icon="apple">
+    **[`octo-ios`](https://github.com/Mininglamp-OSS/octo-ios)** — native Swift / Objective-C
+    client.
+  </Card>
+  <Card title="Browser extension" icon="puzzle-piece">
+    **[`octo-chrome-extension`](https://github.com/Mininglamp-OSS/octo-chrome-extension)** — a
+    WXT + React extension.
+  </Card>
+</CardGroup>
+
+## Using the client
+
+Everything a team does day to day — chat and collaborative docs — happens in the client. See
+[Use chat and docs](/guides/teams/use-chat-and-docs). @-mentioning a bot is how you bring a
+[Lobster](/concepts/the-lobster-model) into a conversation.
+
+## Building the mobile apps from source
+
+<Warning>
+  The Android and iOS repos ship with a **placeholder identifier** (`com.example.octo`) and are
+  **not** provisioned for any store listing — you cannot build a signed, distributable app as-is.
+  Before building your fork, replace the placeholder with your own reverse-DNS identifier
+  everywhere (build config, manifests/entitlements, `google-services.json` /
+  `GoogleService-Info.plist`, package declarations). Each repo's README lists every file to change.
+</Warning>
+
+## Admins get a separate console
+
+Operators manage tenants, orgs, users, and channels in the
+[admin console](/guides/teams/admin-console) (`octo-admin`), a separate internal/VPN-only bundle —
+not the end-user client.

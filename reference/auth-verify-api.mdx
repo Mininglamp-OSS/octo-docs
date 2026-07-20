@@ -79,7 +79,7 @@ Resolves a bot token to a Principal. Prefix routes: - `bf_&lt;...&gt;` — User 
 
 `POST /v1/auth/verify-api-key` · `verifyUserKey`
 
-Resolves a `uk_&lt;...&gt;`-prefixed user API key (length &gt;= 35) to a Principal. Long-lived keys are used by daemons and CI runners (e.g. octo-fleet's runtime daemon). Accepts the same `?include=context` query parameter as `sessionVerifier`; the same state table applies. Unlike session, an api key is bound to exactly one space, so `owned_bots` on the response is a single-key map (`&#123; &lt;bound_space_id&gt;: [...bot_uids] &#125;`).
+Resolves a `uk_&lt;...&gt;`-prefixed user API key (length &gt;= 35) to a Principal. Long-lived keys are used by daemons and CI runners. Accepts the same `?include=context` query parameter as `sessionVerifier`; the same state table applies. Unlike session, an api key is bound to exactly one space, so `owned_bots` on the response is a single-key map (`&#123; &lt;bound_space_id&gt;: [...bot_uids] &#125;`).
 
 **Query parameters**
 

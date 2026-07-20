@@ -43,11 +43,11 @@ OBO 让机器人在获得明确授权后**以某个用户人格的身份**行动
 
 ## 工具调用以卡片形式呈现
 
-当智能体执行某个动作时，结果通过**交互式卡片协议**（Adaptive Cards 1.5，`octo/v1` 配置文件）呈现，使工具调用的预览与操作在客户端中原生渲染——也就是你在 [octo-web](/zh/guides/teams/use-chat-docs-tasks) 中看到的“内联工具调用预览”。
+当智能体执行某个动作时，结果通过**交互式卡片协议**（Adaptive Cards 1.5，`octo/v1` 配置文件）呈现，使工具调用的预览与操作在客户端中原生渲染——也就是你在 [octo-web](/zh/guides/teams/use-chat-and-docs) 中看到的“内联工具调用预览”。
 
-## 集群信息归属何处
+## 机器人令牌只留在服务端
 
-哪些 Daemon 存活、它们承载哪些机器人，以及各供应商运行时（Claude Code、Codex、OpenClaw、Hermes）运行在何处，都由 **[`octo-fleet`](/zh/ecosystem/repository-guide)** 拥有——它从 `octo-server` 中拆分出来，使 IM 核心卸下智能体集群相关的负担。机器人令牌从不离开服务端；浏览器只能看到一个 `bot_uid`，而 Daemon 则用其受限作用域的 JWT 去获取令牌。
+机器人令牌从不离开 `octo-server`。浏览器只能看到一个 `bot_uid`；本地的 Agent 运行时通过其自身受限作用域的凭据来获取所需的令牌，因此该密钥从不暴露给客户端。哪些 Daemon 存活、它们承载哪些机器人，都在服务端追踪，并通过 [Agent 运行时升级流程](/zh/guides/operators/upgrades)对外呈现。
 
 <Card title="把一个智能体接入 Octo" icon="robot" href="/zh/get-started/quickstart-connect-a-bot">
   动手实践路径：几分钟内注册一个机器人并桥接 Claude Code。

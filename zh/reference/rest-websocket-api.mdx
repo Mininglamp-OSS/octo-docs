@@ -10,7 +10,7 @@ icon: "plug"
   Run `npm run gen:all` after changing the spec. See DESIGN.md §6.
 */}
 
-Octo 面向机器人的 REST API 覆盖 **9 个领域、共 98 个接口**。每个领域页面都直接由内嵌于 [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) 的 OpenAPI 3.1 规范生成 —— 与驱动 CLI 和服务端的是同一份规范,因此本参考永不与实现漂移。
+Octo 面向机器人的 REST API 覆盖 **8 个领域、共 84 个接口**。每个领域页面都直接由内嵌于 [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) 的 OpenAPI 3.1 规范生成 —— 与驱动 CLI 和服务端的是同一份规范,因此本参考永不与实现漂移。
 
 <Tip>
   调用这些接口最简单的方式是使用 [`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)(每个接口都对应领域页中标注的 `CLI 命令`),或用机器人 token(`bf_…`)直接走 HTTP。参见 [用 octo-auth 校验凭证](/zh/guides/integrators/verify-credentials-with-octo-auth)。
@@ -26,10 +26,9 @@ Octo 面向机器人的 REST API 覆盖 **9 个领域、共 98 个接口**。每
 | [文件](/zh/reference/api/file) | `file` | 4 |
 | [事件](/zh/reference/api/event) | `event` | 2 |
 | [机器人身份](/zh/reference/api/bot) | `bot` | 6 |
-| [事项](/zh/reference/api/matter) | `matter` | 14 |
 | [协作文档](/zh/reference/api/docs) | `docs` | 31 |
 | [交互式 HTML 文档](/zh/reference/api/html) | `html` | 20 |
-| **合计** | | **98** |
+| **合计** | | **84** |
 
 ## 风险级别
 

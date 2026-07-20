@@ -1,0 +1,46 @@
+---
+title: "客户端"
+description: "触达 Octo 的各种方式：Web 与 PC（Electron）应用、原生 Android 与 iOS，以及浏览器扩展。"
+icon: "devices"
+---
+
+Octo 在你工作的地方与你相遇。所有客户端都通过 REST + WebSocket 与 `octo-server` 通信,共享同一套
+会话、文档与智能体。
+
+<CardGroup cols={2}>
+  <Card title="Web 与 PC" icon="browser">
+    **[`octo-web`](https://github.com/Mininglamp-OSS/octo-web)** —— 同一套 TypeScript/React 代码
+    同时产出浏览器应用与 Electron 桌面客户端(托盘、通知、拖拽上传、自动更新)。支持流式回复、
+    输入指示、内联工具调用预览,以及"智能体 vs 人类"身份标识。中英双语。
+  </Card>
+  <Card title="Android" icon="android">
+    **[`octo-android`](https://github.com/Mininglamp-OSS/octo-android)** —— 原生 Kotlin / Java 客户端。
+  </Card>
+  <Card title="iOS" icon="apple">
+    **[`octo-ios`](https://github.com/Mininglamp-OSS/octo-ios)** —— 原生 Swift / Objective-C 客户端。
+  </Card>
+  <Card title="浏览器扩展" icon="puzzle-piece">
+    **[`octo-chrome-extension`](https://github.com/Mininglamp-OSS/octo-chrome-extension)** ——
+    基于 WXT + React 的扩展。
+  </Card>
+</CardGroup>
+
+## 使用客户端
+
+团队日常所做的一切 —— 聊天与协作文档 —— 都发生在客户端里。参见
+[使用聊天与文档](/zh/guides/teams/use-chat-and-docs)。@提及一个机器人,就是把
+[Lobster](/zh/concepts/the-lobster-model) 拉进对话的方式。
+
+## 从源码构建移动端
+
+<Warning>
+  Android 与 iOS 仓库随附一个**占位标识符**(`com.example.octo`),且**未**为任何应用商店上架做
+  配置 —— 因此无法直接构建可签名、可分发的应用。构建你的 fork 之前,请在所有位置把占位符替换为
+  你自己的反向 DNS 标识符(构建配置、manifest/entitlements、`google-services.json` /
+  `GoogleService-Info.plist`、包声明)。每个仓库的 README 都列出了需要修改的每个文件。
+</Warning>
+
+## 管理员使用独立控制台
+
+运维人员在[管理控制台](/zh/guides/teams/admin-console)(`octo-admin`)中管理租户、组织、用户与
+频道 —— 这是一个独立的、仅限内网/VPN 的产物,而非终端用户客户端。

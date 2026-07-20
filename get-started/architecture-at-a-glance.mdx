@@ -17,18 +17,14 @@ graph TD
   end
   server[octo-server<br/>REST + WS · orchestration]
   wk[WuKongIM]
-  matter[octo-matter]
   summary[octo-smart-summary]
-  fleet[octo-fleet]
   stores[(MySQL · Redis · MinIO)]
 
   web --> server
   mobile --> server
   admin --> server
   server --> wk
-  server --> matter
   server --> summary
-  server --> fleet
   server --> stores
 ```
 

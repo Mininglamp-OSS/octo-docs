@@ -90,7 +90,7 @@ object storage all wired together and verified.
 
     It runs 11 probes across two failure domains and prints PASS/FAIL for each:
 
-    - **`[infra]`** — container health, nginx routing, `octo-server` REST, matter, MinIO
+    - **`[infra]`** — container health, nginx routing, `octo-server` REST, MinIO
       health, and the admin / web SPAs.
     - **`[user-path]`** — WuKongIM `/ws`, an admin login (POST), presigned-URL issuance (GET),
       and a signed 1-byte PUT into MinIO.
@@ -127,7 +127,6 @@ graph LR
   nginx --> admin[octo-admin]
   nginx --> web[octo-web]
   nginx -->|/ws| wk[WuKongIM]
-  server --> matter[octo-matter]
   server --> summary[octo-smart-summary]
   server --> mysql[(MySQL)]
   server --> redis[(Redis)]

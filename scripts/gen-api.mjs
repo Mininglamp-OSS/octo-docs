@@ -31,6 +31,9 @@ const check = process.argv.includes('--check');
 const sink = createSink({ check, generator: 'gen-api' });
 const SRC = { generator: 'gen-api.mjs' };
 
+// Domains withheld from the docs (deprecated / internal). matter is deprecated.
+const EXCLUDE = new Set(['matter']);
+
 // Per-language output roots and label prefixes.
 const LANGS = {
   en: { dir: DOCS_ROOT, link: '' },
@@ -240,6 +243,7 @@ function main() {
   }
   const names = fs.readdirSync(CLI_SPECS_DIR)
     .filter((f) => f.endsWith('.json')).map((f) => path.basename(f, '.json'))
+    .filter((n) => !EXCLUDE.has(n))
     .sort((a, b) => (DOMAIN_META[a]?.order ?? 99) - (DOMAIN_META[b]?.order ?? 99));
   const specs = Object.fromEntries(names.map((n) => [n, readJson(path.join(CLI_SPECS_DIR, `${n}.json`))]));
   const errorsFile = path.join(AUTH_CONTRACT_DIR, 'errors-v1.yaml');

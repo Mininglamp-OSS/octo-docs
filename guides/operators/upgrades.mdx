@@ -1,0 +1,54 @@
+---
+title: "Upgrades"
+description: "Keep agent runtimes current with octo-daemon-cli, and roll platform upgrades safely."
+icon: "arrows-rotate"
+---
+
+Octo keeps the local agent runtimes on each machine (Claude Code, OpenClaw, Codex, Hermes) current
+through **`octo-daemon-cli`**, and the platform services current through pinned container-image
+rolls.
+
+## octo-daemon-cli — the per-machine monitor
+
+**[`octo-daemon-cli`](https://github.com/Mininglamp-OSS/octo-daemon-cli)** runs on each box that
+hosts agent CLIs:
+
+```bash
+npm install -g @mininglamp-oss/octo-daemon
+octo-daemon config --server-url <server-url> --api-key uk_xxx
+octo-daemon run        # foreground
+octo-daemon start      # background via pm2
+```
+
+`config` verifies the key against the server and resolves the `space_id`. The daemon probes the
+installed agent CLIs, pushes its inventory to the server, and supports **one-click remote
+upgrades** from the Octo web UI (atomic server claim + version-pinned downloads). Cadence:
+register < 5 s, 5 s heartbeat, 60 s rescan; the server marks a daemon offline after 45 s of
+silence and deletes it after 7 days. One daemon can serve multiple spaces.
+
+## Applying a runtime upgrade
+
+```bash
+octo-daemon upgrade    # npm install -g @latest, then signals the process to restart
+```
+
+<Warning>
+  `upgrade` re-installs and signals the process — a supervisor **must** respawn it. pm2 does this
+  by default; under systemd set `Restart=always`.
+</Warning>
+
+## Upgrading the platform itself
+
+For the server and clients, pin `mininglamposs/octo-*` images to a release tag (never `:latest`),
+pull the new tags, and roll:
+
+```bash
+docker compose up -d       # Compose
+# or
+helm upgrade octo ...      # Kubernetes
+```
+
+<Info>
+  Review [Backup and restore](/guides/operators/backup-and-restore) before a major upgrade, and
+  regenerate any [reference](/reference/rest-websocket-api) that tracks a changed spec.
+</Info>

@@ -1,0 +1,73 @@
+---
+title: "故障排查"
+description: "诊断最常见的 Octo 部署问题 —— 启动、健康、鉴权与存储。"
+icon: "wrench"
+---
+
+大多数问题在部署时暴露,可归为两类:**平台**没有完全起来,或者起来了但**鉴权/存储**接线有误。
+[冒烟测试](/zh/guides/operators/deploy-compose)(`sudo ./setup.sh --smoke-test`)会告诉你是哪一类
+—— 它把 11 项探测分为 `[infra]` 与 `[user-path]` 两个失败域。
+
+## 启动
+
+<AccordionGroup>
+  <Accordion title="docker compose up 报端口冲突">
+    有其它进程占用了 Octo 的某个端口。客户端唯一必须空出的端口是 `28080`(`OCTO_HTTP_PORT`);
+    其余默认绑定回环。修改 `docker/.env` 中冲突的 `OCTO_*_PORT`,或停掉冲突进程。
+  </Accordion>
+  <Accordion title="某个服务始终不 (healthy)">
+    `--up` 会阻塞直到每个服务健康,随后打印 `docker compose ps` 并列出故障服务。查看日志:
+    `cd docker && docker compose logs --tail 200 <service>`。首次启动时冷 MySQL 初始化可能耗时
+    60–90 秒,判定失败前请给它时间。
+  </Accordion>
+  <Accordion title="setup.sh --up 退出：docker/.env 缺失">
+    `--up` 仅负责启动,绝不重新生成密钥。请先运行 `./setup.sh` 生成 `docker/.env`,再执行
+    `sudo ./setup.sh --up`。(只有 `--up --force` 才会引导生成全新密钥 —— 切勿在 `.env` 已用于
+    生产的机器上使用。)
+  </Accordion>
+  <Accordion title="读取 docker/.env 时权限被拒">
+    `.env` 保持 `root:600`,因为它保存了所有高价值密钥。请用 `sudo` 运行 `--up` 与 `--smoke-test`。
+  </Accordion>
+</AccordionGroup>
+
+## `[infra]` 域失败
+
+某个容器挂了、nginx 没有反代,或宿主端口被防火墙拦住。先看 `docker compose ps` 与
+`docker compose logs`。确认健康端点有响应:`/_nginx_up`、`/api/v1/health`、`/`(参见
+[扩展与可观测](/zh/guides/operators/scale-and-observe))。
+
+## `[user-path]` 域失败
+
+平台起来了,但契约有误 —— 鉴权接线错误、MinIO IAM 凭据失步,或 SigV4 签名不匹配。请同时排查
+`octo-server` **与** MinIO,而不是 nginx。
+
+<AccordionGroup>
+  <Accordion title="管理员登录失败">
+    使用 `setup.sh` 运行结束时打印的密码(或从 `docker/.env` 读取 `OCTO_ADMIN_PWD`)。管理员用户
+    是 `superAdmin`。参见[组织上手](/zh/guides/teams/onboard-your-org)。
+  </Accordion>
+  <Accordion title="文件上传 / 预签名 PUT 返回 403 SignatureDoesNotMatch">
+    浏览器直传必须把凭证端点返回的 `contentType`(以及若有的 `contentDisposition`)作为对应的
+    PUT 请求头回传 —— 它们被纳入 SigV4 签名。同时确保对象存储桶允许来自 `octo-web` 源的 PUT(CORS)。
+  </Accordion>
+  <Accordion title="WebSocket / 实时不工作">
+    浏览器聊天走 nginx `/ws`。确保你的反向代理转发 WebSocket 升级。原生聊天传输(`25100`/`25200`)
+    仅在原生客户端直连 WuKongIM 时才需要。
+  </Accordion>
+</AccordionGroup>
+
+## 鉴权与凭证
+
+所有"token 无效"的原因都会收敛为单一的 `AUTH_INVALID_CREDENTIAL`(401)—— 这是为防枚举的刻意
+设计。真正的原因只在服务端审计日志中,不要基于子原因分支。参见
+[安全与认证模型](/zh/concepts/security-and-auth)与[错误参考](/zh/reference/errors-and-envelopes)。
+
+<Warning>
+  **Redis 默认无鉴权**且绑定回环。若客户端连不上,先检查绑定 —— 但在设置密码之前,切勿放宽
+  `OCTO_REDIS_BIND`。参见[安全加固](/zh/guides/operators/security-hardening)。
+</Warning>
+
+## 仍然卡住？
+
+每个仓库都有自己的深入文档,以及用于私下上报漏洞的 `SECURITY.md`。从
+[仓库指南](/zh/ecosystem/repository-guide)出发,找到对应的仓库。
