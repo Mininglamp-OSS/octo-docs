@@ -30,6 +30,11 @@ icon: "users"
     | Owner | `2` | 一切权限，包括空间级设置 |
 
     你之后可以更新成员的角色——邀请本身带有 owner 与 member/admin 的区分。
+
+    <Note>
+      成员在 `http://<your-host>:28080/` 登录**Web 客户端**(与管理控制台同一主机,但不带
+      `/admin/` 路径)。桌面端、移动端与浏览器扩展等选项见[客户端](/zh/guides/teams/clients)。
+    </Note>
   </Step>
   <Step title="设置频道">
     创建团队所需的群组频道和话题频道。访问权限由每个频道之上的 ACL 结合空间角色共同管控——
@@ -48,9 +53,12 @@ icon: "users"
 
 ## 下一步
 
-<CardGroup cols={2}>
-  <Card title="使用聊天、文档与任务" icon="messages-square" href="/zh/guides/teams/use-chat-and-docs">
+<CardGroup cols={3}>
+  <Card title="使用聊天与文档" icon="messages-square" href="/zh/guides/teams/use-chat-and-docs">
     让你的团队在客户端中高效协作。
+  </Card>
+  <Card title="客户端" icon="devices" href="/zh/guides/teams/clients">
+    Web、桌面、移动与扩展。
   </Card>
   <Card title="管理控制台" icon="shield" href="/zh/guides/teams/admin-console">
     完整的运维操作界面。
