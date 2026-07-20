@@ -17,10 +17,21 @@ independent Node.js gateway that bridges [OpenAI Codex](https://developers.opena
 
 ## Run it
 
+<Warning>
+  The npm package `@mininglamp-oss/codex-channel-octo` is **not yet published** to the public
+  registry (this is an early v0.1.0 test release). Install from source until it lands:
+</Warning>
+
 ```bash
-npm install -g @mininglamp-oss/codex-channel-octo
-codex-channel-octo start
+git clone https://github.com/Mininglamp-OSS/codex-channel-octo.git
+cd codex-channel-octo
+npm install
+npm run build       # tsc → dist/
+npm start           # or: node dist/  (see the repo README)
 ```
+
+Once published, the one-liner will be `npm install -g @mininglamp-oss/codex-channel-octo` →
+`codex-channel-octo start`.
 
 Requires Node ≥ 22 and an Octo bot token (`bf_…`). The gateway registers as an Octo bot,
 connects over WebSocket, runs a coding task with local Codex, and posts the reply back. It

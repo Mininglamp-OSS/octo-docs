@@ -12,8 +12,12 @@ icon: "cubes"
 
 ```bash
 go get github.com/Mininglamp-OSS/octo-auth/go       # Go 1.25+
-npm install @mininglamp-oss/octo-auth               # Node ≥ 20, pure ESM
 ```
+
+<Note>
+  TypeScript 包 `@mininglamp-oss/octo-auth`(Node ≥ 20,纯 ESM)**尚未发布到 npm** ——
+  在发布之前请从仓库安装(`npm install "git+https://github.com/Mininglamp-OSS/octo-auth.git#main:ts"`)。
+</Note>
 
 - **领域**——`sessionVerifier`、`botTokenVerifier`、`userKeyVerifier`，外加一个按凭据前缀分派的 `MultiVerifier`。
 - **中间件**——Go：`net/http`、`gin`、`echo`、`wkhttp`；TS：`express`、`@hocuspocus/server`。

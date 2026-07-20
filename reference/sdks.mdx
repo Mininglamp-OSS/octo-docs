@@ -14,8 +14,13 @@ and metrics. It ships in **Go and TypeScript** for parity across the services.
 
 ```bash
 go get github.com/Mininglamp-OSS/octo-auth/go       # Go 1.25+
-npm install @mininglamp-oss/octo-auth               # Node ≥ 20, pure ESM
 ```
+
+<Note>
+  The TypeScript package `@mininglamp-oss/octo-auth` (Node ≥ 20, pure ESM) is **not yet published
+  to npm** — install from the repo (`npm install "git+https://github.com/Mininglamp-OSS/octo-auth.git#main:ts"`)
+  until it lands.
+</Note>
 
 - **Realms** — `sessionVerifier`, `botTokenVerifier`, `userKeyVerifier`, plus a `MultiVerifier`
   that dispatches by credential prefix.

@@ -17,10 +17,20 @@ icon: "robot"
 
 ## 运行它
 
+<Warning>
+  npm 包 `@mininglamp-oss/codex-channel-octo` **尚未发布**到公共 registry(这是早期 v0.1.0 测试版）。
+  在发布之前请从源码安装：
+</Warning>
+
 ```bash
-npm install -g @mininglamp-oss/codex-channel-octo
-codex-channel-octo start
+git clone https://github.com/Mininglamp-OSS/codex-channel-octo.git
+cd codex-channel-octo
+npm install
+npm run build       # tsc → dist/
+npm start           # 或：node dist/（参见仓库 README）
 ```
+
+发布后,一行命令即可：`npm install -g @mininglamp-oss/codex-channel-octo` → `codex-channel-octo start`。
 
 需要 Node ≥ 22 以及一个 Octo 机器人令牌（`bf_…`）。该网关注册为一个 Octo 机器人、
 通过 WebSocket 连接、用本地 Codex 运行一项编码任务，然后把回复回发。它
