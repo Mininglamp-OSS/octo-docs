@@ -1,55 +1,46 @@
-# Mintlify Starter Kit
+# octo-docs
 
-Use the starter kit to get your docs deployed and ready to customize.
+The unified documentation portal for **[Octo](https://github.com/Mininglamp-OSS)** —
+the open, AI-native workplace where *agents do and humans decide*.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+Built on [Mintlify](https://mintlify.com). Aggregates the 31-repository Octo ecosystem into
+one [Diátaxis](https://diataxis.fr/)-structured, bilingual (EN / 简体中文) portal.
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+> See [`DESIGN.md`](./DESIGN.md) for the full blueprint, IA, and SSOT strategy.
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
-
-## AI-assisted writing
-
-Set up your AI coding tool to work with Mintlify:
+## Local development
 
 ```bash
-npx skills add https://mintlify.com/docs
+npm install            # dev dep for the generators (js-yaml)
+npm run gen:all        # generate the API / CLI / config reference from source specs
+mint dev               # local preview at http://localhost:3000
+mint validate          # strict build check (fails on warnings/errors)
 ```
 
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
+`mint` is the Mintlify CLI (`npm i -g mint`).
 
-See the [AI tools guides](/ai-tools) for tool-specific setup.
-
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+## Structure
 
 ```
-npm i -g mint
+docs.json          Mintlify config (theme, colors, navigation)
+index.mdx          four-lane landing page
+get-started/       Tutorials: what Octo is, architecture, quickstarts
+guides/            How-to, grouped by audience lane
+reference/         GENERATED reference (API, CLI, config) — do not hand-edit
+concepts/          Explanation
+ecosystem/         the repository matrix
+contributing/      code + docs + translation
+zh/                简体中文 pages (Mintlify localization)
+scripts/           SSOT generators (see scripts/README.md)
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+## Reference is generated
 
-```
-mint dev
-```
+The `reference/api/`, `reference/cli/`, `reference/configuration.mdx`, and
+`reference/errors-and-envelopes.mdx` pages are generated from the specs that ship inside the
+code (`octo-cli`, `octo-auth`, `octo-server`). Edit the spec, then `npm run gen:all` — never
+hand-edit the generated files.
 
-View your local preview at `http://localhost:3000`.
+## License
 
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+Documentation content is Apache-2.0, matching the Octo core repositories.

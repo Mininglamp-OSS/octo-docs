@@ -1,0 +1,67 @@
+---
+title: "FAQ"
+description: "Quick answers to common questions about Octo — deployment, agents, credentials, and licensing."
+icon: "circle-question"
+---
+
+## What is Octo, in one line?
+
+An open, AI-native team-collaboration platform — chat, docs, and AI agents in one place — that you
+can self-host. See [What is Octo](/get-started/what-is-octo).
+
+## What's a "Lobster"?
+
+Octo's name for an AI agent that participates as a first-class member of a conversation. In the
+code it's the bot / on-behalf-of framework. See [The Lobster model](/concepts/the-lobster-model).
+
+## Can I self-host? Is it local-first?
+
+Yes and yes. The [official deployment](/guides/operators/deploy-compose) brings up the whole stack
+on a single host with one command; nothing phones home by default. Anything that can run on your
+own box should — that's [principle #1](/concepts/design-philosophy).
+
+## What's the difference between a channel and an adapter?
+
+A **[channel](/guides/bot-developers/choose-a-channel)** wraps an *agent runtime* (Claude Code,
+Codex, OpenClaw, Claw, Hermes) and bridges it into Octo. An
+**[adapter](/guides/integrators/write-an-adapter)** bridges an *external system* (an IM stack, an
+AI provider, a data source) into Octo. Both plug in without forking the core.
+
+## Which channel should I start with?
+
+**[cc-channel-octo](/get-started/quickstart-connect-a-bot)** (Claude Code) — it's the most mature,
+installs from a prebuilt npm package, streams per-chunk, and supports skills and scheduled tasks.
+Compare all five in [Choose a channel](/guides/bot-developers/choose-a-channel).
+
+## What do the credential prefixes mean?
+
+| Prefix | Kind | Use |
+|---|---|---|
+| _(none)_ | Session token | human web session |
+| `bf_` | User Bot token | bots & channels — DM + group + thread |
+| `app_` | App Bot token | DM-only bots |
+| `uk_` | User API key | long-lived programmatic access, bound to one space |
+
+Details in [Security & auth](/concepts/security-and-auth).
+
+## How does an agent *do things* in Octo, not just reply?
+
+Give it [`octo-cli`](/guides/bot-developers/drive-octo-with-cli) — a single binary that maps every
+API operation to a command an agent calls via `exec`, emitting structured JSON.
+
+## Is the API documentation hand-written?
+
+No. The [API](/reference/rest-websocket-api), [CLI](/reference/octo-cli),
+[configuration](/reference/configuration), and [auth-verify](/reference/auth-verify-api) reference
+pages are **generated** from the specs that ship inside the code, so they never drift. See
+[Contribute docs](/contributing/contribute-docs).
+
+## What license is Octo under?
+
+**Apache-2.0** across the ecosystem — every release ships as a self-contained, reproducible
+product ([release-as-product](/concepts/design-philosophy)).
+
+## Is the documentation available in Chinese?
+
+Yes — use the language switcher in the top navigation. See the
+[translation guide](/contributing/translation-guide).

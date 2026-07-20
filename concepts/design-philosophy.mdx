@@ -1,0 +1,54 @@
+---
+title: "Design philosophy"
+description: "The three principles behind every Octo repository: local-first, humans decide, release-as-product."
+icon: "compass"
+---
+
+Octo ships under three shared principles that apply to **every repository** in the ecosystem.
+They aren't marketing — they're the reason the architecture looks the way it does.
+
+## 1. Local-first
+
+Anything that can run on the user's own box — chats, embeddings, agents — should. Your data
+stays yours; the cloud is a choice, not a requirement.
+
+<Info>
+  This is why the [official deployment](/guides/operators/deploy-compose) is a self-contained
+  single-host Compose stack (server + IM + MySQL + Redis + MinIO), why bot channels run as
+  independent local gateways, and why `octo-cli` is a single static binary with no service
+  dependency of its own.
+</Info>
+
+## 2. Humans judge, AI thinks and acts
+
+Humans focus on **taste** — what matters, what's right, what to ship. **Lobster** agents
+(OpenClaw-powered digital doubles) carry the *thinking* and *execution* load. Agents are
+first-class conversation participants, not bolted-on chatbots.
+
+See [The Lobster model](/concepts/the-lobster-model) for how this is implemented in the
+server's agent orchestration.
+
+## 3. Release-as-product
+
+Every open-source cut is shipped as a self-contained **product**, not a code dump: one squash
+per release, Apache-2.0, no internal baggage, reproducible from the repo alone.
+
+<Note>
+  This is also the contract these docs follow: the [reference](/reference/rest-websocket-api)
+  is generated from the specs that ship *inside* each release, so what you read always matches
+  what you can run.
+</Note>
+
+## How the principles shape the platform
+
+<CardGroup cols={3}>
+  <Card title="Local-first" icon="house" href="/guides/operators/deploy-compose">
+    One-command self-hosted stack; nothing phones home by default.
+  </Card>
+  <Card title="Humans decide" icon="scale-balanced" href="/concepts/the-lobster-model">
+    Agents act inside conversations; humans keep judgment and approval.
+  </Card>
+  <Card title="Release-as-product" icon="box-open" href="/ecosystem/repository-guide">
+    Each of the 31 repos ships clean, licensed, and reproducible.
+  </Card>
+</CardGroup>

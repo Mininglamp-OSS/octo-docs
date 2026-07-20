@@ -1,0 +1,60 @@
+---
+title: "在 Kubernetes 上部署"
+description: "使用 Kustomize 或 Helm 部署多节点 Octo，并自带你自己的后端服务。"
+icon: "dharmachakra"
+---
+
+面向多节点 / 生产环境，`octo-deployment` 提供了 **Kustomize** 清单和一个 **Helm**
+chart。两者都会部署应用服务；由你决定是否自带后端存储。
+
+## 方案 A —— Kustomize
+
+`kustomize/base/` 是标准的多节点参考：Deployment + Service、非敏感的
+ConfigMap，以及 `octo-*-secret.example.yaml` 模板。
+
+<Steps>
+  <Step title="填写密钥">
+    复制每个 `octo-*-secret.example.yaml`，替换所有 `CHANGE_ME_*`，然后应用这三个
+    secret。
+  </Step>
+  <Step title="应用 base（或某个 overlay）">
+    ```bash
+    kubectl apply -k kustomize/base
+    # or an overlay:
+    kubectl apply -k kustomize/overlays/prod   # multi-replica
+    kubectl apply -k kustomize/overlays/dev    # image tag "dev"
+    ```
+  </Step>
+  <Step title="自带后端服务">
+    Kustomize base 期望**由你**提供 MySQL、Redis、WuKongIM 和兼容 S3 的对象
+    存储。将 ConfigMap/secret 指向它们即可。
+  </Step>
+</Steps>
+
+## 方案 B —— Helm（开箱即全）
+
+Helm chart 打包了 MySQL、Redis、MinIO、WuKongIM 和 nginx——一条命令即可拉起完整技术栈：
+
+```bash
+helm install octo oci://ghcr.io/mininglamp-oss/octo --version 0.3.1
+```
+
+要求 Kubernetes 1.24+、Helm 3.10+ 以及一个默认 StorageClass。健康时，所有 pod 均达到
+`1/1 Running`。若要使用**外部**后端服务，设置 `<service>.enabled: false` 并填写
+对应的 `external<Service>` 块（若该块为空则会快速失败）。`values-china.yaml` 会将
+应用镜像切换到腾讯镜像仓库。
+
+## 对外暴露
+
+nginx 是唯一入口（默认 `ClusterIP`）。可通过 LoadBalancer、Ingress
+（一条通配规则 → `octo-nginx` Service）或 `kubectl port-forward` 暴露它。nginx 负责限流、
+WebSocket 升级和预签名 URL 透传。
+
+<CardGroup cols={2}>
+  <Card title="扩容与可观测" icon="chart-line" href="/zh/guides/operators/scale-and-observe">
+    健康检查端点、指标与水平扩容。
+  </Card>
+  <Card title="备份与恢复" icon="database" href="/zh/guides/operators/backup-and-restore">
+    PVC 以及需要保护的状态。
+  </Card>
+</CardGroup>

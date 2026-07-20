@@ -1,0 +1,103 @@
+---
+title: "Repository guide"
+description: "The 31-repository Octo ecosystem — every repo's role, language, and how the pieces fit together."
+icon: "diagram-project"
+---
+
+Octo is spread across a family of focused repositories under
+[Mininglamp-OSS](https://github.com/Mininglamp-OSS). This portal is organized by *what you want
+to do*; this page is the map by *repo*, for contributors and anyone orienting themselves.
+
+## How the pieces fit
+
+```mermaid
+graph TD
+  subgraph Clients
+    web[octo-web]
+    android[octo-android]
+    ios[octo-ios]
+    ext[octo-chrome-extension]
+    admin[octo-admin]
+  end
+  subgraph Core
+    server[octo-server]
+    summary[octo-smart-summary]
+  end
+  im[octo-im / WuKongIM]
+  subgraph Shared
+    lib[octo-lib]
+    auth[octo-auth]
+    adapters[octo-adapters]
+  end
+  web --> server
+  admin --> server
+  server --> im
+  server --> summary
+  server -.uses.-> lib
+  server -.uses.-> auth
+  server --> adapters
+```
+
+## Core services (Go)
+
+| Repo | Role |
+|---|---|
+| [`octo-server`](https://github.com/Mininglamp-OSS/octo-server) | Backend API · orchestration · Lobster scheduling · drives WuKongIM |
+| [`octo-smart-summary`](https://github.com/Mininglamp-OSS/octo-smart-summary) | LLM conversation summarization |
+| [`octo-speech`](https://github.com/Mininglamp-OSS/octo-speech) | Speech-to-text microservice |
+| [`octo-search-indexer`](https://github.com/Mininglamp-OSS/octo-search-indexer) | Message search write + index layer |
+| [`octo-message-export-api`](https://github.com/Mininglamp-OSS/octo-message-export-api) | Async batch message export |
+| [`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace) | Skill / MCP marketplace control plane (scaffold) |
+
+## Collaborative docs (Go)
+
+| Repo | Role |
+|---|---|
+| [`octo-docs-backend`](https://github.com/Mininglamp-OSS/octo-docs-backend) | Real-time CRDT doc sync (Yjs + Hocuspocus) |
+| [`octo-docs-html`](https://github.com/Mininglamp-OSS/octo-docs-html) | Prompt-native interactive HTML documents |
+
+## Clients
+
+| Repo | Language | Role |
+|---|---|---|
+| [`octo-web`](https://github.com/Mininglamp-OSS/octo-web) | TS / React | Web & PC (Electron) client |
+| [`octo-android`](https://github.com/Mininglamp-OSS/octo-android) | Kotlin / Java | Native Android client |
+| [`octo-ios`](https://github.com/Mininglamp-OSS/octo-ios) | Swift / Obj-C | Native iOS client |
+| [`octo-chrome-extension`](https://github.com/Mininglamp-OSS/octo-chrome-extension) | TS / React (WXT) | Browser extension |
+| [`octo-admin`](https://github.com/Mininglamp-OSS/octo-admin) | TS / React | Admin console |
+
+## IM core, shared libs & CLI
+
+| Repo | Role |
+|---|---|
+| [`octo-im`](https://github.com/Mininglamp-OSS/octo-im) | WuKongIM — distributed messaging core |
+| [`octo-lib`](https://github.com/Mininglamp-OSS/octo-lib) | Shared Go library (protocol, crypto, storage, HTTP) |
+| [`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth) | Credential verifier SDK (Go + TS) |
+| [`octo-adapters`](https://github.com/Mininglamp-OSS/octo-adapters) | Third-party IM / AI / data-source bridges |
+| [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) | Single-binary REST client for AI bots (98 ops) |
+| [`octo-daemon-cli`](https://github.com/Mininglamp-OSS/octo-daemon-cli) | Per-machine runtime monitor & upgrader |
+
+## Standards, skills & channels
+
+| Repo | Role |
+|---|---|
+| [`octo-spec`](https://github.com/Mininglamp-OSS/octo-spec) | Git-native AI-coding standard (OKF format) |
+| [`octo-skills`](https://github.com/Mininglamp-OSS/octo-skills) | AgentSkills collection |
+| [`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo) | Claude Code → Octo channel |
+| [`codex-channel-octo`](https://github.com/Mininglamp-OSS/codex-channel-octo) | OpenAI Codex → Octo channel |
+| [`hermes-channel-octo`](https://github.com/Mininglamp-OSS/hermes-channel-octo) | hermes-agent → Octo channel |
+| [`claw-channel-octo`](https://github.com/Mininglamp-OSS/claw-channel-octo) | WorkBuddy Claw → Octo channel |
+| [`openclaw-channel-octo`](https://github.com/Mininglamp-OSS/openclaw-channel-octo) | OpenClaw → Octo channel |
+
+## Delivery
+
+| Repo | Role |
+|---|---|
+| [`octo-deployment`](https://github.com/Mininglamp-OSS/octo-deployment) | Official OOTB deployment (Compose + Kubernetes + Helm) |
+| [`octo-website`](https://github.com/Mininglamp-OSS/octo-website) | Official landing page |
+
+<Info>
+  Each repo keeps its own deep docs; this portal aggregates the cross-cutting narrative and the
+  [generated reference](/reference/rest-websocket-api). Every repo ships under **Apache-2.0**
+  ([release-as-product](/concepts/design-philosophy)).
+</Info>

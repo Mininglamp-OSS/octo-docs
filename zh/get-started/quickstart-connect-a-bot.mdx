@@ -1,0 +1,158 @@
+---
+title: "接入你的第一个 AI 机器人"
+description: "几分钟内注册一个机器人，把 Claude Code 桥接进 Octo——这是 Octo 的招牌路径。"
+icon: "robot"
+---
+
+正是这条路径让 Octo 成为 Octo:把 AI Agent 作为一等参与者放进你的工作空间。你将注册一个
+机器人,然后运行 [`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo)——
+一个把 **Claude Code** 桥接进 Octo IM 的独立网关。完成后,你可以私聊机器人(或在群里 @它),
+收到来自真实编码 Agent 的流式回复。
+
+<Tip>
+  `cc-channel-octo` 是 Claude Code 版本。同样的流程也适用于它的兄弟项目——
+  [Codex](/zh/guides/bot-developers/codex-channel)、
+  [OpenClaw / Claw](/zh/guides/bot-developers/openclaw-and-claw-channels) 和
+  [Hermes](/zh/guides/bot-developers/hermes-channel)。参见
+  [选择通道](/zh/guides/bot-developers/choose-a-channel)进行对比。
+</Tip>
+
+## 前置条件
+
+- 一套正在运行的 Octo 实例——若还没有,请先完成
+  [10 分钟完成部署](/zh/get-started/quickstart-deploy)教程。你需要它的 API URL(例如
+  `http://localhost:28080`)。
+- **Node.js ≥ 22**(`node -v`)。
+- **Claude Code CLI**:`npm i -g @anthropic-ai/claude-code`。
+- 环境中已导出 **`ANTHROPIC_API_KEY`**。
+
+## 设置机器人
+
+<Steps>
+  <Step title="创建机器人并获取 token">
+    在 Octo 中,机器人通过与 **BotFather**(内置的机器人注册器)对话来创建:
+
+    1. 打开 Octo Web 客户端,与 **BotFather** 发起私聊。
+    2. 发送 `/newbot`,按提示为机器人命名。
+    3. BotFather 会回复一个以 `bf_` 开头的 **User Bot token**。
+
+    把这个 token 妥善保存——它是机器人的身份与完整凭证。
+
+    <Info>
+      `bf_` **User Bot** token 拥有私聊 + 群组 + 话题权限,正是这里所需。`app_` **App Bot**
+      token(来自管理台)仅限私聊。完整说明参见[安全与认证模型](/zh/concepts/security-and-auth)。
+    </Info>
+  </Step>
+
+  <Step title="安装网关">
+    最快的方式是使用预构建的 npm 包:
+
+    ```bash
+    npm install -g @mininglamp-oss/cc-channel-octo
+    ```
+
+    这会安装 `cc-channel-octo` 命令——无需编译步骤。
+  </Step>
+
+  <Step title="配置机器人">
+    `cc-channel-octo` 在 `~/.cc-channel-octo/` 下使用固定布局:一个**全局**配置(共享默认值 +
+    机器人列表,**不含 token**)和一个**每机器人**配置(token + 覆盖项)。两者都要创建:
+
+    ```bash
+    mkdir -p ~/.cc-channel-octo/default
+    ```
+
+    全局 `~/.cc-channel-octo/config.json` —— 指向你的 Octo 实例:
+
+    ```json
+    {
+      "apiUrl": "http://localhost:28080",
+      "bots": [{ "id": "default" }]
+    }
+    ```
+
+    每机器人 `~/.cc-channel-octo/default/config.json` —— token **只**放这里:
+
+    ```json
+    {
+      "botToken": "bf_YOUR_BOT_TOKEN",
+      "sdk": { "model": "vertexai/claude-opus-4-8" }
+    }
+    ```
+
+    收紧文件权限,避免 token 被他人读取:
+
+    ```bash
+    chmod 600 ~/.cc-channel-octo/config.json ~/.cc-channel-octo/default/config.json
+    ```
+
+    <Warning>
+      token 只应出现在每机器人的 `config.json`(权限 `600`)中——绝不要放进全局文件、shell
+      历史或版本控制。
+    </Warning>
+  </Step>
+
+  <Step title="启动网关">
+    ```bash
+    cc-channel-octo
+    ```
+
+    观察日志,直到出现:
+
+    ```
+    Ready — listening for messages
+    ```
+
+    到此,机器人已上线。
+  </Step>
+</Steps>
+
+## 与你的机器人对话
+
+打开 Octo,私聊机器人,或在群里 @它(群内它只响应 @提及)。给它发点什么,比如
+_"写一个反转字符串的 Python 函数"_,然后看回复**实时流式**返回,并带有输入指示。Claude Code
+通过 Agent SDK 执行任务,并把结果发进会话。
+
+会话历史持久化在 SQLite 中(每会话 40 条消息的滑动窗口)。常用的对话内命令:
+
+| 命令 | 作用 |
+|---|---|
+| `/reset` | 清除你自己会话已存的历史。 |
+| `/config` | 显示当前生效的设置。 |
+| `/help` | 列出可用命令。 |
+
+## 可选 — 让 Agent *操作* Octo
+
+到目前为止机器人只是*回复*。你还可以让 Agent **操作** Octo——发消息、列群组、管理事项——
+只需给它 [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli):一个单二进制 REST 客户端,
+专为 Agent 通过 `exec` 调用而设计:
+
+```bash
+npm install -g @mininglamp-oss/octo-cli
+
+export OCTO_BOT_TOKEN="bf_YOUR_BOT_TOKEN"
+export OCTO_API_BASE_URL="http://localhost:28080"
+
+octo-cli group list
+octo-cli message send --data '{"channel_id":"...","channel_type":1,"payload":{}}'
+```
+
+每条命令都在 stdout 输出结构化 JSON 信封——非常适合 Agent 运行时。每个命令与一个 API 操作
+一一对应;参见 [octo-cli 参考](/zh/reference/octo-cli)与 [REST API 参考](/zh/reference/rest-websocket-api)。
+
+## 后续步骤
+
+<CardGroup cols={2}>
+  <Card title="选择通道" icon="git-compare" href="/zh/guides/bot-developers/choose-a-channel">
+    对比全部五个智能体通道。
+  </Card>
+  <Card title="用 octo-cli 操作 Octo" icon="terminal" href="/zh/guides/bot-developers/drive-octo-with-cli">
+    完整的“Agent 操作 Octo”指南。
+  </Card>
+  <Card title="构建并发布 Skill" icon="puzzle" href="/zh/guides/bot-developers/publish-a-skill">
+    封装可复用的 Agent 能力。
+  </Card>
+  <Card title="Lobster 模型" icon="brain" href="/zh/concepts/the-lobster-model">
+    Octo 如何把 Agent 视为一等参与者。
+  </Card>
+</CardGroup>

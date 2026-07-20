@@ -1,0 +1,66 @@
+---
+title: "Bridge OpenAI Codex"
+description: "Run the codex-channel-octo gateway to put an OpenAI Codex agent into Octo."
+icon: "robot"
+---
+
+**[`codex-channel-octo`](https://github.com/Mininglamp-OSS/codex-channel-octo)** is an
+independent Node.js gateway that bridges [OpenAI Codex](https://developers.openai.com/codex)
+(via `@openai/codex-sdk`, which bundles the runtime) into Octo IM. It mirrors its sibling
+[`cc-channel-octo`](/guides/bot-developers/claude-code-channel); only the agent core differs.
+
+<Warning>
+  **Early test release (v0.1.0).** The core path — registration, connection, multi-turn chat,
+  multi-bot — is verified, but there is **no cron and no skills yet**. For a fully-featured
+  channel, use [cc-channel-octo](/guides/bot-developers/claude-code-channel).
+</Warning>
+
+## Run it
+
+<Warning>
+  The npm package `@mininglamp-oss/codex-channel-octo` is **not yet published** to the public
+  registry (this is an early v0.1.0 test release). Install from source until it lands:
+</Warning>
+
+```bash
+git clone https://github.com/Mininglamp-OSS/codex-channel-octo.git
+cd codex-channel-octo
+npm install
+npm run build       # tsc → dist/
+npm start           # or: node dist/  (see the repo README)
+```
+
+Once published, the one-liner will be `npm install -g @mininglamp-oss/codex-channel-octo` →
+`codex-channel-octo start`.
+
+Requires Node ≥ 22 and an Octo bot token (`bf_…`). The gateway registers as an Octo bot,
+connects over WebSocket, runs a coding task with local Codex, and posts the reply back. It
+supports DM, group (@mention), and community topics, multi-turn conversations, multiple bots in
+one process, and config hot-reload.
+
+## Codex thread interop
+
+Each Octo conversation maps to a **Codex thread**, so a conversation is resumable from your
+terminal:
+
+```bash
+codex exec resume <threadId>
+```
+
+This IM ↔ terminal interop is opt-in — you can pick up a chat conversation in a local Codex
+session and vice versa.
+
+## Streaming behavior
+
+Unlike cc-channel-octo's per-chunk streaming, Codex delivers the **final message whole**, with
+intermediate steps surfaced as progress updates (not per-token).
+
+## Security
+
+- `sandboxMode` defaults to **`read-only`**; enabling writes requires a deliberate double-switch.
+- `danger-full-access` is rejected outright.
+- Each bot gets its own `CODEX_HOME`, isolating Codex state per bot.
+
+<Card title="Compare all channels" icon="code-compare" href="/guides/bot-developers/choose-a-channel">
+  See where Codex sits relative to the other four channels.
+</Card>

@@ -1,0 +1,63 @@
+---
+title: "常见问题"
+description: "关于 Octo 的常见问题速答 —— 部署、智能体、凭证与许可。"
+icon: "circle-question"
+---
+
+## 一句话，Octo 是什么？
+
+一个开放、AI 原生的团队协作平台 —— 聊天、文档与 AI 智能体三合一,并且可以自托管。参见
+[什么是 Octo](/zh/get-started/what-is-octo)。
+
+## "Lobster" 是什么？
+
+Octo 对 AI 智能体的称呼 —— 它作为对话中的一等成员参与其中。在代码里,它是 bot 与代理执行
+(on-behalf-of)框架。参见 [Lobster 模型](/zh/concepts/the-lobster-model)。
+
+## 能自托管吗？是本地优先的吗？
+
+都可以。[官方部署](/zh/guides/operators/deploy-compose)一条命令即可在单机拉起整套技术栈;默认
+不会向外回传任何数据。凡是能跑在自己机器上的,就应该跑在本地 —— 这是[第一原则](/zh/concepts/design-philosophy)。
+
+## channel 与 adapter 有什么区别？
+
+**[channel](/zh/guides/bot-developers/choose-a-channel)** 封装的是*智能体运行时*(Claude Code、
+Codex、OpenClaw、Claw、Hermes),把它桥接进 Octo。**[adapter](/zh/guides/integrators/write-an-adapter)**
+桥接的是*外部系统*(IM 栈、AI 提供方、数据源)。两者都无需 fork 核心即可接入。
+
+## 应该从哪个 channel 开始？
+
+**[cc-channel-octo](/zh/get-started/quickstart-connect-a-bot)**(Claude Code)—— 它最成熟,可从
+预构建 npm 包安装、支持逐块流式、Skill 与定时任务。五个 channel 的对比见
+[选择一个 Channel](/zh/guides/bot-developers/choose-a-channel)。
+
+## 凭证前缀分别代表什么？
+
+| 前缀 | 类型 | 用途 |
+|---|---|---|
+| _(无)_ | 会话 token | 人类 Web 会话 |
+| `bf_` | User Bot token | 机器人与 channel —— 私聊 + 群组 + 话题 |
+| `app_` | App Bot token | 仅私聊的机器人 |
+| `uk_` | 用户 API key | 长期编程访问,绑定单个 space |
+
+详见[安全与认证模型](/zh/concepts/security-and-auth)。
+
+## 智能体如何在 Octo 中*执行操作*,而不只是回复？
+
+给它 [`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli) —— 一个单二进制,把每个 API 操作
+映射为一条命令,智能体通过 `exec` 调用并输出结构化 JSON。
+
+## API 文档是手写的吗？
+
+不是。[API](/zh/reference/rest-websocket-api)、[CLI](/zh/reference/octo-cli)、
+[配置](/zh/reference/configuration) 与[鉴权校验](/zh/reference/auth-verify-api)参考页都是从代码
+内的规范**生成**的,因此永不漂移。参见[参与文档贡献](/zh/contributing/contribute-docs)。
+
+## Octo 使用什么许可证？
+
+整个生态统一采用 **Apache-2.0** —— 每个发布都作为自包含、可复现的产品交付
+([release-as-product](/zh/concepts/design-philosophy))。
+
+## 文档有中文版吗？
+
+有 —— 使用顶部导航的语言切换器。参见[翻译指南](/zh/contributing/translation-guide)。

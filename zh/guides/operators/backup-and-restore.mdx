@@ -1,0 +1,57 @@
+---
+title: "备份与恢复"
+description: "在 Octo 部署中需要保护哪些状态——MySQL、对象存储、IM 数据——以及它们存放在何处。"
+icon: "database"
+---
+
+Octo 的持久化状态存放在少数几个明确定义的位置。备份好这些内容，你就能从一次全新克隆重建整个技术栈。
+
+<Warning>
+  Compose 文件**不**附带备份任务——备份由你自己负责。而且
+  `docker compose down -v` 会**删除**命名卷（以 `COMPOSE_PROJECT_NAME` 划分范围），因此
+  切勿对包含你想保留数据的技术栈执行该命令。
+</Warning>
+
+## 哪些位置保存状态（Compose）
+
+状态存放在命名的 Docker 卷中，模板为 `${COMPOSE_PROJECT_NAME:-octo}_*`：
+
+| 卷 | 内容 |
+|---|---|
+| `mysql-data` | 关系型数据——组织、用户、频道、文档二进制内容 |
+| `redis-data` | 缓存 / 会话（Redis） |
+| `minio-data` | 对象存储——文件、附件 |
+| `wukongim-data` | IM 消息队列与频道状态 |
+| `opensearch-data` / `kafka-data` / `search-dlq-spill` | 仅在开启 search 配置档时 |
+
+后端服务绑定到回环地址：MySQL `23306`、MinIO API `29000`。
+
+## 备份
+
+- **MySQL** —— 针对 `23306` 进行一致性转储（例如 `mysqldump` / `xtrabackup`），或在
+  容器停止时对 `mysql-data` 卷做快照。
+- **对象存储** —— 将 MinIO 的 `minio-data` bucket 内容镜像（例如 `mc mirror`）到
+  第二处位置。
+- **WuKongIM** —— 对 `wukongim-data` 做快照；在集群中，依赖节点间冗余外加
+  周期性快照。
+- **Redis** —— 通常可重建（缓存），但如果你依赖持久化会话，请做快照。
+
+## 在 Kubernetes 上
+
+每个有状态组件（`mysql`、`redis`、`minio`、`wukongim`）都由一个 **PVC** 支撑，其
+`storage.size` 和 `storageClass` 可配置（Helm 默认 20 / 10 / 50 / 10 Gi）。请通过
+你集群的卷快照机制进行备份。删除 release 并不会移除 PVC，除非你显式执行
+`kubectl delete pvc`。
+
+## 恢复
+
+1. 拉起一个全新技术栈（`./setup.sh` → `--up`）或一个全新的 Helm release。
+2. 停止应用层，恢复 MySQL 转储和对象存储内容，恢复
+   `wukongim-data`。
+3. 启动应用层并运行 `--smoke-test` 以确认外部暴露面正常工作。
+
+<Info>
+  也要备份好你的 `docker/.env`（或 K8s secret）——尤其是 `OCTO_MASTER_KEY`，它
+  提供静态加密，且**无法在不丢失数据的情况下轮换**。丢失它意味着丢失对加密数据的
+  访问权限。参见 [安全加固](/zh/guides/operators/security-hardening)。
+</Info>

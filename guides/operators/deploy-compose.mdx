@@ -1,0 +1,68 @@
+---
+title: "Deploy with Docker Compose"
+description: "The single-node, out-of-the-box Octo deployment for evaluation and internal demos."
+icon: "docker"
+---
+
+The **[`octo-deployment`](https://github.com/Mininglamp-OSS/octo-deployment)** Compose stack is
+the canonical single-host deployment: server, admin, web, smart-summary, WuKongIM, MySQL,
+Redis, MinIO, and an nginx reverse proxy, wired by one `docker-compose.yaml`.
+
+<Info>
+  For the guided first run, follow [Deploy in 10 minutes](/get-started/quickstart-deploy). This
+  page is the operator reference for the Compose stack.
+</Info>
+
+## The three-step path
+
+```bash
+git clone https://github.com/Mininglamp-OSS/octo-deployment.git
+cd octo-deployment
+./setup.sh                     # 1. generate docker/.env (random secrets + admin pwd)
+sudo ./setup.sh --up           # 2. start; blocks until every service is (healthy)
+sudo ./setup.sh --smoke-test   # 3. 11-probe end-to-end check
+```
+
+`--up` is **start-only** — it runs `docker compose up -d --wait` and never regenerates secrets
+(a missing `.env` is fatal unless you pass `--force`). Both `--up` and `--smoke-test` need sudo
+because `docker/.env` stays `root:600`.
+
+## Network surface
+
+One client port is open by default:
+
+| Port | Purpose |
+|---|---|
+| `28080` (`OCTO_HTTP_PORT`) | nginx HTTP — all client traffic |
+| `28443` (`OCTO_HTTPS_PORT`) | nginx HTTPS (when you enable TLS) |
+
+**Everything else** — MySQL (`23306`), Redis (`26379`), MinIO (`29000`/`29001`), the WuKongIM
+manager API (`25001`) and monitor (`25300`) — binds to loopback (`127.0.0.1`) by default.
+Browser chat flows through nginx `/ws`; the native WuKongIM chat transports (`25100`/`25200`) are
+only needed if you connect native chat clients directly.
+
+<Warning>
+  **Multiple stacks on one host share volumes.** Named volumes default to
+  `${COMPOSE_PROJECT_NAME:-octo}_*`, so two default clones share data — a `docker compose down -v`
+  from one can wipe the other. Set a unique `COMPOSE_PROJECT_NAME` before bringing up a second
+  stack.
+</Warning>
+
+## Optional profiles
+
+```bash
+./setup.sh --summary   # LLM summary services (needs LLM_API_KEY)
+./setup.sh --search    # message-search infra (Kafka + OpenSearch + es-indexer)
+```
+
+See [Operate mail, speech & search](/guides/operators/subsystems) to turn
+search on end-to-end.
+
+<CardGroup cols={2}>
+  <Card title="Move to Kubernetes" icon="dharmachakra" href="/guides/operators/deploy-kubernetes">
+    Multi-node manifests and Helm.
+  </Card>
+  <Card title="Harden before exposing" icon="lock" href="/guides/operators/security-hardening">
+    The pre-flight checklist.
+  </Card>
+</CardGroup>

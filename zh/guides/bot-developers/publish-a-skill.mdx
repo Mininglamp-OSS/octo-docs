@@ -1,0 +1,60 @@
+---
+title: "构建并发布一个 Skill"
+description: "为 Octo/OpenClaw 编写一个 AgentSkill，并把它安装到你的机器人上。"
+icon: "puzzle"
+---
+
+**Skill** 是一种自包含、可复用的能力，智能体会自动获取它——它被打包为
+一个目录，内含一个 `SKILL.md`（以及可选的 `references/`）。Octo 的技能存放于
+**[`octo-skills`](https://github.com/Mininglamp-OSS/octo-skills)**，而它们所遵循的工程标准
+是 **[`octo-spec`](https://github.com/Mininglamp-OSS/octo-spec)**。
+
+## 一个技能的构成
+
+每个技能都是一个目录，其 `SKILL.md` 描述了它所做的事情。智能体（Claude Code、
+OpenClaw、Codex）通过读取那段描述来发现一个技能——所以开头几行至关重要。大多数
+技能还会附带一个首次运行的引导（onboarding）流程。
+
+该集合中已有的技能：
+
+| 技能 | 它做什么 |
+|---|---|
+| `octo-multica-cloud` | 通过一个逐用户的 `octo-multica-key` 驱动云端 Multica SaaS——议题、智能体、派发、评论。 |
+| `octo-loop` ⚗️ | 一个实验性的 OpenClaw 循环工程标准：一个 编排 / 执行 / 验证 的三环契约，配有一道无法作弊的验收门。 |
+| `multica-squad-onboarding` | 一个对话式顾问，通过 `multica` CLI 设计并开通 Multica 小队。 |
+
+## 把技能安装到你的机器人
+
+把它放进你智能体的技能目录。对于 OpenClaw / Octo：
+
+```bash
+# one-line installer
+curl -fsSL https://raw.githubusercontent.com/Mininglamp-OSS/octo-skills/main/install.sh | bash -s <skill>
+# or clone + copy into ~/.openclaw/skills/ (or a bot's skills/ dir)
+```
+
+对于一个 [cc-channel-octo](/zh/guides/bot-developers/claude-code-channel) 机器人，把技能放在
+`~/.cc-channel-octo/skills/`（共享）或 `~/.cc-channel-octo/<botId>/skills/`（逐机器人）下。
+
+## 按标准编写：octo-spec
+
+**`octo-spec`** 是一个开箱即用的、面向 AI 辅助编码的工程标准——**git 原生
+且零服务**。没有需要运行的服务器：标准存放在仓库中的 `.octospec/` 下，并随
+`git pull` 一同传播，因此任何编码智能体都会自动读取并遵循它们。
+
+- **OKF（Open Knowledge Format）**——纯 Markdown + YAML frontmatter：人类可读、
+  无需 SDK 即可被智能体解析，并且可 diff。一个 `.octospec/` 目录就是一个有效的 OKF 捆绑包。
+- **两层宪章（constitution）**——一个组织范围的*全局*层（提交 / PR / 审阅 / 安全
+  约定），外加一个仓库本地层，后者在一个固定版本上继承全局层。
+
+为一个仓库进行初始化配置：
+
+```bash
+cp -r templates/octospec-init .octospec   # from the octo-spec repo
+# set GLOBAL_SRC, then:
+./octospec-sync.sh
+```
+
+<Card title="octo-spec（OKF）参考" icon="file-code" href="/zh/reference/octo-spec-okf">
+  这个 AI 编码标准的格式细节。
+</Card>

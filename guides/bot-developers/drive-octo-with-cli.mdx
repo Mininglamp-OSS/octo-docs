@@ -1,0 +1,69 @@
+---
+title: "Drive Octo with octo-cli"
+description: "Let an AI agent operate Octo — send messages, manage groups, threads, files — via the octo-cli REST client."
+icon: "terminal"
+---
+
+**[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli)** is a single-binary REST client
+designed for **AI agent bots to call via `exec`**. Where a [channel](/guides/bot-developers/choose-a-channel)
+lets an agent *reply*, `octo-cli` lets it *act* — send messages, list groups, manage threads,
+upload files. Every invocation emits a structured JSON envelope on stdout; there is no
+interactive I/O.
+
+## Install
+
+```bash
+npm install -g @mininglamp-oss/octo-cli
+# or
+go install github.com/Mininglamp-OSS/octo-cli/cmd/octo-cli@latest
+```
+
+The npm package resolves the matching prebuilt platform binary.
+
+## Authenticate
+
+`octo-cli` is bot-only — there's no user login. Point it at your instance with two env vars:
+
+```bash
+export OCTO_BOT_TOKEN="bf_your_user_bot_token"    # or app_… (DM-only)
+export OCTO_API_BASE_URL="https://your-octo-instance.com"
+```
+
+Optional: `OCTO_SPACE_ID` (space context for platform-scoped bots), `OCTO_FORMAT`
+(`json` | `table` | `csv` | `ndjson`).
+
+## Use it
+
+```bash
+octo-cli group list
+octo-cli message send --data '{"channel_id":"chat-1","channel_type":1,"payload":{"text":"hi"}}'
+octo-cli thread create --chat-id chat-1 --name "design review"
+octo-cli file upload --file ./report.pdf
+octo-cli docs list --sort updatedAt:desc
+octo-cli file download abc123 --jq '.data.url'
+```
+
+The command tree — **98 operations across 9 domains** — is auto-registered from OpenAPI specs
+embedded in the binary, so it stays in lock-step with the server. Each command maps 1:1 to a
+REST operation.
+
+<Info>
+  Use `--data '<json>'` for request bodies and `--jq '<expr>'` to post-process the JSON envelope.
+  Errors go to stderr with a deterministic taxonomy — ideal for scripting inside an agent loop.
+</Info>
+
+## Wiring it into an agent
+
+Give the agent permission to `exec octo-cli` (for example, a Claude Code bot's `allowedTools`,
+or the Claw runtime's Agent Skills). The agent then calls `octo-cli` commands to operate Octo
+directly — this is exactly how the
+[Claw channel](/guides/bot-developers/openclaw-and-claw-channels) implements its "hands."
+
+<CardGroup cols={2}>
+  <Card title="Full command reference" icon="terminal" href="/reference/octo-cli">
+    Every command, flag, and argument — generated from the embedded specs.
+  </Card>
+  <Card title="REST API reference" icon="plug" href="/reference/rest-websocket-api">
+    The same 98 operations as HTTP endpoints.
+  </Card>
+</CardGroup>

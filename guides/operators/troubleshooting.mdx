@@ -1,0 +1,80 @@
+---
+title: "Troubleshooting"
+description: "Diagnose the most common Octo deployment issues — startup, health, auth, and storage."
+icon: "wrench"
+---
+
+Most problems surface at deploy time and fall into two buckets: the **platform** isn't fully up,
+or it's up but **auth / storage** is wired wrong. The [smoke test](/guides/operators/deploy-compose)
+(`sudo ./setup.sh --smoke-test`) tells you which — it groups its 11 probes into `[infra]` and
+`[user-path]` failure domains.
+
+## Startup
+
+<AccordionGroup>
+  <Accordion title="docker compose up complains about port collisions">
+    Another process holds one of Octo's ports. The only port that must be free for clients is
+    `28080` (`OCTO_HTTP_PORT`); the rest default to loopback. Change the offending
+    `OCTO_*_PORT` in `docker/.env`, or stop the conflicting process.
+  </Accordion>
+  <Accordion title="A service never becomes (healthy)">
+    `--up` blocks until every service is healthy, then prints `docker compose ps` and names the
+    failing ones. Inspect logs: `cd docker && docker compose logs --tail 200 <service>`. A cold
+    MySQL init can take 60–90 s on first boot — give it time before assuming failure.
+  </Accordion>
+  <Accordion title="setup.sh --up exits: docker/.env missing">
+    `--up` is start-only and never regenerates secrets. Run `./setup.sh` first to create
+    `docker/.env`, then `sudo ./setup.sh --up`. (Only `--up --force` will bootstrap fresh
+    secrets — never use it on a stack whose `.env` is already in production.)
+  </Accordion>
+  <Accordion title="Permission denied reading docker/.env">
+    `.env` stays `root:600` because it holds every high-value secret. Run `--up` and
+    `--smoke-test` with `sudo`.
+  </Accordion>
+</AccordionGroup>
+
+## The `[infra]` domain failed
+
+A container is down, nginx isn't reverse-proxying, or a host port is firewalled. Start with
+`docker compose ps` and `docker compose logs`. Confirm the health endpoints respond:
+`/_nginx_up`, `/api/v1/health`, `/` (see [Scale and observe](/guides/operators/scale-and-observe)).
+
+## The `[user-path]` domain failed
+
+The platform is up but the contract is wrong — auth wired incorrectly, MinIO IAM creds desynced,
+or SigV4 signing mismatched. Look at `octo-server` **and** MinIO together, not at nginx.
+
+<AccordionGroup>
+  <Accordion title="Admin login fails">
+    Use the password `setup.sh` printed at the end of its run (or read `OCTO_ADMIN_PWD` from
+    `docker/.env`). The admin user is `superAdmin`. See [Onboard your org](/guides/teams/onboard-your-org).
+  </Accordion>
+  <Accordion title="File upload / presigned PUT returns 403 SignatureDoesNotMatch">
+    A browser-direct upload must echo the `contentType` (and `contentDisposition` if set) returned
+    by the credentials endpoint as the matching PUT headers — they're covered by the SigV4
+    signature. Also ensure the object-storage bucket allows PUT from the `octo-web` origin (CORS).
+  </Accordion>
+  <Accordion title="WebSocket / real-time not working">
+    Browser chat flows through nginx `/ws`. Make sure your reverse proxy forwards the WebSocket
+    upgrade. Native chat transports (`25100`/`25200`) are only needed for native clients connecting
+    directly to WuKongIM.
+  </Accordion>
+</AccordionGroup>
+
+## Auth & credentials
+
+Every "token bad" reason collapses to a single `AUTH_INVALID_CREDENTIAL` (401) — by design, to
+prevent enumeration. The real reason is in the server's audit log only; don't branch on a
+sub-reason. See [Security & auth](/concepts/security-and-auth) and the
+[error reference](/reference/errors-and-envelopes).
+
+<Warning>
+  **Redis runs with no auth by default** and is bound to loopback. If a client can't reach it,
+  check the bind — but never widen `OCTO_REDIS_BIND` without also setting a password. See
+  [Security hardening](/guides/operators/security-hardening).
+</Warning>
+
+## Still stuck?
+
+Each repo carries its own deep docs and a `SECURITY.md` for reporting vulnerabilities privately.
+Start from the [repository guide](/ecosystem/repository-guide) to find the right one.

@@ -1,0 +1,68 @@
+---
+title: "Contribute docs"
+description: "Docs-as-code workflow for this Mintlify portal — principles, page structure, and adding a page."
+icon: "pen-to-square"
+---
+
+These docs are **code**: versioned, reviewed, and built like any other part of Octo. This portal
+is built with [Mintlify](https://mintlify.com) — pages are MDX with YAML frontmatter, and
+navigation lives in `docs.json`.
+
+## Principles
+
+1. **One front door, not 31.** Aggregate; link to a repo's deep docs rather than duplicating them.
+2. **Organize by journey.** Navigation follows audience + task, never one-page-per-repo.
+3. **[Diátaxis](https://diataxis.fr/).** Every page is exactly one of Tutorial, How-to,
+   Reference, or Explanation — never a mix.
+4. **Single source of truth.** Reference pages are *generated* from specs — never hand-edit
+   anything in `reference/api/`, `reference/cli/`, `reference/configuration`, or
+   `reference/errors-and-envelopes` (each carries a `DO NOT EDIT` banner).
+
+## Run the site locally
+
+```bash
+npm install          # dev dep for the generators
+npm run gen:all      # regenerate the API / CLI / config reference
+mint dev             # preview at http://localhost:3000
+mint validate        # strict build check (fails on warnings/errors)
+```
+
+<Note>
+  The Mintlify CLI requires an **LTS Node** (≤ 22). If your default is newer, use an LTS Node for
+  `mint` commands.
+</Note>
+
+## Add a page
+
+<Steps>
+  <Step title="Create the MDX file">
+    Put it in the right section folder (`get-started/`, `guides/<lane>/`, `concepts/`, …). Add
+    frontmatter: `title`, `description`, and an `icon` (Lucide / Font Awesome name).
+  </Step>
+  <Step title="Register it in navigation">
+    Add the page's path (without extension) to the matching group in `docs.json`. Pages don't
+    appear until they're in the nav.
+  </Step>
+  <Step title="Write to the standard">
+    Pick one Diátaxis type. Use components — `<Note>` / `<Tip>` / `<Warning>` / `<Info>`,
+    `<Steps>`, `<Card>` / `<CardGroup>` — and prefer runnable commands over prose. Diagrams use
+    ` ```mermaid ` fences.
+  </Step>
+  <Step title="Validate">
+    Run `mint validate` and `mint broken-links` before opening a PR.
+  </Step>
+</Steps>
+
+## Regenerating reference
+
+If you changed a source spec (in `octo-cli`, `octo-auth`, or `octo-server`), regenerate rather
+than editing the output:
+
+```bash
+npm run gen:all      # rewrite the reference pages
+npm run gen:check    # CI drift check — fails if pages are stale
+```
+
+<Card title="Translation guide" icon="language" href="/contributing/translation-guide">
+  How to add and maintain the 简体中文 pages.
+</Card>

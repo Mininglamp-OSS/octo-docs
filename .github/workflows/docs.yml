@@ -1,0 +1,46 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      # octo-docs into a subdir so the sibling spec repos can live alongside it —
+      # the SSOT generators resolve specs from ../octo-cli, ../octo-auth, ../octo-server.
+      - uses: actions/checkout@v4
+        with:
+          path: octo-docs
+
+      - name: Check out sibling spec repos
+        run: |
+          git clone --depth 1 https://github.com/Mininglamp-OSS/octo-cli.git octo-cli
+          git clone --depth 1 https://github.com/Mininglamp-OSS/octo-auth.git octo-auth
+          git clone --depth 1 https://github.com/Mininglamp-OSS/octo-server.git octo-server
+
+      # Mintlify CLI requires an LTS Node (does not support Node 25+).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deps
+        working-directory: octo-docs
+        run: npm install
+
+      - name: Check generated reference is up to date (SSOT drift)
+        working-directory: octo-docs
+        run: npm run gen:check
+
+      - name: Install Mintlify CLI
+        run: npm install -g mint
+
+      - name: Validate build (strict)
+        working-directory: octo-docs
+        run: mint validate
+
+      - name: Check for broken links
+        working-directory: octo-docs
+        run: mint broken-links

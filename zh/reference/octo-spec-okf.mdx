@@ -1,0 +1,43 @@
+---
+title: "octo-spec（OKF 格式）"
+description: "git 原生、零服务的 AI 编码标准及其开放知识格式。"
+icon: "file-code"
+---
+
+**[`octo-spec`](https://github.com/Mininglamp-OSS/octo-spec)** 是一套开箱即用、面向 AI 辅助编码的工程标准。它是 **git 原生且零服务**的：没有需要运行的服务器。标准以 `.octospec/` 形式存放于仓库中，并随 `git pull` 传播，因此任何编码智能体（Claude Code、Codex、OpenClaw）都会自动读取并遵循它们——无需每次会话都重新解释你的约定。
+
+## OKF——开放知识格式
+
+这些标准以 **OKF（Open Knowledge Format）** 存储：纯 **Markdown + YAML frontmatter**。这使它们：
+
+- **人类可读**——像阅读任何文档一样评审它们，
+- **无需 SDK 即可被智能体解析**——智能体直接读取这些文件，
+- **可 diff**——变更会出现在普通的 git diff 中。
+
+一个 `.octospec/` 目录就是一个有效的 OKF 包。
+
+## 双层宪章
+
+```mermaid
+graph TD
+  global[Global layer — "constitution"<br/>cross-repo conventions] --> local[Per-repo layer — "local law"<br/>.octospec/ inherits global at a pinned version]
+```
+
+- **全局层**——组织级约定：提交 / PR / 评审 / 安全规则。
+- **仓库层**——某个仓库自有的 `.octospec/`，以**固定版本**继承全局层，使更新是经过深思熟虑的。
+
+## 没有运行时引擎
+
+`octo-spec` 仅提供三个脚本（同步、lint、learning-reflow）——没有运行时引擎。四阶段循环（**Plan → Implement → Verify → Finish**）由*智能体*通过斜杠命令执行，而非由某个服务执行。
+
+为一个仓库完成上手：
+
+```bash
+cp -r templates/octospec-init .octospec   # from the octo-spec repo
+# set GLOBAL_SRC, then:
+./octospec-sync.sh
+```
+
+<Card title="构建并发布 Skill" icon="puzzle" href="/zh/guides/bot-developers/publish-a-skill">
+  按此标准编写的 Skill 可直接安装进你的机器人。
+</Card>

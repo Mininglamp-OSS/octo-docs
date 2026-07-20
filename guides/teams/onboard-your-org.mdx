@@ -1,0 +1,63 @@
+---
+title: "Onboard your organization"
+description: "Create an org, invite members with the right roles, and set up channels in Octo."
+icon: "users"
+---
+
+Once your [stack is deployed](/get-started/quickstart-deploy), the first job is to get your
+organization and people in. Octo is multi-tenant and space-scoped, so onboarding is about
+creating a space, inviting members with the right roles, and opening the channels they'll work
+in.
+
+## Prerequisites
+
+- A running Octo instance with an admin login (the `superAdmin` credentials printed by
+  `setup.sh`).
+- Access to the [admin console](/guides/teams/admin-console) at
+  `http://<your-host>:28080/admin/`.
+
+## Steps
+
+<Steps>
+  <Step title="Create the organization (space)">
+    In the admin console, create a **space** — the tenant boundary that owns all channels, users,
+    and data. Everything below is scoped to it.
+  </Step>
+  <Step title="Invite members with roles">
+    Invite people by email. Each member carries a **role** within the space:
+
+    | Role | Value | Can |
+    |---|---|---|
+    | Member | `0` | Participate in channels they belong to |
+    | Admin | `1` | Manage members, channels, and moderation |
+    | Owner | `2` | Everything, including space-level settings |
+
+    You can update a member's role later — invites themselves carry an owner-vs-member/admin
+    distinction.
+  </Step>
+  <Step title="Set up channels">
+    Create the group and topic channels your team needs. Access is governed per channel by ACL on
+    top of the space role — see the [Security & auth model](/concepts/security-and-auth).
+  </Step>
+  <Step title="Add an AI bot (optional)">
+    Bring a Lobster into the workspace so agents are first-class from day one — follow
+    [Connect your first AI bot](/get-started/quickstart-connect-a-bot).
+  </Step>
+</Steps>
+
+<Info>
+  Onboarding actions are the admin console's day-2 job. It's a thin front-end over
+  `octo-server`'s `/admin/*` APIs — every mutation is re-checked by backend RBAC, so operator
+  access is enforced server-side, not just in the UI.
+</Info>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Use chat, docs & tasks" icon="messages-square" href="/guides/teams/use-chat-and-docs">
+    Get your team productive in the client.
+  </Card>
+  <Card title="Admin console" icon="shield" href="/guides/teams/admin-console">
+    The full operator surface.
+  </Card>
+</CardGroup>

@@ -1,0 +1,59 @@
+---
+title: "Octo 文档"
+description: "开放的 AI 原生工作空间——智能体负责执行，人类负责决策。"
+mode: "wide"
+---
+
+**Octo 是为人类 × AI 智能体打造的开放工作空间**——_智能体负责执行，人类负责决策。_
+让 **Lobster**（由 OpenClaw 驱动的数字分身）承担思考与执行，你只需专注于品味与判断。
+
+<Note>
+  本门户正在积极建设中。信息架构、两条旗舰快速入门路径，以及自动生成的 API/CLI/配置参考均已上线；其余页面正在陆续补充。蓝图详见仓库中的 `DESIGN.md`。
+</Note>
+
+## 选择你的路径
+
+四条贯穿文档的通道，分别对应人们使用 Octo 的四种方式。
+
+<CardGroup cols={2}>
+  <Card title="团队与用户" icon="users" href="/zh/get-started/quickstart-deploy">
+    **“我想运行并使用 Octo。”** 搭建整套技术栈，为你的组织完成上手，并通过聊天、文档和任务展开协作。
+  </Card>
+  <Card title="机器人与智能体开发者" icon="robot" href="/zh/get-started/quickstart-connect-a-bot">
+    **“我想把 AI 智能体接入 Octo。”** 注册机器人、选择一个 Channel，让智能体通过 `octo-cli` 驱动 Octo。
+  </Card>
+  <Card title="集成方" icon="plug" href="/zh/guides/integrators/call-the-rest-api">
+    **“我想基于 Octo 构建。”** 调用 REST 与 WebSocket API，用 `octo-auth` SDK 校验凭据，并编写适配器。
+  </Card>
+  <Card title="运维方" icon="server" href="/zh/guides/operators/deploy-kubernetes">
+    **“我想在生产环境自托管。”** 使用 Compose 或 Kubernetes 部署，进行扩缩容、可观测、备份与加固。
+  </Card>
+</CardGroup>
+
+## 从这里开始
+
+<CardGroup cols={3}>
+  <Card title="什么是 Octo" icon="circle-question" href="/zh/get-started/what-is-octo">
+    产品定位、Lobster 模型，以及三大原则。
+  </Card>
+  <Card title="10 分钟完成部署" icon="rocket" href="/zh/get-started/quickstart-deploy">
+    从 `git clone` 到通过官方 Docker Compose 部署跑起整套技术栈。
+  </Card>
+  <Card title="连接你的第一个机器人" icon="robot" href="/zh/get-started/quickstart-connect-a-bot">
+    将 Claude Code 桥接进 Octo，与真实的编码智能体对话。
+  </Card>
+</CardGroup>
+
+## Octo 之道
+
+<Columns cols={3}>
+  <Card title="本地优先" icon="house">
+    凡是能在自己机器上运行的——聊天、嵌入、智能体——都应当如此。云是一种选择，而非必需。
+  </Card>
+  <Card title="人类决策" icon="scale-balanced">
+    人类掌握品味——什么重要、什么正确、该发布什么。Lobster 智能体承担思考与执行。
+  </Card>
+  <Card title="发布即产品" icon="box-open">
+    每一次开源切分都以自包含的产品形态发布，而非代码堆砌。
+  </Card>
+</Columns>

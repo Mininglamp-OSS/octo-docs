@@ -1,0 +1,52 @@
+---
+title: "Choose a channel"
+description: "Compare Octo's five agent channels — Claude Code, Codex, OpenClaw, Claw, Hermes — and pick the right one."
+icon: "code-compare"
+---
+
+A **channel** is an independent gateway that bridges an AI agent runtime into Octo IM: it
+registers as a bot, connects to receive messages, runs the agent, and posts replies back. Octo
+ships five, each wrapping a different agent core. They all use the same
+[bot token](/concepts/security-and-auth) (`bf_…`) and the same
+[BotFather flow](/get-started/quickstart-connect-a-bot).
+
+## At a glance
+
+| Channel | Agent core | Transport | Streaming | Skills | Maturity |
+|---|---|---|---|---|---|
+| **[cc-channel-octo](/get-started/quickstart-connect-a-bot)** | Claude Code / Claude Agent SDK | WuKongIM binary WS (DH + AES) | Per-chunk, 800 ms throttled | Yes — AgentSkills + cron | Published on npm, feature-rich |
+| **[codex-channel-octo](/guides/bot-developers/codex-channel)** | OpenAI Codex (`@openai/codex-sdk`) | Octo WebSocket | Final message + step progress | Not yet | Early test (v0.1.0) |
+| **[openclaw-channel-octo](/guides/bot-developers/openclaw-and-claw-channels)** | OpenClaw framework | Octo WebSocket | Progress / display cards | `octo_management` tool + skills | Published on ClawHub |
+| **[claw-channel-octo](/guides/bot-developers/openclaw-and-claw-channels)** | WorkBuddy Claw runtime | WebSocket, JSON-RPC over WS | send → edit → final | 4 octo-cli Agent Skills | Phases 1–2 done; UI pending |
+| **[hermes-channel-octo](/guides/bot-developers/hermes-channel)** | hermes-agent (NousResearch) | WuKongIM binary WS (ECDH + AES) | Yes | Via hermes-agent | 0.1.x, e2e-verified |
+
+## How to choose
+
+<CardGroup cols={2}>
+  <Card title="You want a coding agent, fast" icon="robot" href="/get-started/quickstart-connect-a-bot">
+    **cc-channel-octo** is the most mature: prebuilt npm binary, per-chunk streaming, skills, and
+    scheduled tasks. Start here if you're unsure.
+  </Card>
+  <Card title="You already run OpenClaw" icon="paw" href="/guides/bot-developers/openclaw-and-claw-channels">
+    **openclaw-channel-octo** installs from ClawHub and slots into your existing OpenClaw agents
+    and skills.
+  </Card>
+  <Card title="You want Codex" icon="code" href="/guides/bot-developers/codex-channel">
+    **codex-channel-octo** wraps OpenAI Codex, with IM ↔ terminal thread interop. It's an early
+    test release — no cron/skills yet.
+  </Card>
+  <Card title="You run hermes-agent" icon="feather" href="/guides/bot-developers/hermes-channel">
+    **hermes-channel-octo** is a Python plugin for a NousResearch hermes-agent gateway.
+  </Card>
+</CardGroup>
+
+<Note>
+  All five are **independent gateways** — they run as their own process next to your agent
+  runtime and speak to Octo over the network. None require forking `octo-server`. You can run
+  several at once, even multiple bots per gateway.
+</Note>
+
+## Want to build your own?
+
+If none of these wrap your agent, write an adapter against the same envelope contract — see
+[Write an adapter](/guides/integrators/write-an-adapter).

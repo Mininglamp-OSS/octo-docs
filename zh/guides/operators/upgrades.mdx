@@ -1,0 +1,53 @@
+---
+title: "升级"
+description: "使用 octo-daemon-cli 让 agent 运行时保持最新，并安全地滚动平台升级。"
+icon: "arrows-rotate"
+---
+
+Octo 通过 **`octo-daemon-cli`** 让每台机器上的本地 agent 运行时（Claude Code、OpenClaw、Codex、Hermes）
+保持最新，并通过固定版本的容器镜像滚动更新让平台服务保持最新。
+
+## octo-daemon-cli —— 每台机器的监视器
+
+**[`octo-daemon-cli`](https://github.com/Mininglamp-OSS/octo-daemon-cli)** 运行在每台承载
+agent CLI 的机器上：
+
+```bash
+npm install -g @mininglamp-oss/octo-daemon
+octo-daemon config --server-url <server-url> --api-key uk_xxx
+octo-daemon run        # foreground
+octo-daemon start      # background via pm2
+```
+
+`config` 会针对服务端校验密钥并解析 `space_id`。守护进程探测已安装的
+agent CLI，将其清单推送给服务端，并支持从 Octo web UI 发起的**一键远程升级**
+（原子化服务端认领 + 版本锁定下载）。节奏：注册 < 5 秒、5 秒
+心跳、60 秒重新扫描；服务端在守护进程静默 45 秒后将其标记为离线，并在 7 天后删除它。
+一个守护进程可服务多个空间。
+
+## 应用运行时升级
+
+```bash
+octo-daemon upgrade    # npm install -g @latest, then signals the process to restart
+```
+
+<Warning>
+  `upgrade` 会重新安装并向进程发信号——一个 supervisor **必须**重新拉起它。pm2 默认这样做；
+  在 systemd 下请设置 `Restart=always`。
+</Warning>
+
+## 升级平台本身
+
+对于 server 和客户端，请将 `mininglamposs/octo-*` 镜像固定到某个 release 标签（切勿用 `:latest`），
+拉取新标签，然后滚动更新：
+
+```bash
+docker compose up -d       # Compose
+# or
+helm upgrade octo ...      # Kubernetes
+```
+
+<Info>
+  在进行大版本升级前，请查阅 [备份与恢复](/zh/guides/operators/backup-and-restore)，并
+  重新生成任何跟踪已变更规范的 [参考文档](/zh/reference/rest-websocket-api)。
+</Info>

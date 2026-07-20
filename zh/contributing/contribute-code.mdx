@@ -1,0 +1,54 @@
+---
+title: "贡献代码"
+description: "如何为 Octo 仓库做贡献——工作流、分支模型与提交风格。"
+icon: "code-branch"
+---
+
+Octo 在 [31 个仓库](/zh/ecosystem/repository-guide) 中公开开发。每个仓库都是
+自包含的，因此贡献从挑选正确的那个仓库开始。
+
+## 找到正确的仓库
+
+使用 [仓库指南](/zh/ecosystem/repository-guide) 定位组件。大多数仓库共享
+相同的贡献文件：
+
+- **`CONTRIBUTING.md`** —— 该仓库的工作流、分支模型与提交风格。
+- **`CODE_OF_CONDUCT.md`** —— 社区行为期望。
+- **`SECURITY.md`** —— 在此报告安全问题，**而非**公开的 issue 追踪器。
+
+## 工作流
+
+<Steps>
+  <Step title="Fork 并建分支">
+    Fork 该仓库并创建一个主题分支。遵循该仓库 `CONTRIBUTING.md` 中的
+    分支命名与提交约定。
+  </Step>
+  <Step title="遵循仓库的标准">
+    有几个仓库带有 [`octo-spec`](/zh/reference/octo-spec-okf) 的 `.octospec/` 捆绑包——
+    编码标准随仓库一起分发，任何编码 agent 都会自动读取它。请与
+    既有约定保持一致。
+  </Step>
+  <Step title="测试并提交 PR">
+    运行该仓库的测试 / lint 关卡（CI 会强制执行），然后提交一个 pull request。保持改动
+    聚焦。
+  </Step>
+</Steps>
+
+<Info>
+  Octo 遵循**以产品方式发布**：每一次 OSS 切分都是一个干净、自包含、
+  可从仓库重现的 release，遵循 **Apache-2.0**。贡献应保持这一标准——
+  不携带内部包袱，不夹带 vendored 密钥。
+</Info>
+
+## 为这些文档做贡献
+
+改进文档本身有其自己的指南：
+
+<CardGroup cols={2}>
+  <Card title="贡献文档" icon="pen-to-square" href="/zh/contributing/contribute-docs">
+    文档即代码的工作流以及如何添加一个页面。
+  </Card>
+  <Card title="翻译指南" icon="language" href="/zh/contributing/translation-guide">
+    保持英文与简体中文对等。
+  </Card>
+</CardGroup>

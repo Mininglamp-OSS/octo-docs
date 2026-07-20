@@ -1,0 +1,68 @@
+---
+title: "贡献文档"
+description: "这个 Mintlify 门户的文档即代码工作流——原则、页面结构以及如何添加页面。"
+icon: "pen-to-square"
+---
+
+这些文档就是**代码**：像 Octo 的任何其他部分一样进行版本控制、评审和构建。本门户
+使用 [Mintlify](https://mintlify.com) 构建——页面是带 YAML frontmatter 的 MDX，而
+导航存放在 `docs.json` 中。
+
+## 原则
+
+1. **一个入口，而非 31 个。** 聚合内容；链接到某个仓库的深度文档，而非复制它们。
+2. **按旅程组织。** 导航遵循受众 + 任务，绝不采用一仓库一页的方式。
+3. **[Diátaxis](https://diataxis.fr/)。** 每个页面恰好是 Tutorial、How-to、
+   Reference 或 Explanation 中的一种——绝不混合。
+4. **单一事实来源。** 参考页是从 spec *生成*的——切勿手动编辑
+   `reference/api/`、`reference/cli/`、`reference/configuration` 或
+   `reference/errors-and-envelopes` 中的任何内容（每处都带有 `DO NOT EDIT` 横幅）。
+
+## 在本地运行站点
+
+```bash
+npm install          # dev dep for the generators
+npm run gen:all      # regenerate the API / CLI / config reference
+mint dev             # preview at http://localhost:3000
+mint validate        # strict build check (fails on warnings/errors)
+```
+
+<Note>
+  Mintlify CLI 需要 **LTS Node**（≤ 22）。如果你的默认版本更新，请为
+  `mint` 命令使用 LTS Node。
+</Note>
+
+## 添加一个页面
+
+<Steps>
+  <Step title="创建 MDX 文件">
+    将它放入正确的分区文件夹（`get-started/`、`guides/<lane>/`、`concepts/`……）。添加
+    frontmatter：`title`、`description` 和一个 `icon`（Lucide / Font Awesome 名称）。
+  </Step>
+  <Step title="在导航中注册">
+    将页面路径（不含扩展名）添加到 `docs.json` 中匹配的分组。页面在进入
+    导航前不会显示。
+  </Step>
+  <Step title="按标准撰写">
+    选定一种 Diátaxis 类型。使用组件——`<Note>` / `<Tip>` / `<Warning>` / `<Info>`、
+    `<Steps>`、`<Card>` / `<CardGroup>`——并优先使用可运行命令而非纯文字。图表使用
+    ` ```mermaid ` 围栏。
+  </Step>
+  <Step title="校验">
+    在提交 PR 前运行 `mint validate` 和 `mint broken-links`。
+  </Step>
+</Steps>
+
+## 重新生成参考文档
+
+如果你改动了某个源 spec（在 `octo-cli`、`octo-auth` 或 `octo-server` 中），请重新生成
+而非编辑输出：
+
+```bash
+npm run gen:all      # rewrite the reference pages
+npm run gen:check    # CI drift check — fails if pages are stale
+```
+
+<Card title="翻译指南" icon="language" href="/zh/contributing/translation-guide">
+  如何添加与维护简体中文页面。
+</Card>

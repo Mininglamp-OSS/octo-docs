@@ -1,0 +1,58 @@
+---
+title: "Administer with the admin console"
+description: "Manage tenants, orgs, users, channels, and Lobster agents from the octo-admin console."
+icon: "shield"
+---
+
+**[`octo-admin`](https://github.com/Mininglamp-OSS/octo-admin)** is the operator console for an
+Octo deployment — tenants, orgs, users, channels, and Lobster agent configuration in one pane.
+It's a thin React front-end over `octo-server`'s `/admin/*` REST APIs, with no business logic or
+database of its own.
+
+## Access
+
+With the [Compose deployment](/guides/operators/deploy-compose), the console is served at:
+
+```
+http://<your-host>:28080/admin/     # log in as superAdmin
+```
+
+Operator authentication is delegated to `octo-server` (SSO or an admin token), and **every
+mutation passes backend-side RBAC** — the UI is a convenience, not the security boundary. Deploy
+it as a separate, internal/VPN-only, SSO-gated bundle.
+
+## What you manage
+
+<CardGroup cols={2}>
+  <Card title="Tenants & orgs" icon="building">
+    Bootstrap tenants; audit organizations and their spaces.
+  </Card>
+  <Card title="Users" icon="user">
+    Review users, roles, and membership across spaces.
+  </Card>
+  <Card title="Channels" icon="hashtag">
+    Moderate channels and their access.
+  </Card>
+  <Card title="Agents" icon="robot">
+    Toggle Lobster agent feature flags and rotate webhooks.
+  </Card>
+</CardGroup>
+
+There's also an **audit log** view for day-2 operations.
+
+## Self-hosting the console
+
+It's a Vite app:
+
+```bash
+pnpm dev        # dev server; point VITE_ADMIN_API_* at your octo-server
+pnpm build      # static bundle → ./dist
+```
+
+Retarget the API via `.env.local` (`VITE_ADMIN_API_*`). The console ships EN / 中文 locales.
+
+<Info>
+  Because the admin console holds no data and enforces nothing on its own, the security posture
+  is entirely: **serve it privately, gate it behind SSO, and rely on server-side RBAC.** See
+  [Security hardening](/guides/operators/security-hardening).
+</Info>

@@ -1,0 +1,66 @@
+---
+title: "使用 Docker Compose 部署"
+description: "面向评估与内部演示的单节点、开箱即用 Octo 部署方案。"
+icon: "docker"
+---
+
+**[`octo-deployment`](https://github.com/Mininglamp-OSS/octo-deployment)** 的 Compose 技术栈是
+标准的单主机部署方案：server、admin、web、smart-summary、WuKongIM、MySQL、
+Redis、MinIO 以及一个 nginx 反向代理，全部由一份 `docker-compose.yaml` 串联起来。
+
+<Info>
+  若需带引导的首次运行，请参阅 [10 分钟完成部署](/zh/get-started/quickstart-deploy)。本
+  页是 Compose 技术栈的运维参考。
+</Info>
+
+## 三步上手路径
+
+```bash
+git clone https://github.com/Mininglamp-OSS/octo-deployment.git
+cd octo-deployment
+./setup.sh                     # 1. generate docker/.env (random secrets + admin pwd)
+sudo ./setup.sh --up           # 2. start; blocks until every service is (healthy)
+sudo ./setup.sh --smoke-test   # 3. 11-probe end-to-end check
+```
+
+`--up` 是**仅启动**——它运行 `docker compose up -d --wait`，绝不会重新生成密钥
+（缺少 `.env` 时会直接失败，除非传入 `--force`）。`--up` 与 `--smoke-test` 都需要 sudo，
+因为 `docker/.env` 始终保持 `root:600`。
+
+## 网络暴露面
+
+默认仅开放一个客户端端口：
+
+| 端口 | 用途 |
+|---|---|
+| `28080` (`OCTO_HTTP_PORT`) | nginx HTTP——所有客户端流量 |
+| `28443` (`OCTO_HTTPS_PORT`) | nginx HTTPS（启用 TLS 时） |
+
+**其余所有服务**——MySQL (`23306`)、Redis (`26379`)、MinIO (`29000`/`29001`)、WuKongIM
+管理 API (`25001`) 和监控 (`25300`)——默认绑定到回环地址 (`127.0.0.1`)。
+浏览器聊天通过 nginx `/ws` 转发；仅当你直接连接原生聊天客户端时，才需要原生 WuKongIM 聊天传输端口 (`25100`/`25200`)。
+
+<Warning>
+  **同一主机上的多个技术栈会共享数据卷。** 命名卷默认为
+  `${COMPOSE_PROJECT_NAME:-octo}_*`，因此两个默认克隆会共享数据——从其中一个执行
+  `docker compose down -v` 可能会抹掉另一个的数据。在启动第二个技术栈前，请先设置唯一的
+  `COMPOSE_PROJECT_NAME`。
+</Warning>
+
+## 可选配置档（profiles）
+
+```bash
+./setup.sh --summary   # LLM summary services (needs LLM_API_KEY)
+./setup.sh --search    # message-search infra (Kafka + OpenSearch + es-indexer)
+```
+
+参见 [运维邮件、语音与搜索](/zh/guides/operators/subsystems) 了解如何端到端开启搜索。
+
+<CardGroup cols={2}>
+  <Card title="迁移到 Kubernetes" icon="dharmachakra" href="/zh/guides/operators/deploy-kubernetes">
+    多节点清单与 Helm。
+  </Card>
+  <Card title="暴露前先加固" icon="lock" href="/zh/guides/operators/security-hardening">
+    上线前检查清单。
+  </Card>
+</CardGroup>
