@@ -109,35 +109,35 @@
               },
               {
                 "group": "Messages",
-                "openapi": { "source": "/api-reference/openapi/message.json", "directory": "api-reference/message" }
+                "openapi": { "source": "openapi/message.json", "directory": "api-reference/message" }
               },
               {
                 "group": "Threads",
-                "openapi": { "source": "/api-reference/openapi/thread.json", "directory": "api-reference/thread" }
+                "openapi": { "source": "openapi/thread.json", "directory": "api-reference/thread" }
               },
               {
                 "group": "Groups",
-                "openapi": { "source": "/api-reference/openapi/group.json", "directory": "api-reference/group" }
+                "openapi": { "source": "openapi/group.json", "directory": "api-reference/group" }
               },
               {
                 "group": "Files",
-                "openapi": { "source": "/api-reference/openapi/file.json", "directory": "api-reference/file" }
+                "openapi": { "source": "openapi/file.json", "directory": "api-reference/file" }
               },
               {
                 "group": "Events",
-                "openapi": { "source": "/api-reference/openapi/event.json", "directory": "api-reference/event" }
+                "openapi": { "source": "openapi/event.json", "directory": "api-reference/event" }
               },
               {
                 "group": "Bot Identity",
-                "openapi": { "source": "/api-reference/openapi/bot.json", "directory": "api-reference/bot" }
+                "openapi": { "source": "openapi/bot.json", "directory": "api-reference/bot" }
               },
               {
                 "group": "Docs (collaborative)",
-                "openapi": { "source": "/api-reference/openapi/docs.json", "directory": "api-reference/docs" }
+                "openapi": { "source": "openapi/docs.json", "directory": "api-reference/docs" }
               },
               {
                 "group": "Docs (interactive HTML)",
-                "openapi": { "source": "/api-reference/openapi/html.json", "directory": "api-reference/html" }
+                "openapi": { "source": "openapi/html.json", "directory": "api-reference/html" }
               },
               {
                 "group": "CLI commands by domain",
@@ -285,35 +285,35 @@
               },
               {
                 "group": "消息",
-                "openapi": { "source": "/api-reference/openapi/message.json", "directory": "zh/api-reference/message" }
+                "openapi": { "source": "openapi/message.json", "directory": "zh/api-reference/message" }
               },
               {
                 "group": "话题",
-                "openapi": { "source": "/api-reference/openapi/thread.json", "directory": "zh/api-reference/thread" }
+                "openapi": { "source": "openapi/thread.json", "directory": "zh/api-reference/thread" }
               },
               {
                 "group": "群组",
-                "openapi": { "source": "/api-reference/openapi/group.json", "directory": "zh/api-reference/group" }
+                "openapi": { "source": "openapi/group.json", "directory": "zh/api-reference/group" }
               },
               {
                 "group": "文件",
-                "openapi": { "source": "/api-reference/openapi/file.json", "directory": "zh/api-reference/file" }
+                "openapi": { "source": "openapi/file.json", "directory": "zh/api-reference/file" }
               },
               {
                 "group": "事件",
-                "openapi": { "source": "/api-reference/openapi/event.json", "directory": "zh/api-reference/event" }
+                "openapi": { "source": "openapi/event.json", "directory": "zh/api-reference/event" }
               },
               {
                 "group": "机器人身份",
-                "openapi": { "source": "/api-reference/openapi/bot.json", "directory": "zh/api-reference/bot" }
+                "openapi": { "source": "openapi/bot.json", "directory": "zh/api-reference/bot" }
               },
               {
                 "group": "协作文档",
-                "openapi": { "source": "/api-reference/openapi/docs.json", "directory": "zh/api-reference/docs" }
+                "openapi": { "source": "openapi/docs.json", "directory": "zh/api-reference/docs" }
               },
               {
                 "group": "交互式 HTML 文档",
-                "openapi": { "source": "/api-reference/openapi/html.json", "directory": "zh/api-reference/html" }
+                "openapi": { "source": "openapi/html.json", "directory": "zh/api-reference/html" }
               },
               {
                 "group": "CLI 命令（按领域）",

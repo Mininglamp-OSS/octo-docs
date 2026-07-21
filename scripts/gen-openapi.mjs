@@ -3,7 +3,7 @@
  * for Mintlify's interactive API playground.
  *
  * Source of truth : ../octo-cli/internal/registry/specs/*.json (OpenAPI 3.1)
- * Output          : api-reference/openapi/<domain>.json  (committed, drift-checked)
+ * Output          : openapi/<domain>.json  (committed, drift-checked)
  *
  * The source specs are embedded in the octo-cli Go binary and are NOT edited by
  * hand. They lack the pieces Mintlify's playground needs, so this generator
@@ -21,7 +21,10 @@ import path from 'node:path';
 import { WORKSPACE, DOCS_ROOT, createSink, readJson } from './_lib.mjs';
 
 const CLI_SPECS_DIR = path.join(WORKSPACE, 'octo-cli/internal/registry/specs');
-const OUT_DIR = path.join(DOCS_ROOT, 'api-reference/openapi');
+// Neutral location — NOT under `api-reference/`, which is Mintlify's default
+// directory for generated API pages (co-locating specs there breaks the
+// hosted build's OpenAPI fetch).
+const OUT_DIR = path.join(DOCS_ROOT, 'openapi');
 
 /** Deprecated / internal / unreleased / not-yet-documented — withheld from docs. */
 const EXCLUDE = new Set(['matter', 'marketplace']);
@@ -110,7 +113,7 @@ function main() {
   }
 
   const ok = sink.finish(
-    `[gen-openapi] wrote ${files.length} augmented specs (${totalOps} ops) → api-reference/openapi/`,
+    `[gen-openapi] wrote ${files.length} augmented specs (${totalOps} ops) → openapi/`,
   );
   if (!ok) process.exit(1);
 }
