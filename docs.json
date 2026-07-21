@@ -71,6 +71,7 @@
                   "guides/integrators/call-the-rest-api",
                   "guides/integrators/verify-credentials-with-octo-auth",
                   "guides/integrators/write-an-adapter",
+                  "guides/integrators/receive-events-with-webhooks",
                   "guides/integrators/export-and-search-messages",
                   "guides/integrators/marketplace"
                 ]
@@ -227,6 +228,7 @@
                   "zh/guides/integrators/call-the-rest-api",
                   "zh/guides/integrators/verify-credentials-with-octo-auth",
                   "zh/guides/integrators/write-an-adapter",
+                  "zh/guides/integrators/receive-events-with-webhooks",
                   "zh/guides/integrators/export-and-search-messages",
                   "zh/guides/integrators/marketplace"
                 ]
