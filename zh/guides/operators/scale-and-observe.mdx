@@ -53,3 +53,12 @@ nginx 是唯一入口（在 Kubernetes 上是一个 `ClusterIP` Service）。它
   即便你扩容了公开层，也要将 WuKongIM 管理 API 和 MinIO 控制台保持在回环 / 私有网络上
   ——参见 [安全加固](/zh/guides/operators/security-hardening)。
 </Note>
+
+<CardGroup cols={2}>
+  <Card title="备份与恢复" icon="database" href="/zh/guides/operators/backup-and-restore">
+    在扩容前保护好状态：需要快照什么、如何恢复。
+  </Card>
+  <Card title="升级" icon="arrows-rotate" href="/zh/guides/operators/upgrades">
+    在 Compose 与 Kubernetes 上安全地滚动更新镜像标签。
+  </Card>
+</CardGroup>

@@ -54,3 +54,12 @@ per-UID). To expose the stack, put a LoadBalancer or Ingress in front of the ngi
   Keep the WuKongIM manager API and MinIO console on loopback/private networks even as you scale
   the public tiers — see [Security hardening](/guides/operators/security-hardening).
 </Note>
+
+<CardGroup cols={2}>
+  <Card title="Backup and restore" icon="database" href="/guides/operators/backup-and-restore">
+    Protect state before you scale: what to snapshot and how to recover.
+  </Card>
+  <Card title="Upgrades" icon="arrows-rotate" href="/guides/operators/upgrades">
+    Roll new image tags across Compose and Kubernetes safely.
+  </Card>
+</CardGroup>
