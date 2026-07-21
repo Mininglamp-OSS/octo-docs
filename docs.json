@@ -342,11 +342,59 @@
     }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude", "mcp"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "mcp"
+    ]
   },
   "footer": {
     "socials": {
       "github": "https://github.com/Mininglamp-OSS"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/guides/teams/use-chat-docs-tasks",
+      "destination": "/guides/teams/use-chat-and-docs"
+    },
+    {
+      "source": "/guides/operators/subsystems-mail-speech-search",
+      "destination": "/guides/operators/subsystems"
+    },
+    {
+      "source": "/guides/operators/upgrades-and-version-sync",
+      "destination": "/guides/operators/upgrades"
+    },
+    {
+      "source": "/reference/api/matter",
+      "destination": "/reference/rest-websocket-api"
+    },
+    {
+      "source": "/reference/cli/matter",
+      "destination": "/reference/octo-cli"
+    },
+    {
+      "source": "/zh/guides/teams/use-chat-docs-tasks",
+      "destination": "/zh/guides/teams/use-chat-and-docs"
+    },
+    {
+      "source": "/zh/guides/operators/subsystems-mail-speech-search",
+      "destination": "/zh/guides/operators/subsystems"
+    },
+    {
+      "source": "/zh/guides/operators/upgrades-and-version-sync",
+      "destination": "/zh/guides/operators/upgrades"
+    },
+    {
+      "source": "/zh/reference/api/matter",
+      "destination": "/zh/reference/rest-websocket-api"
+    },
+    {
+      "source": "/zh/reference/cli/matter",
+      "destination": "/zh/reference/octo-cli"
+    }
+  ]
 }
