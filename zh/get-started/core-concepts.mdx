@@ -4,7 +4,8 @@ description: "使用 Octo 所需的术语：Lobster、频道、Bot、Org、Skill
 icon: "book"
 ---
 
-一份速查术语表，按各概念在平台中所处的位置分组。每一项都链接到深入讲解之处。
+一份速查术语表，按各概念在平台中所处的位置分组。每一项都链接到深入讲解之处。完整的实体模型
+——字段、枚举与关系——参见[数据模型与实体](/zh/reference/data-model)。
 
 ## 人与空间
 
@@ -33,6 +34,11 @@ icon: "book"
   你到处都会看到两种凭据：**`bf_…`**（User Bot 令牌——机器人与频道使用）和 **`uk_…`**（长期有效的用户 API 密钥）。两者都通过同一套契约进行校验——参见[安全与认证](/zh/concepts/security-and-auth)。
 </Info>
 
-<Card title="看看它们如何组合" icon="sitemap" href="/zh/get-started/architecture-at-a-glance">
-  用一张图看懂整体架构。
-</Card>
+<CardGroup cols={2}>
+  <Card title="看看它们如何组合" icon="sitemap" href="/zh/get-started/architecture-at-a-glance">
+    用一张图看懂整体架构。
+  </Card>
+  <Card title="数据模型与实体" icon="diagram-project" href="/zh/reference/data-model">
+    每个实体的字段、枚举与关系。
+  </Card>
+</CardGroup>
