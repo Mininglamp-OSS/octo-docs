@@ -22,11 +22,11 @@ openclaw gateway run --force
 
 需要 Node ≥ 22 以及 OpenClaw ≥ 2026.4.15。账号配置位于 `~/.openclaw/openclaw.json`
 中的 `channels.octo.accounts` 下，并支持热重载。令牌可以是 `bf_`（User Bot，完整群组 +
-线程）或 `app_`（App Bot，仅私信）。
+话题）或 `app_`（App Bot，仅私信）。
 
 <Info>
   该插件注册了一个智能体工具，**`octo_management`**（群组、`GROUP.md`/`THREAD.md`、
-  线程、成员、`write-secret`）。它仅在 `tools.profile: full` 下才被准入；全新
+  话题、成员、`write-secret`）。它仅在 `tools.profile: full` 下才被准入；全新
   安装默认使用 `coding` 配置，因此需通过 `tools.alsoAllow` 添加它。
 </Info>
 
@@ -53,7 +53,7 @@ graph LR
   [`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli) 命令主动操作 Octo。
 
 在 `connectionMode: "websocket"` 下，回复直接经由 `plugin.outbound` / Octo REST 发出——
-而非经过外部 webhook 中继。功能：私信 / 群组 / 线程、文本 / 图片 / 文件、文件
+而非经过外部 webhook 中继。功能：私信 / 群组 / 话题、文本 / 图片 / 文件、文件
 上传、流式回复（send → edit → final）、自动重连、30 秒心跳，以及 5 分钟
 去重。阶段 1–2 已完成；设置面板 UI（阶段 3）待定。
 
