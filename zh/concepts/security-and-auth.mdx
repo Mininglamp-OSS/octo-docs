@@ -22,7 +22,7 @@ Octo 拥有一套贯穿所有服务的统一认证契约，由 **[`octo-auth`](h
 
 ## RBAC 与租户
 
-授权以 Space 为作用域。Space 成员拥有一个角色——`0` member / `1` admin / `2` owner——且每个触及用户数据的 handler 都会经过 **Space 中间件**。多租户隔离是结构性的：各服务按 `space_id`（来自 `X-Space-ID`）过滤，Bot API 在任何操作前校验机器人归属，话题模块则校验父 Channel 的访问权限。
+授权以 Space 为作用域。Space 成员拥有一个角色——`0` member / `1` admin / `2` owner——且每个触及用户数据的 handler 都会经过 **Space 中间件**。多租户隔离是结构性的：各服务按 `space_id`（来自 `X-Space-ID`）过滤，Bot API 在任何操作前校验机器人归属，话题模块则校验父频道的访问权限。
 
 ```mermaid
 graph LR

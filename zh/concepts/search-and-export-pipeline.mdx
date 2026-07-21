@@ -40,7 +40,7 @@ graph LR
 
 <Steps>
   <Step title="提交">
-    `POST /v1/messages/batch`，附带 Channel 列表 + 时间范围 → 始终返回 **HTTP 202** + 一个 `task_id`。
+    `POST /v1/messages/batch`，附带频道列表 + 时间范围 → 始终返回 **HTTP 202** + 一个 `task_id`。
   </Step>
   <Step title="轮询">
     `GET /v1/messages/batch/{task_id}` 查询状态。`DELETE` 幂等地取消。

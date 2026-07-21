@@ -25,9 +25,9 @@ graph LR
 
 <Steps>
   <Step title="认证">解析凭据（会话、`bf_` 机器人令牌或 `uk_` 密钥）。</Step>
-  <Step title="授权">组织感知的 RBAC + 按 Channel 的 ACL + 智能体身份门控。</Step>
+  <Step title="授权">组织感知的 RBAC + 按频道的 ACL + 智能体身份门控。</Step>
   <Step title="执行">运行业务逻辑，可能会启动或恢复一个 Lobster 会话。</Step>
-  <Step title="扇出">将消息入队到 WuKongIM；若该 Channel 需要向外桥接，则触发相应适配器。</Step>
+  <Step title="扇出">将消息入队到 WuKongIM；若该频道需要向外桥接，则触发相应适配器。</Step>
   <Step title="响应">返回统一的 JSON 信封（或 WS 帧），并附带链路追踪与指标。</Step>
 </Steps>
 
