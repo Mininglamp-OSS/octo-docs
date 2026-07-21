@@ -108,36 +108,17 @@
                 ]
               },
               {
-                "group": "Messages",
-                "openapi": { "source": "openapi/message.json", "directory": "api-reference/message" }
-              },
-              {
-                "group": "Threads",
-                "openapi": { "source": "openapi/thread.json", "directory": "api-reference/thread" }
-              },
-              {
-                "group": "Groups",
-                "openapi": { "source": "openapi/group.json", "directory": "api-reference/group" }
-              },
-              {
-                "group": "Files",
-                "openapi": { "source": "openapi/file.json", "directory": "api-reference/file" }
-              },
-              {
-                "group": "Events",
-                "openapi": { "source": "openapi/event.json", "directory": "api-reference/event" }
-              },
-              {
-                "group": "Bot Identity",
-                "openapi": { "source": "openapi/bot.json", "directory": "api-reference/bot" }
-              },
-              {
-                "group": "Docs (collaborative)",
-                "openapi": { "source": "openapi/docs.json", "directory": "api-reference/docs" }
-              },
-              {
-                "group": "Docs (interactive HTML)",
-                "openapi": { "source": "openapi/html.json", "directory": "api-reference/html" }
+                "group": "REST API by domain",
+                "pages": [
+                  "reference/api/message",
+                  "reference/api/thread",
+                  "reference/api/group",
+                  "reference/api/file",
+                  "reference/api/event",
+                  "reference/api/bot",
+                  "reference/api/docs",
+                  "reference/api/html"
+                ]
               },
               {
                 "group": "CLI commands by domain",
@@ -284,36 +265,17 @@
                 ]
               },
               {
-                "group": "消息",
-                "openapi": { "source": "openapi/message.json", "directory": "zh/api-reference/message" }
-              },
-              {
-                "group": "话题",
-                "openapi": { "source": "openapi/thread.json", "directory": "zh/api-reference/thread" }
-              },
-              {
-                "group": "群组",
-                "openapi": { "source": "openapi/group.json", "directory": "zh/api-reference/group" }
-              },
-              {
-                "group": "文件",
-                "openapi": { "source": "openapi/file.json", "directory": "zh/api-reference/file" }
-              },
-              {
-                "group": "事件",
-                "openapi": { "source": "openapi/event.json", "directory": "zh/api-reference/event" }
-              },
-              {
-                "group": "机器人身份",
-                "openapi": { "source": "openapi/bot.json", "directory": "zh/api-reference/bot" }
-              },
-              {
-                "group": "协作文档",
-                "openapi": { "source": "openapi/docs.json", "directory": "zh/api-reference/docs" }
-              },
-              {
-                "group": "交互式 HTML 文档",
-                "openapi": { "source": "openapi/html.json", "directory": "zh/api-reference/html" }
+                "group": "REST API（按领域）",
+                "pages": [
+                  "zh/reference/api/message",
+                  "zh/reference/api/thread",
+                  "zh/reference/api/group",
+                  "zh/reference/api/file",
+                  "zh/reference/api/event",
+                  "zh/reference/api/bot",
+                  "zh/reference/api/docs",
+                  "zh/reference/api/html"
+                ]
               },
               {
                 "group": "CLI 命令（按领域）",
@@ -414,14 +376,6 @@
       "source": "/reference/api/matter",
       "destination": "/reference/rest-websocket-api"
     },
-    { "source": "/reference/api/message", "destination": "/reference/rest-websocket-api" },
-    { "source": "/reference/api/thread", "destination": "/reference/rest-websocket-api" },
-    { "source": "/reference/api/group", "destination": "/reference/rest-websocket-api" },
-    { "source": "/reference/api/file", "destination": "/reference/rest-websocket-api" },
-    { "source": "/reference/api/event", "destination": "/reference/rest-websocket-api" },
-    { "source": "/reference/api/bot", "destination": "/reference/rest-websocket-api" },
-    { "source": "/reference/api/docs", "destination": "/reference/rest-websocket-api" },
-    { "source": "/reference/api/html", "destination": "/reference/rest-websocket-api" },
     {
       "source": "/reference/cli/matter",
       "destination": "/reference/octo-cli"
@@ -442,14 +396,6 @@
       "source": "/zh/reference/api/matter",
       "destination": "/zh/reference/rest-websocket-api"
     },
-    { "source": "/zh/reference/api/message", "destination": "/zh/reference/rest-websocket-api" },
-    { "source": "/zh/reference/api/thread", "destination": "/zh/reference/rest-websocket-api" },
-    { "source": "/zh/reference/api/group", "destination": "/zh/reference/rest-websocket-api" },
-    { "source": "/zh/reference/api/file", "destination": "/zh/reference/rest-websocket-api" },
-    { "source": "/zh/reference/api/event", "destination": "/zh/reference/rest-websocket-api" },
-    { "source": "/zh/reference/api/bot", "destination": "/zh/reference/rest-websocket-api" },
-    { "source": "/zh/reference/api/docs", "destination": "/zh/reference/rest-websocket-api" },
-    { "source": "/zh/reference/api/html", "destination": "/zh/reference/rest-websocket-api" },
     {
       "source": "/zh/reference/cli/matter",
       "destination": "/zh/reference/octo-cli"

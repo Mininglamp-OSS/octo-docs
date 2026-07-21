@@ -3,14 +3,12 @@
  * gen-api.mjs — Octo API reference generator (SSOT → Mintlify MDX).
  *
  * Reads the authoritative OpenAPI 3.1 specs that ship inside the code:
- *   - octo-cli   : internal/registry/specs/*.json   (8 in-scope domains, 84 ops)
+ *   - octo-cli   : internal/registry/specs/*.json   (9 domains, 98 ops)
  *   - octo-auth  : contract/errors-v1.yaml
  *
  * Emits, for each language (en, zh):
- *   reference/rest-websocket-api.mdx (API overview) +
+ *   reference/api/<domain>.mdx + reference/rest-websocket-api.mdx +
  *   reference/errors-and-envelopes.mdx   (zh under a zh/ prefix)
- * The per-domain endpoint pages are rendered by Mintlify's interactive OpenAPI
- * playground from vendored specs (see scripts/gen-openapi.mjs + docs.json).
  * The scaffolding (frontmatter, intros, section headers, callouts) is
  * translated; spec-derived rows are identical across languages, since the API
  * is defined in English specs. Every file carries a DO-NOT-EDIT banner.
@@ -69,8 +67,8 @@ const S = {
     domainNote: (link) => `Call these with a bot token (\`bf_…\`) as a bearer credential, or via [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli). See the [API overview](${link}/reference/rest-websocket-api) for authentication and risk levels.`,
     idxTitle: 'REST & WebSocket API',
     idxDesc: 'The authoritative Octo REST API, generated from the octo-cli embedded OpenAPI 3.1 specs.',
-    idxIntro: (t, d) => `The Octo bot-facing REST API spans **${t} operations across ${d} domains**. Each domain in the sidebar is an **interactive reference** generated from the OpenAPI 3.1 spec embedded in [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so it never drifts from the implementation. Open any endpoint to inspect its schema and send a live request.`,
-    tip: (link) => `Call these endpoints with a bot token (\`bf_…\`) as a bearer credential — set your instance URL and token in an endpoint's **Try it** panel to send a live request, or use [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli). See [Verify credentials with octo-auth](${link}/guides/integrators/verify-credentials-with-octo-auth). The entities and enums these operations read and write are catalogued in the [data model](${link}/reference/data-model).`,
+    idxIntro: (t, d) => `The Octo bot-facing REST API spans **${t} operations across ${d} domains**. Every domain page is generated directly from the OpenAPI 3.1 spec embedded in [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so this reference never drifts from the implementation.`,
+    tip: (link) => `The easiest way to call these endpoints is via [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli) (each operation maps to a \`CLI op\` shown on its domain page) or directly over HTTP with a bot token (\`bf_…\`). See [Verify credentials with octo-auth](${link}/guides/integrators/verify-credentials-with-octo-auth). The entities and enums these operations read and write are catalogued in the [data model](${link}/reference/data-model).`,
     hDomains: 'Domains', thDomain: 'Domain', thSpec: 'Spec', thOps: 'Operations', total: 'Total',
     hRisk: 'Risk levels', riskIntro: 'Each operation is tagged with an `x-octo-risk` level from the spec:',
     riskRead: '🟢 **read** — no state change.', riskWrite: '🟠 **write** — creates or mutates state.',
@@ -91,8 +89,8 @@ const S = {
     domainNote: (link) => `用机器人 token(\`bf_…\`)作为 bearer 凭证调用这些接口，或通过 [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli) 调用。鉴权与风险级别见 [API 总览](${link}/reference/rest-websocket-api)。`,
     idxTitle: 'REST 与 WebSocket API',
     idxDesc: 'Octo 权威 REST API —— 由 octo-cli 内嵌的 OpenAPI 3.1 规范生成。',
-    idxIntro: (t, d) => `Octo 面向机器人的 REST API 覆盖 **${d} 个领域、共 ${t} 个接口**。侧边栏中的每个领域都是一份由内嵌于 [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) 的 OpenAPI 3.1 规范生成的**交互式参考** —— 与驱动 CLI 和服务端的是同一份规范,因此永不与实现漂移。打开任一接口即可查看其 schema 并发起实时请求。`,
-    tip: (link) => `用机器人 token(\`bf_…\`)作为 bearer 凭证调用这些接口 —— 在某个接口的 **Try it** 面板中填入你的实例地址与 token 即可发起实时请求,或使用 [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli)。参见 [用 octo-auth 校验凭证](${link}/guides/integrators/verify-credentials-with-octo-auth)。这些操作读写的实体与枚举,汇总于[数据模型](${link}/reference/data-model)。`,
+    idxIntro: (t, d) => `Octo 面向机器人的 REST API 覆盖 **${d} 个领域、共 ${t} 个接口**。每个领域页面都直接由内嵌于 [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) 的 OpenAPI 3.1 规范生成 —— 与驱动 CLI 和服务端的是同一份规范,因此本参考永不与实现漂移。`,
+    tip: (link) => `调用这些接口最简单的方式是使用 [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli)(每个接口都对应领域页中标注的 \`CLI 命令\`),或用机器人 token(\`bf_…\`)直接走 HTTP。参见 [用 octo-auth 校验凭证](${link}/guides/integrators/verify-credentials-with-octo-auth)。这些操作读写的实体与枚举,汇总于[数据模型](${link}/reference/data-model)。`,
     hDomains: '领域', thDomain: '领域', thSpec: '规范', thOps: '接口数', total: '合计',
     hRisk: '风险级别', riskIntro: '每个接口都带有来自规范的 `x-octo-risk` 级别标记:',
     riskRead: '🟢 **读** —— 不改变状态。', riskWrite: '🟠 **写** —— 创建或修改状态。',
@@ -146,22 +144,38 @@ function renderOperation(route, method, op, root, t, riskMap) {
   return out.join('\n');
 }
 
-// The per-domain endpoint pages are now rendered by Mintlify's interactive
-// OpenAPI playground (see scripts/gen-openapi.mjs + docs.json nav). This helper
-// only computes the per-domain operation count for the overview's Domains table.
-function summarizeDomain(name, spec, lang) {
+function generateDomainPage(name, spec, lang) {
+  const t = S[lang], L = LANGS[lang], riskMap = RISK[lang];
   const meta = DOMAIN_META[name] || { [lang]: name };
   const label = meta[lang] || meta.en || name;
-  let count = 0;
-  for (const item of Object.values(spec.paths || {})) {
-    for (const method of HTTP_METHODS) if (item[method]) count++;
+  const source = `octo-cli/internal/registry/specs/${name}.json`;
+  const ops = [];
+  for (const [route, item] of Object.entries(spec.paths || {})) {
+    for (const method of HTTP_METHODS) if (item[method]) ops.push([route, method, item[method]]);
   }
-  return { name, label, count };
+  const body = [
+    '---',
+    `title: "${label} API"`,
+    `description: "${t.apiDesc(label)}"`,
+    'icon: "code"',
+    '---',
+    '',
+    banner({ ...SRC, spec: source }),
+    '',
+    `> ${t.genFrom} [\`${source}\`](https://github.com/Mininglamp-OSS/octo-cli/blob/main/internal/registry/specs/${name}.json) — **${ops.length} ${t.opsSuffix}**.`,
+    '',
+    t.domainNote(L.link),
+    '',
+    ops.map(([r, m, op]) => renderOperation(r, m, op, spec, t, riskMap)).join('\n---\n\n'),
+    '',
+  ].join('\n');
+  sink.emit(path.join(L.dir, 'reference/api', `${name}.mdx`), body);
+  return { name, label, count: ops.length };
 }
 
 function generateIndex(summaries, totalOps, lang) {
   const t = S[lang], L = LANGS[lang];
-  const rows = summaries.map((s) => `| ${s.label} | \`${s.name}\` | ${s.count} |`).join('\n');
+  const rows = summaries.map((s) => `| [${s.label}](${L.link}/reference/api/${s.name}) | \`${s.name}\` | ${s.count} |`).join('\n');
   const index = [
     '---',
     `title: "${t.idxTitle}"`,
@@ -241,13 +255,13 @@ function main() {
 
   let totalOps = 0;
   for (const lang of Object.keys(LANGS)) {
-    const summaries = names.map((name) => summarizeDomain(name, specs[name], lang));
+    const summaries = names.map((name) => generateDomainPage(name, specs[name], lang));
     totalOps = summaries.reduce((n, s) => n + s.count, 0);
     generateIndex(summaries, totalOps, lang);
     if (errDoc) generateErrors(errDoc, lang);
   }
 
-  const ok = sink.finish(`[gen-api] wrote API overview + errors (${totalOps} ops across ${names.length} domains) × ${Object.keys(LANGS).length} langs.`);
+  const ok = sink.finish(`[gen-api] wrote ${names.length} domain pages (${totalOps} ops) + index + errors × ${Object.keys(LANGS).length} langs.`);
   if (!ok) process.exit(1);
 }
 
