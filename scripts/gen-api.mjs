@@ -34,7 +34,7 @@ const sink = createSink({ check, generator: 'gen-api' });
 const SRC = { generator: 'gen-api.mjs' };
 
 // Domains withheld from the docs (deprecated / internal). matter is deprecated.
-const EXCLUDE = new Set(['matter']);
+const EXCLUDE = new Set(['matter', 'marketplace']);
 
 // Per-language output roots and label prefixes.
 const LANGS = {

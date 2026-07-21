@@ -23,8 +23,8 @@ import { WORKSPACE, DOCS_ROOT, createSink, readJson } from './_lib.mjs';
 const CLI_SPECS_DIR = path.join(WORKSPACE, 'octo-cli/internal/registry/specs');
 const OUT_DIR = path.join(DOCS_ROOT, 'api-reference/openapi');
 
-/** Deprecated / internal / unreleased — withheld from docs. */
-const EXCLUDE = new Set(['matter']);
+/** Deprecated / internal / unreleased / not-yet-documented — withheld from docs. */
+const EXCLUDE = new Set(['matter', 'marketplace']);
 
 /** Editable base URL — users point "Try it" at their own Octo instance. */
 const SERVERS = [
