@@ -40,7 +40,7 @@ WuKongIM 被设计为可作为**无单点故障**的弹性集群运行：
 WuKongIM 集成了 Webhook、Datasource 钩子以及 **Prometheus** 监控。管理 API（上游默认管理端口 `5300`；在 Octo 部署中映射到 loopback）是一个管理/调试界面，而非聊天传输通道——请将其隔离于公网之外。参见[扩缩容与可观测](/zh/guides/operators/scale-and-observe)。
 
 <Note>
-  构建需要 Go 1.20+；不支持 Windows。仓库在 `cmd/` 下提供了辅助二进制：`wukongim`（服务器）、`wkbench`（基准测试）以及 `wkdb`（节点本地只读存储检查器）。
+  构建需要 Go 1.23+；不支持 Windows。仓库在 `cmd/` 下提供了辅助二进制：`wukongim`（服务器）、`wkbench`（基准测试）以及 `wkdb`（节点本地只读存储检查器）。
 </Note>
 
 <CardGroup cols={3}>
