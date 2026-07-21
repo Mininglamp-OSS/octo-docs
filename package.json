@@ -6,12 +6,11 @@
   "type": "module",
   "scripts": {
     "gen:api": "node scripts/gen-api.mjs",
-    "gen:openapi": "node scripts/gen-openapi.mjs",
     "gen:cli": "node scripts/gen-cli.mjs",
     "gen:config": "node scripts/gen-config.mjs",
     "gen:sdk": "node scripts/gen-sdk.mjs",
-    "gen:all": "npm run gen:api && npm run gen:openapi && npm run gen:cli && npm run gen:config && npm run gen:sdk",
-    "gen:check": "node scripts/gen-api.mjs --check && node scripts/gen-openapi.mjs --check && node scripts/gen-cli.mjs --check && node scripts/gen-config.mjs --check && node scripts/gen-sdk.mjs --check",
+    "gen:all": "npm run gen:api && npm run gen:cli && npm run gen:config && npm run gen:sdk",
+    "gen:check": "node scripts/gen-api.mjs --check && node scripts/gen-cli.mjs --check && node scripts/gen-config.mjs --check && node scripts/gen-sdk.mjs --check",
     "dev": "mint dev",
     "validate": "mint validate"
   },
