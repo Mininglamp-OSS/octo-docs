@@ -24,7 +24,7 @@ const sink = createSink({ check, generator: 'gen-cli' });
 const SRC = { generator: 'gen-cli.mjs' };
 
 // Domains withheld from the docs (deprecated / internal). matter is deprecated.
-const EXCLUDE = new Set(['matter']);
+const EXCLUDE = new Set(['matter', 'marketplace']);
 
 const LANGS = {
   en: { dir: DOCS_ROOT, link: '' },
