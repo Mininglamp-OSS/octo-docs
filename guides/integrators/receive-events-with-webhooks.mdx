@@ -1,0 +1,149 @@
+---
+title: "Receive events with incoming webhooks"
+description: "Let an external service post messages into an Octo group or thread over a token-bearing URL — no bot process required."
+icon: "inbox"
+---
+
+An **incoming webhook** lets an external system push messages into a specific Octo **group** or
+**thread** by POSTing to a token-bearing URL. The message appears in the channel from a synthetic
+webhook sender (a `iwh_…` identity) — you don't run a bot process or hold a login. It's the
+lightest way to get CI results, alerts, or provider events into a conversation.
+
+<Info>
+  Incoming webhooks are served by `octo-server` (`incomingwebhook` module) as a **REST feature** —
+  they are not part of [`octo-cli`](/guides/bot-developers/drive-octo-with-cli). The `iwh_` sender
+  is one of the credential kinds in the [data model](/reference/data-model#cross-cutting-enums).
+</Info>
+
+## How authentication works
+
+Each webhook has two parts:
+
+- **`webhook_id`** — a public `iwh_…` identifier that appears in the URL (and is the message
+  sender's id).
+- **`token`** — a 256-bit secret. The server stores only its SHA-256 hash and compares in constant
+  time, so the token is shown **once**, at creation, and never again.
+
+The token in the URL is the **sole credential** for delivery — anyone with the full URL can post,
+so treat it like a password. All authentication failures return a uniform `401` (the server never
+reveals whether the id or the token was wrong).
+
+## Create a webhook
+
+Creating a webhook is a management call that requires a normal member of the target group — a bot
+token (`bf_…`) or a user credential works. It returns the token and the delivery URLs.
+
+<Steps>
+  <Step title="Call the create endpoint">
+    ```bash
+    export OCTO_API_BASE_URL="https://your-octo-instance.com"
+    export OCTO_BOT_TOKEN="bf_your_token"
+
+    curl -X POST "$OCTO_API_BASE_URL/v1/groups/$GROUP_NO/incoming-webhooks" \
+      -H "Authorization: Bearer $OCTO_BOT_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"CI alerts","allow_mention_bots":true}'
+    ```
+
+    Fields: `name` (≤ 64 chars; auto-generated if omitted), and mention policy —
+    `allow_mention_all`, `allow_mention_bots`, `mention_uids` (see [Mentions](#mentions)).
+    `avatar` may only be set by group admins. To target a **thread** instead of the whole group,
+    use `/v1/groups/$GROUP_NO/threads/$SHORT_ID/incoming-webhooks`.
+  </Step>
+
+  <Step title="Save the token and URL">
+    The response includes the `token` once, a native `url`, and a `urls` map with one entry per
+    adapter (`native`, `github`, `gitlab`, `feishu`, `wecom`).
+
+    <Warning>
+      The returned URLs are **host-less paths** — prepend your Octo base domain. And the `token`
+      is never shown again: store it now, or [rotate it](#manage-webhooks) later.
+    </Warning>
+  </Step>
+</Steps>
+
+## Send your first event
+
+POST the **native** payload to the bare `webhook_id/token` path:
+
+```bash
+curl -X POST "$OCTO_API_BASE_URL/v1/incoming-webhooks/$WEBHOOK_ID/$TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"msg_type":"text","content":"Deploy #4123 succeeded ✅"}'
+```
+
+- **`msg_type`** — `text` (default), `richtext` (a `blocks` array), or `card` (an Adaptive Card in
+  `card`). Any other value is rejected with `400`.
+- **`content`** — the text body; `text` is accepted as a Slack-style alias.
+- **`username` / `avatar_url`** — override the sender's display, but **only if the webhook's creator
+  is currently a group admin** (otherwise the configured name/avatar is used).
+
+<Note>
+  Limits: the native body is capped at 8 KiB and `content` at 4000 characters; provider adapters
+  (GitHub/GitLab) accept up to 1 MiB. Delivery is rate-limited per webhook — a burst gets `429`
+  with a `Retry-After` header.
+</Note>
+
+## Provider adapters
+
+For systems that emit their own webhook format, append the provider name to the URL — the adapter
+translates the provider's payload into an Octo message. Paste the URL into that system's webhook
+settings.
+
+| Provider | URL suffix | Notes |
+|---|---|---|
+| **Native** | *(none)* | Your own `msg_type` / `content` payload (above). |
+| **GitHub** | `/github` | Paste as the repository's **Payload URL**. |
+| **GitLab** | `/gitlab` | Also set the webhook **Secret Token** to the same URL token — it's verified via the `X-Gitlab-Token` header. |
+| **Feishu (飞书)** | `/feishu` | Paste as a custom-bot URL. The URL token is the only credential — Feishu's own `timestamp`/`sign` are ignored. |
+| **WeCom (企业微信)** | `/wecom` | Uses the WeCom group-bot message format. |
+
+For example, a GitHub repository webhook would point at:
+
+```
+https://your-octo-instance.com/v1/incoming-webhooks/iwh_…/…/github
+```
+
+## Mentions
+
+`@`-mentions are driven by the webhook's **configuration**, never by the delivery body (a `mention`
+field in the payload is ignored). Set them at create/update time:
+
+- **`mention_uids`** — specific users/bots to @ (up to 50).
+- **`allow_mention_bots`** — permit `@所有AI` (all bots).
+- **`allow_mention_all`** — permit `@所有人` (everyone); broadcast mentions are further gated by
+  group policy.
+
+For `text` messages the server prepends the mention bubbles and emits the wire mention entities.
+
+## Manage webhooks
+
+All management routes live under the group (or thread) scope, and also have a `/v1/bot/groups/…`
+face for bot-token callers:
+
+| Method & path | Purpose |
+|---|---|
+| `POST /v1/groups/{group_no}/incoming-webhooks` | Create (returns token + URLs, once). |
+| `GET /v1/groups/{group_no}/incoming-webhooks` | List webhooks in scope (never echoes tokens). |
+| `PUT …/incoming-webhooks/{webhook_id}` | Update name, avatar, status, or mention config. |
+| `DELETE …/incoming-webhooks/{webhook_id}` | Disable (soft-delete). |
+| `POST …/incoming-webhooks/{webhook_id}/regenerate` | Rotate the token (returns a new one). |
+| `GET …/incoming-webhooks/{webhook_id}/deliveries?limit=50` | Recent delivery records (success / failure / skipped). |
+| `POST …/incoming-webhooks/{webhook_id}/test` | Send an end-to-end test message. |
+
+<Tip>
+  Debugging a silent webhook? Call `/test` to confirm the pipeline, then read `/deliveries` — each
+  record carries a status and a `reason` (e.g. a rejected `msg_type`, an auth failure, or a
+  rate-limit skip).
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Call the REST & WebSocket API" icon="plug" href="/guides/integrators/call-the-rest-api">
+    Authenticate and drive the full API as a bot.
+  </Card>
+  <Card title="Write an adapter" icon="puzzle-piece" href="/guides/integrators/write-an-adapter">
+    Bridge a whole external system when a webhook isn't enough.
+  </Card>
+</CardGroup>
