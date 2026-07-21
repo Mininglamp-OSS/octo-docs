@@ -10,24 +10,24 @@ icon: "plug"
   Run `npm run gen:all` after changing the spec. See DESIGN.md §6.
 */}
 
-The Octo bot-facing REST API spans **84 operations across 8 domains**. Every domain page is generated directly from the OpenAPI 3.1 spec embedded in [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so this reference never drifts from the implementation.
+The Octo bot-facing REST API spans **84 operations across 8 domains**. Each domain in the sidebar is an **interactive reference** generated from the OpenAPI 3.1 spec embedded in [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so it never drifts from the implementation. Open any endpoint to inspect its schema and send a live request.
 
 <Tip>
-  The easiest way to call these endpoints is via [`octo-cli`](/guides/bot-developers/drive-octo-with-cli) (each operation maps to a `CLI op` shown on its domain page) or directly over HTTP with a bot token (`bf_…`). See [Verify credentials with octo-auth](/guides/integrators/verify-credentials-with-octo-auth). The entities and enums these operations read and write are catalogued in the [data model](/reference/data-model).
+  Call these endpoints with a bot token (`bf_…`) as a bearer credential — set your instance URL and token in an endpoint's **Try it** panel to send a live request, or use [`octo-cli`](/guides/bot-developers/drive-octo-with-cli). See [Verify credentials with octo-auth](/guides/integrators/verify-credentials-with-octo-auth). The entities and enums these operations read and write are catalogued in the [data model](/reference/data-model).
 </Tip>
 
 ## Domains
 
 | Domain | Spec | Operations |
 |---|---|---|
-| [Messages](/reference/api/message) | `message` | 4 |
-| [Threads](/reference/api/thread) | `thread` | 8 |
-| [Groups](/reference/api/group) | `group` | 9 |
-| [Files](/reference/api/file) | `file` | 4 |
-| [Events](/reference/api/event) | `event` | 2 |
-| [Bot Identity](/reference/api/bot) | `bot` | 6 |
-| [Docs (collaborative)](/reference/api/docs) | `docs` | 31 |
-| [Docs (interactive HTML)](/reference/api/html) | `html` | 20 |
+| Messages | `message` | 4 |
+| Threads | `thread` | 8 |
+| Groups | `group` | 9 |
+| Files | `file` | 4 |
+| Events | `event` | 2 |
+| Bot Identity | `bot` | 6 |
+| Docs (collaborative) | `docs` | 31 |
+| Docs (interactive HTML) | `html` | 20 |
 | **Total** | | **84** |
 
 ## Risk levels
