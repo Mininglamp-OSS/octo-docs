@@ -341,6 +341,9 @@
       "href": "https://github.com/Mininglamp-OSS/octo-deployment"
     }
   },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude", "mcp"]
+  },
   "footer": {
     "socials": {
       "github": "https://github.com/Mininglamp-OSS"
