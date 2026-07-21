@@ -97,6 +97,7 @@
                 "group": "Overview",
                 "pages": [
                   "reference/rest-websocket-api",
+                  "reference/data-model",
                   "reference/octo-cli",
                   "reference/configuration",
                   "reference/errors-and-envelopes",
@@ -252,6 +253,7 @@
                 "group": "概览",
                 "pages": [
                   "zh/reference/rest-websocket-api",
+                  "zh/reference/data-model",
                   "zh/reference/octo-cli",
                   "zh/reference/configuration",
                   "zh/reference/errors-and-envelopes",
