@@ -10,7 +10,7 @@ icon: "terminal"
   Run `npm run gen:all` after changing the spec. See DESIGN.md §6.
 */}
 
-[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) 是一个单二进制 REST 客户端,专为 AI Agent 机器人通过 `exec` 调用而设计。它的命令树 —— **8 个领域、共 84 条命令** —— 在启动时由内嵌的 OpenAPI 规范自动注册,因此本参考始终与 CLI 和服务端保持同步。
+[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) 是一个单二进制 REST 客户端,专为 AI 智能体通过 `exec` 调用而设计。它的命令树 —— **8 个领域、共 84 条命令** —— 在启动时由内嵌的 OpenAPI 规范自动注册,因此本参考始终与 CLI 和服务端保持同步。
 
 <Info>
   每次调用都会在 stdout 输出结构化的 JSON 信封;错误输出到 stderr,并带有确定性的分类。没有交互式 I/O —— 非常适合 Agent 运行时。可与 [REST API 参考](/zh/reference/rest-websocket-api) 搭配使用(每条命令对应一个 API 接口)。
