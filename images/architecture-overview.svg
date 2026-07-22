@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Octo platform architecture</title>
+  <desc id="desc">Clients and agents connect through nginx to octo-server, which coordinates WuKongIM, core services, data stores, search and export, and shared libraries.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#667085"/>
+    </marker>
+    <style>
+      .box { fill: #f8fafc; stroke: #98a2b3; stroke-width: 2; }
+      .primary { fill: #eef4ff; stroke: #4e5ba6; stroke-width: 3; }
+      .optional { fill: #fffaeb; stroke: #dc6803; stroke-width: 2; }
+      .label { fill: #101828; font: 600 22px ui-sans-serif, system-ui, sans-serif; text-anchor: middle; }
+      .detail { fill: #475467; font: 17px ui-sans-serif, system-ui, sans-serif; text-anchor: middle; }
+      .line { fill: none; stroke: #667085; stroke-width: 3; marker-end: url(#arrow); }
+      .dash { stroke-dasharray: 9 8; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="620" rx="24" fill="#ffffff"/>
+
+  <rect class="box" x="50" y="70" width="250" height="105" rx="16"/>
+  <text class="label" x="175" y="113">Clients</text>
+  <text class="detail" x="175" y="145">web · mobile · extension · admin</text>
+
+  <rect class="box" x="50" y="445" width="250" height="105" rx="16"/>
+  <text class="label" x="175" y="488">Agent plane</text>
+  <text class="detail" x="175" y="520">channels · octo-cli · daemon</text>
+
+  <rect class="box" x="390" y="70" width="220" height="105" rx="16"/>
+  <text class="label" x="500" y="115">nginx :28080</text>
+  <text class="detail" x="500" y="146">HTTP · WebSocket</text>
+
+  <rect class="primary" x="390" y="255" width="300" height="125" rx="18"/>
+  <text class="label" x="540" y="305">octo-server</text>
+  <text class="detail" x="540" y="338">orchestration · agent scheduling</text>
+
+  <rect class="box" x="800" y="50" width="320" height="100" rx="16"/>
+  <text class="label" x="960" y="92">WuKongIM</text>
+  <text class="detail" x="960" y="124">real-time messaging</text>
+
+  <rect class="box" x="800" y="195" width="320" height="100" rx="16"/>
+  <text class="label" x="960" y="236">Core services</text>
+  <text class="detail" x="960" y="268">summary · speech · docs · marketplace</text>
+
+  <rect class="box" x="800" y="340" width="320" height="100" rx="16"/>
+  <text class="label" x="960" y="381">Data stores</text>
+  <text class="detail" x="960" y="413">MySQL · Redis · MinIO</text>
+
+  <rect class="optional" x="800" y="485" width="320" height="100" rx="16"/>
+  <text class="label" x="960" y="526">Search &amp; export</text>
+  <text class="detail" x="960" y="558">Kafka · OpenSearch (optional)</text>
+
+  <rect class="box" x="390" y="475" width="300" height="90" rx="16"/>
+  <text class="label" x="540" y="513">Shared libraries</text>
+  <text class="detail" x="540" y="544">octo-lib · auth · adapters</text>
+
+  <path class="line" d="M300 122 H390"/>
+  <path class="line" d="M500 175 V255"/>
+  <path class="line" d="M300 498 H350 V350 H390"/>
+  <path class="line" d="M610 122 H730 V100 H800"/>
+  <path class="line" d="M690 285 H800"/>
+  <path class="line" d="M690 330 H750 V390 H800"/>
+  <path class="line dash" d="M690 355 H735 V535 H800"/>
+  <path class="line dash" d="M540 380 V475"/>
+  <path class="line" d="M690 270 H740 V140 H800"/>
+
+  <text class="detail" x="710" y="88">/ws</text>
+</svg>

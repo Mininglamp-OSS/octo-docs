@@ -55,6 +55,19 @@ mint validate        # strict build check (fails on warnings/errors)
   </Step>
 </Steps>
 
+## Add images
+
+Store documentation images in `images/` and reference them with a root-relative path. The portal
+supports SVG alongside PNG, JPEG, GIF, and WebP. Prefer SVG for diagrams, logos, and icons that
+need to stay sharp at different sizes.
+
+```md
+![Architecture overview](/images/architecture-overview.svg)
+```
+
+Always provide meaningful alt text. Keep SVG files self-contained: do not include scripts, embedded
+HTML, or references to remote resources. Run `mint validate` to catch missing assets.
+
 ## Regenerating reference
 
 If you changed a source spec (in `octo-cli`, `octo-auth`, or `octo-server`), regenerate rather

@@ -55,6 +55,18 @@ mint validate        # strict build check (fails on warnings/errors)
   </Step>
 </Steps>
 
+## 添加图片
+
+将文档图片存放在 `images/` 中，并使用根路径引用。除 PNG、JPEG、GIF 和 WebP 外，门户也
+支持 SVG。对于需要在不同尺寸下保持清晰的图表、徽标和图标，优先使用 SVG。
+
+```md
+![架构概览](/images/architecture-overview.svg)
+```
+
+务必提供有意义的替代文本。SVG 文件应当自包含，不要加入脚本、嵌入式 HTML 或远程资源
+引用。运行 `mint validate` 检查资源是否缺失。
+
 ## 重新生成参考文档
 
 如果你改动了某个源 spec（在 `octo-cli`、`octo-auth` 或 `octo-server` 中），请重新生成

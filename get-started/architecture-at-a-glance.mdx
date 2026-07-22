@@ -8,18 +8,7 @@ Octo is a set of focused services that meet at one anchor — **`octo-server`**.
 sibling services all talk to it; it orchestrates business logic and agent scheduling and drives
 [WuKongIM](/concepts/messaging-and-im-core) for real-time messaging.
 
-```mermaid
-graph LR
-  clients["Clients<br/>web · mobile · extension · admin"] --> nginx["nginx :28080"]
-  nginx --> server["octo-server<br/>orchestration · agent scheduling"]
-  nginx -->|/ws| im["WuKongIM"]
-  server --> im
-  server --> svc["Core services<br/>smart-summary · speech<br/>docs · marketplace"]
-  server --> data[("MySQL · Redis · MinIO")]
-  agents["Agent plane<br/>channels · octo-cli · octo-daemon"] --> server
-  server -. optional .-> search["Search & export<br/>Kafka · OpenSearch"]
-  server -. uses .-> shared["octo-lib · octo-auth · octo-adapters"]
-```
+![Octo platform architecture: clients and agents connect through nginx to octo-server, which coordinates messaging, services, data stores, search, and shared libraries.](/images/architecture-overview.svg)
 
 ## The request lifecycle
 
