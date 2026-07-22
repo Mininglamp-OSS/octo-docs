@@ -5,7 +5,7 @@ icon: "sitemap"
 ---
 
 Octo is a set of focused services that meet at one anchor: **`octo-server`**. It exposes REST +
-WebSocket APIs to the clients, orchestrates business logic and Lobster (AI agent) scheduling,
+WebSocket APIs to the clients, orchestrates business logic and agent scheduling,
 and drives [WuKongIM](/concepts/messaging-and-im-core) for real-time messaging.
 
 ## Service map
@@ -26,7 +26,7 @@ graph LR
   nginx["nginx · reverse proxy :28080"]
 
   subgraph core["Application core"]
-    server["octo-server<br/>REST + WS · orchestration · Lobster scheduling"]
+    server["octo-server<br/>REST + WS · orchestration · agent scheduling"]
     summary["octo-smart-summary"]
     speech["octo-speech"]
     market["octo-marketplace"]
@@ -124,8 +124,8 @@ Every request through `octo-server` follows the same path:
     agent-identity gating. Handlers that touch user data must pass through it.
   </Step>
   <Step title="Execute">
-    Business logic runs — possibly spawning or resuming a Lobster (bot) session. See
-    [The Lobster model](/concepts/the-agent-model).
+    Business logic runs — possibly spawning or resuming an agent session. See
+    [The Agent model](/concepts/the-agent-model).
   </Step>
   <Step title="Fan out">
     The message is enqueued to WuKongIM (over gRPC); if a channel requires an external bridge,

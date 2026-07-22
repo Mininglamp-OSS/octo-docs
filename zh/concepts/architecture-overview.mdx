@@ -4,7 +4,7 @@ description: "Octo 的服务图谱与完整请求生命周期，从客户端到 
 icon: "sitemap"
 ---
 
-Octo 是一组职责聚焦的服务，它们汇聚于一个核心锚点：**`octo-server`**。它向客户端暴露 REST + WebSocket API，编排业务逻辑与 Lobster（AI 智能体）调度，并驱动 [WuKongIM](/zh/concepts/messaging-and-im-core) 实现实时消息。
+Octo 是一组职责聚焦的服务，它们汇聚于一个核心锚点：**`octo-server`**。它向客户端暴露 REST + WebSocket API，编排业务逻辑与智能体调度，并驱动 [WuKongIM](/zh/concepts/messaging-and-im-core) 实现实时消息。
 
 ## 服务图谱
 
@@ -23,7 +23,7 @@ graph LR
   nginx["nginx · 反向代理 :28080"]
 
   subgraph core["应用核心"]
-    server["octo-server<br/>REST + WS · 编排 · Lobster 调度"]
+    server["octo-server<br/>REST + WS · 编排 · 智能体调度"]
     summary["octo-smart-summary"]
     speech["octo-speech"]
     market["octo-marketplace"]
@@ -114,7 +114,7 @@ graph LR
     Space 中间件执行组织感知的 RBAC（member / admin / owner）、按频道的 ACL，以及智能体身份门控。任何触及用户数据的 handler 都必须经过它。
   </Step>
   <Step title="执行">
-    运行业务逻辑——可能会启动或恢复一个 Lobster（机器人）会话。参见 [Lobster 模型](/zh/concepts/the-agent-model)。
+    运行业务逻辑——可能会启动或恢复一个智能体会话。参见 [智能体模型](/zh/concepts/the-agent-model)。
   </Step>
   <Step title="扇出">
     消息被入队到 WuKongIM（经由 gRPC）；若某个频道需要外部桥接，则触发相应的[适配器 / 频道](/zh/guides/bot-developers/choose-a-channel)。

@@ -1,11 +1,11 @@
 ---
 title: "Write an adapter"
-description: "Bridge a third-party IM stack, AI provider, or data source into Octo as a Lobster-addressable surface."
+description: "Bridge a third-party IM stack, AI provider, or data source into Octo as a agent-addressable surface."
 icon: "cable"
 ---
 
 An **adapter** bridges an external system — a chat stack, an AI provider, a data source — into
-Octo so it becomes a Lobster-addressable surface. Adapters live in
+Octo so it becomes a agent-addressable surface. Adapters live in
 **[`octo-adapters`](https://github.com/Mininglamp-OSS/octo-adapters)**. Each one is
 self-contained, can be enabled/disabled independently, and is loaded at boot from
 `octo-server`'s config — **plug, don't patch**; you never fork the core.
@@ -22,7 +22,7 @@ self-contained, can be enabled/disabled independently, and is loaded at boot fro
 graph LR
   connect[Connect] --> auth[Authenticate<br/>DH+AES or OAuth/bearer]
   auth --> route[Route inbound → OCTO envelope]
-  route --> dispatch[Dispatch outbound from Lobster]
+  route --> dispatch[Dispatch outbound from agent]
   dispatch --> recover[Recover<br/>back-off reconnect · idempotent IDs · session resume]
 ```
 

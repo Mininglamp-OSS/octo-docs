@@ -1,11 +1,11 @@
 ---
 title: "编写一个适配器"
-description: "把第三方 IM 技术栈、AI 提供方或数据源桥接进 Octo，成为一个可被 Lobster 寻址的界面。"
+description: "把第三方 IM 技术栈、AI 提供方或数据源桥接进 Octo，成为一个可被智能体寻址的界面。"
 icon: "cable"
 ---
 
 **适配器（adapter）**把一个外部系统——聊天技术栈、AI 提供方、数据源——桥接进
-Octo，使其成为一个可被 Lobster 寻址的界面。适配器存放于
+Octo，使其成为一个可被智能体寻址的界面。适配器存放于
 **[`octo-adapters`](https://github.com/Mininglamp-OSS/octo-adapters)**。每一个都是
 自包含的、可以独立启用/停用，并在启动时从 `octo-server` 的配置中加载——**插入，而非打补丁**；你永远不用 fork 核心。
 
@@ -19,7 +19,7 @@ Octo，使其成为一个可被 Lobster 寻址的界面。适配器存放于
 graph LR
   connect[Connect] --> auth[Authenticate<br/>DH+AES or OAuth/bearer]
   auth --> route[Route inbound → OCTO envelope]
-  route --> dispatch[Dispatch outbound from Lobster]
+  route --> dispatch[Dispatch outbound from agent]
   dispatch --> recover[Recover<br/>back-off reconnect · idempotent IDs · session resume]
 ```
 
