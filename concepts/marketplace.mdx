@@ -67,23 +67,26 @@ the `marketplace.json` spec ships embedded in the binary, exposing two command g
 
 ```bash
 octo-cli marketplace skill list         # browse / search Skills
-octo-cli marketplace skill download …   # authorize + fetch (SHA-256 verified)
+octo-cli marketplace skill download …   # authorize + return download_url + file_sha256
 octo-cli marketplace mcp list           # browse MCP listings
 octo-cli marketplace mcp probe …        # validate a remote MCP connection
 ```
 
-The CLI authenticates with an **Assistant** (`bf_…`) profile and Space context. On Skill install it
-requires an exact SHA-256 match, rejects path traversal, and never executes archive scripts.
+The CLI authenticates with an **Assistant** (`bf_…`) profile and Space context. `skill download`
+returns a `download_url` and the expected `file_sha256` for the **caller** to verify — it doesn't
+follow the artifact redirect itself. The install-time protections (exact SHA-256 match, rejecting
+path traversal, never executing archive scripts) are enforced **server-side on ingest** and by the
+**install workflow** the CLI ships (`skills/octo-marketplace`), which the calling agent follows.
 
 ## Status
 
 - **Shipped:** the Skill lifecycle (upload / parse / create / version / download, categories, tags)
-  and the MCP catalog (CRUD, probe, icons, categories) in the current spec and `octo-marketplace`.
-- **Hardening:** catalog discovery UI, publishing/versioning polish, and full database persistence
-  are still being wired.
+  and the MCP catalog (CRUD, probe, icons, categories) in the current spec and `octo-marketplace` —
+  both Skill and MCP records are MySQL-backed.
+- **Hardening:** catalog discovery UI and publishing/versioning polish are still being refined.
 
 <CardGroup cols={2}>
-  <Card title="Build & publish a Skill" icon="puzzle-piece" href="/guides/bot-developers/publish-a-skill">
+  <Card title="Build & publish a Skill" icon="puzzle" href="/guides/bot-developers/publish-a-skill">
     Author a `SKILL.md` capability and install it to an Agent.
   </Card>
   <Card title="Publish to the Marketplace" icon="store" href="/guides/integrators/marketplace">
