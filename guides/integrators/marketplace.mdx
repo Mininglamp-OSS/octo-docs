@@ -1,11 +1,11 @@
 ---
 title: "Publish to the Marketplace"
-description: "Where Skills and MCP servers will be published — the octo-marketplace control plane."
+description: "Where Skills and MCP servers are published — the octo-marketplace control plane."
 icon: "store"
 ---
 
 **[`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace)** is the control plane
-for the future Octo **Skill and MCP marketplace** — a place to publish, version, and distribute
+for the Octo **Skill and MCP marketplace** — a place to publish, version, and distribute
 [Skills](/guides/bot-developers/publish-a-skill) and MCP servers.
 
 <Warning>
@@ -30,7 +30,7 @@ Ownership is split cleanly:
 - **`octo-marketplace`** owns assets, releases, and policy.
 - **`octo-cli`** owns local install on the consumer side.
 
-## Run the scaffold
+## Run the service
 
 ```bash
 go run ./cmd/marketplace-api      # port 8092
@@ -39,10 +39,10 @@ docker compose up --build         # MySQL on 3306
 ```
 
 It uses Go 1.25 + Gin + MySQL, and follows the API-service shape of
-[`octo-smart-summary`](/ecosystem/repository-guide). Auth is unified user + `bf_` User Bot,
+[`octo-smart-summary`](/ecosystem/repository-guide). Auth is unified user + `bf_` Assistant,
 fails closed (`AUTH_ENABLED` defaults true), via the Octo auth client. When mounted behind the
 web gateway it serves under `/market/api/v1`.
 
 <Card title="Author a Skill today" icon="puzzle" href="/guides/bot-developers/publish-a-skill">
-  Skills work now via the git-native install path — the marketplace will add discovery on top.
+  Skills work now via the git-native install path — the marketplace adds discovery, versioning, and distribution on top.
 </Card>
