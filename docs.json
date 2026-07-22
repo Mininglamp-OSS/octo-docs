@@ -142,7 +142,7 @@
                 "group": "Concepts",
                 "pages": [
                   "concepts/architecture-overview",
-                  "concepts/the-lobster-model",
+                  "concepts/the-agent-model",
                   "concepts/security-and-auth",
                   "concepts/messaging-and-im-core",
                   "concepts/collaborative-docs",
@@ -299,7 +299,7 @@
                 "group": "概念",
                 "pages": [
                   "zh/concepts/architecture-overview",
-                  "zh/concepts/the-lobster-model",
+                  "zh/concepts/the-agent-model",
                   "zh/concepts/security-and-auth",
                   "zh/concepts/messaging-and-im-core",
                   "zh/concepts/collaborative-docs",
@@ -360,6 +360,8 @@
     }
   },
   "redirects": [
+    { "source": "/concepts/the-lobster-model", "destination": "/concepts/the-agent-model" },
+    { "source": "/zh/concepts/the-lobster-model", "destination": "/zh/concepts/the-agent-model" },
     {
       "source": "/guides/teams/use-chat-docs-tasks",
       "destination": "/guides/teams/use-chat-and-docs"

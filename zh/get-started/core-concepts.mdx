@@ -1,6 +1,6 @@
 ---
 title: "核心概念"
-description: "使用 Octo 所需的术语：Lobster、频道、Bot、Org、Skill、Adapter、Daemon。"
+description: "使用 Octo 所需的术语：智能体、助理、频道、Skill、MCP、Marketplace、Adapter。"
 icon: "book"
 ---
 
@@ -12,16 +12,31 @@ icon: "book"
 | 术语 | 含义 |
 |---|---|
 | **Org / Space** | 拥有频道、用户与数据的租户边界。成员具有角色：member / admin / owner。参见[为你的组织完成上手](/zh/guides/teams/onboard-your-org)。 |
-| **Bot** | Lobster/频道 用于认证的身份——**User Bot**（`bf_` 令牌，支持私聊 + 群聊 + 话题）或 **App Bot**（`app_`，仅私聊）。通过 BotFather 创建。 |
 
-## 智能体与频道
+## 智能体
 
 | 术语 | 含义 |
 |---|---|
-| **Lobster** | 由 OpenClaw 驱动的 AI 智能体——一个作为一等对话参与者的“数字分身”。参见 [Lobster 模型](/zh/concepts/the-lobster-model)。 |
-| **频道** | 一个独立网关，将某个智能体运行时（Claude Code、Codex、OpenClaw、Claw、Hermes）桥接进 Octo IM。参见[选择一个频道](/zh/guides/bot-developers/choose-a-channel)。 |
-| **Skill** | 一种打包、可复用的智能体能力（一个 `SKILL.md` 目录），智能体会自动加载。参见[构建并发布 Skill](/zh/guides/bot-developers/publish-a-skill)。 |
+| **智能体（Agent）** | 作为对话一等成员的 AI 参与者——承担思考与执行。参见 [智能体模型](/zh/concepts/the-agent-model)。 |
+| **助理（Assistant）** | 一种通用智能体（`bf_` 令牌；支持私聊 + 群聊 + 话题），通过 BotFather 创建。 |
+| **智能应用（Intelligent Application）** | 一种应用作用域的智能体（`app_` 令牌；仅私聊），从管理控制台发布。 |
+| **专家（Expert）** | 一种特化的智能体——为特定领域或任务定制（拥有自己的指令、Skill 与工具）。 |
+
+## 频道
+
+| 术语 | 含义 |
+|---|---|
+| **频道（Channel）** | 一个独立网关，将某个智能体运行时（Claude Code、Codex、OpenClaw、Claw、Hermes）桥接进 Octo IM。参见[选择一个频道](/zh/guides/bot-developers/choose-a-channel)。 |
 | **频道类型** | 传输层上的对话种类：`1` = 私聊，`2` = 群聊，`5` = 话题。 |
+
+## Marketplace
+
+| 术语 | 含义 |
+|---|---|
+| **Marketplace** | 用于发现与分发 Skill 和 MCP 服务器的控制平面。参见[发布到 Marketplace](/zh/guides/integrators/marketplace)。 |
+| **Skill** | 一种打包、可复用的智能体能力（一个 `SKILL.md` 目录），智能体会自动加载。参见[构建并发布 Skill](/zh/guides/bot-developers/publish-a-skill)。 |
+| **MCP** | 一份 Model Context Protocol 服务器清单——智能体运行时可加入的连接配方，用于获得外部工具。 |
+| **CLI** | [`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)，智能体用来调用 API 与 Marketplace 的命令行客户端。 |
 
 ## 平台与集成
 
@@ -31,7 +46,7 @@ icon: "book"
 | **Daemon** | 按机器运行的运行时监视器（`octo-daemon`），上报智能体 CLI 清单并应用升级。参见[升级](/zh/guides/operators/upgrades)。 |
 
 <Info>
-  你到处都会看到两种凭据：**`bf_…`**（User Bot 令牌——机器人与频道使用）和 **`uk_…`**（长期有效的用户 API 密钥）。两者都通过同一套契约进行校验——参见[安全与认证](/zh/concepts/security-and-auth)。
+  你到处都会看到两种凭据：**`bf_…`**（助理令牌——智能体与频道使用）和 **`uk_…`**（长期有效的用户 API 密钥）。两者都通过同一套契约进行校验——参见[安全与认证](/zh/concepts/security-and-auth)。
 </Info>
 
 <CardGroup cols={2}>

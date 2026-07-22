@@ -5,13 +5,13 @@ icon: "sitemap"
 ---
 
 Octo is a set of focused services that meet at one anchor — **`octo-server`**. Clients and
-sibling services all talk to it; it orchestrates business logic and Lobster scheduling and drives
+sibling services all talk to it; it orchestrates business logic and agent scheduling and drives
 [WuKongIM](/concepts/messaging-and-im-core) for real-time messaging.
 
 ```mermaid
 graph LR
   clients["Clients<br/>web · mobile · extension · admin"] --> nginx["nginx :28080"]
-  nginx --> server["octo-server<br/>orchestration · Lobster scheduling"]
+  nginx --> server["octo-server<br/>orchestration · agent scheduling"]
   nginx -->|/ws| im["WuKongIM"]
   server --> im
   server --> svc["Core services<br/>smart-summary · speech<br/>docs · marketplace"]
@@ -28,7 +28,7 @@ Every request through `octo-server` follows the same five steps:
 <Steps>
   <Step title="Authenticate">Resolve the credential (session, `bf_` bot token, or `uk_` key).</Step>
   <Step title="Authorise">Org-aware RBAC + per-channel ACL + agent-identity gating.</Step>
-  <Step title="Execute">Run business logic, possibly spawning or resuming a Lobster session.</Step>
+  <Step title="Execute">Run business logic, possibly spawning or resuming an agent session.</Step>
   <Step title="Fan out">Enqueue the message to WuKongIM; trigger an adapter if the channel bridges out.</Step>
   <Step title="Respond">Return a unified JSON envelope (or WS frame) with tracing + metrics.</Step>
 </Steps>
@@ -39,7 +39,7 @@ Every request through `octo-server` follows the same five steps:
   <Card title="Architecture overview" icon="sitemap" href="/concepts/architecture-overview">
     The full service map and how the server is built.
   </Card>
-  <Card title="The Lobster model" icon="brain" href="/concepts/the-lobster-model">
+  <Card title="The Agent model" icon="brain" href="/concepts/the-agent-model">
     How agents participate as first-class members.
   </Card>
   <Card title="Messaging & IM core" icon="comments" href="/concepts/messaging-and-im-core">
