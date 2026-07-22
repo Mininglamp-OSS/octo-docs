@@ -1,0 +1,70 @@
+---
+title: "Marketplace"
+description: "Octo 如何发现与分发智能体能力——Skill 与 MCP 服务器——通过 octo-marketplace 与 octo-cli。"
+icon: "store"
+---
+
+**Marketplace** 是 Octo 用于发现与分发两类扩展[智能体](/zh/concepts/the-agent-model)之物的控制平面：**Skill** 与 **MCP 服务器**。它是一个独立服务([`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace)),可从 Web 客户端、`octo-server`,以及大多数智能体所走的路径——[**CLI**](#cli)——访问。
+
+<Info>
+  职责是分开的:`octo-server` 拥有身份、用户与空间成员关系;`octo-marketplace` 拥有目录资产与策略;`octo-cli` 负责本地下载、校验与安装。Marketplace **绝不执行 Skill 代码,也绝不启动 MCP 服务器**——它存储的是清单,而非运行时。
+</Info>
+
+## Skill
+
+**Skill** 是一种打包、可复用的智能体能力——一个带有 `SKILL.md`(及可选 `references/`)的目录,智能体会自动加载它。创作方法参见[构建并发布 Skill](/zh/guides/bot-developers/publish-a-skill)。
+
+Marketplace 在当下即可用的 git-native 安装路径之上,增加了**发现、版本化与分发**:
+
+| 阶段 | 发生了什么 |
+|---|---|
+| **上传（Upload）** | 初始化上传 → 获取一个预签名 URL → 将归档 PUT 到对象存储。 |
+| **解析（Parse）** | 一个异步任务从 `SKILL.md` 中抽取元数据(名称、描述、版本、标签、SHA-256)。 |
+| **创建（Create）** | 把解析任务绑定为一个 Skill,附带分类、标签、图标与 `visibility`(`public` / `private` / `space`)。 |
+| **版本（Version）** | 重新上传会累积为带变更日志的不可变版本。 |
+| **下载（Download）** | 鉴权后返回 `download_url` + `file_sha256`(由 CLI 校验哈希)。 |
+
+Skill 还可按**分类**与**标签**发现,智能体的拥有者也可以直接**发布**一个 Skill(一条同步的“解析—创建”路径)。
+
+## MCP
+
+**MCP** 条目是一份 **[Model Context Protocol](https://modelcontextprotocol.io) 服务器清单**——智能体运行时可加入的连接配方,用于获得外部工具。与 Skill 不同,MCP 清单**没有可下载的归档**;“安装”它意味着把它的连接块加入某个运行时的 MCP 配置。
+
+目录会存储发现类元数据(`name`、`slug`、`slogan`、`category`、`tags`、`notes`、`usage_examples`、`faqs`)、声明的 `tools`,以及一份**连接配方**:
+
+- **`transport`**——`stdio`、`streamable-http` 或 `sse`。
+- **`url` / `command` / `args` / `env` / `headers`**——如何抵达该服务器。
+- **`quick_start`**——一段可直接粘贴的 `mcpServers` 块,以清单的 `slug` 作为键。
+
+<Warning>
+  **密钥从不被存储。** 目录只记录 env/header 的*名称*,其值在传输中被替换为占位哨兵,快速开始中的密钥对同侪查看者隐藏。调用方在安装时于本地提供真实密钥。
+</Warning>
+
+**探测(`mcp.probe`)**在*不持久化*的前提下校验某个远程服务器的连接——它返回 `is_ok`、服务器信息与发现到的工具列表。探测仅用于 `streamable-http` / `sse`;`stdio` 服务器由智能体运行时在本地校验,Marketplace 绝不启动它们。
+
+## CLI
+
+[`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli) 是智能体使用 Marketplace 的方式——`marketplace.json` 规范内嵌于该二进制中,暴露两个命令组:
+
+```bash
+octo-cli marketplace skill list         # 浏览 / 搜索 Skill
+octo-cli marketplace skill download …   # 鉴权 + 拉取(校验 SHA-256)
+octo-cli marketplace mcp list           # 浏览 MCP 清单
+octo-cli marketplace mcp probe …        # 校验一个远程 MCP 连接
+```
+
+CLI 以**助理**(`bf_…`)配置及空间上下文进行认证。安装 Skill 时,它要求 SHA-256 精确匹配、拒绝路径穿越,且绝不执行归档脚本。
+
+## 状态
+
+- **已交付:** 当前规范与 `octo-marketplace` 中的 Skill 生命周期(上传 / 解析 / 创建 / 版本 / 下载、分类、标签)以及 MCP 目录(CRUD、探测、图标、分类)。
+- **打磨中:** 目录发现 UI、发布/版本化的细节完善,以及完整的数据库持久化仍在接入中。
+
+<CardGroup cols={2}>
+  <Card title="构建并发布 Skill" icon="puzzle-piece" href="/zh/guides/bot-developers/publish-a-skill">
+    创作一个 `SKILL.md` 能力并安装到某个智能体。
+  </Card>
+  <Card title="发布到 Marketplace" icon="store" href="/zh/guides/integrators/marketplace">
+    运行该服务及其 API 界面。
+  </Card>
+</CardGroup>
