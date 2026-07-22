@@ -9,10 +9,9 @@ icon: "circle-question"
 一个开放、AI 原生的团队协作平台 —— 聊天、文档与 AI 智能体三合一,并且可以自托管。参见
 [什么是 Octo](/zh/get-started/what-is-octo)。
 
-## "Lobster" 是什么？
+## “智能体（Agent）”是什么？
 
-Octo 对 AI 智能体的称呼 —— 它作为对话中的一等成员参与其中。在代码里,它是 bot 与代理执行
-(on-behalf-of)框架。参见 [Lobster 模型](/zh/concepts/the-lobster-model)。
+Octo 对 AI 参与者的称呼 —— 它作为对话中的一等成员参与其中。智能体分为几种类型 —— **助理**(`bf_`)、**智能应用**(`app_`),或**专家**(一种特化的助理)。在代码里,它对应 `robot`/bot 与代理执行(on-behalf-of)框架。参见 [智能体模型](/zh/concepts/the-agent-model)。
 
 ## 能自托管吗？是本地优先的吗？
 
@@ -36,8 +35,8 @@ Codex、OpenClaw、Claw、Hermes),把它桥接进 Octo。**[adapter](/zh/guides/
 | 前缀 | 类型 | 用途 |
 |---|---|---|
 | _(无)_ | 会话 token | 人类 Web 会话 |
-| `bf_` | User Bot token | 机器人与 channel —— 私聊 + 群组 + 话题 |
-| `app_` | App Bot token | 仅私聊的机器人 |
+| `bf_` | 助理令牌 | 智能体与频道 —— 私聊 + 群聊 + 话题 |
+| `app_` | 智能应用令牌 | 仅私聊的智能体 |
 | `uk_` | 用户 API key | 长期编程访问,绑定单个 space |
 
 详见[安全与认证模型](/zh/concepts/security-and-auth)。

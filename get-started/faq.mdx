@@ -9,10 +9,12 @@ icon: "circle-question"
 An open, AI-native team-collaboration platform — chat, docs, and AI agents in one place — that you
 can self-host. See [What is Octo](/get-started/what-is-octo).
 
-## What's a "Lobster"?
+## What's an "Agent"?
 
-Octo's name for an AI agent that participates as a first-class member of a conversation. In the
-code it's the bot / on-behalf-of framework. See [The Lobster model](/concepts/the-lobster-model).
+Octo's term for an AI participant that acts as a first-class member of a conversation. Agents come
+in kinds — an **Assistant** (`bf_`), an **Intelligent Application** (`app_`), or an **Expert** (a
+specialized Assistant). In the code these are the `robot`/bot and on-behalf-of framework. See
+[The Agent model](/concepts/the-agent-model).
 
 ## Can I self-host? Is it local-first?
 
@@ -38,8 +40,8 @@ Compare all five in [Choose a channel](/guides/bot-developers/choose-a-channel).
 | Prefix | Kind | Use |
 |---|---|---|
 | _(none)_ | Session token | human web session |
-| `bf_` | User Bot token | bots & channels — DM + group + thread |
-| `app_` | App Bot token | DM-only bots |
+| `bf_` | Assistant token | agents & channels — DM + group + thread |
+| `app_` | Intelligent Application token | DM-only agents |
 | `uk_` | User API key | long-lived programmatic access, bound to one space |
 
 Details in [Security & auth](/concepts/security-and-auth).

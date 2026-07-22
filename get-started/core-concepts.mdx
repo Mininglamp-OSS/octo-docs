@@ -1,6 +1,6 @@
 ---
 title: "Core concepts"
-description: "The vocabulary you need to work with Octo: Lobster, Channel, Bot, Org, Skill, Adapter, Daemon."
+description: "The vocabulary you need to work with Octo: Agent, Assistant, Channel, Skill, MCP, Marketplace, Adapter."
 icon: "book"
 ---
 
@@ -13,16 +13,31 @@ and relationships — see [Data model and entities](/reference/data-model).
 | Term | What it is |
 |---|---|
 | **Org / Space** | The tenant boundary that owns channels, users, and data. Members have roles: member / admin / owner. See [Onboard your org](/guides/teams/onboard-your-org). |
-| **Bot** | The identity a Lobster / channel authenticates as — a **User Bot** (`bf_` token, DM + group + thread) or **App Bot** (`app_`, DM-only). Created via BotFather. |
 
-## Agents & channels
+## Agents
 
 | Term | What it is |
 |---|---|
-| **Lobster** | An OpenClaw-powered AI agent — a "digital double" that acts as a first-class conversation participant. See [The Lobster model](/concepts/the-lobster-model). |
+| **Agent** | An AI participant that acts as a first-class conversation member — it carries the thinking and doing. See [The Agent model](/concepts/the-agent-model). |
+| **Assistant** | A general-purpose Agent (`bf_` token; DM + group + thread), created via BotFather. |
+| **Intelligent Application** | An app-scoped Agent (`app_` token; DM-only), published from the admin console. |
+| **Expert** | A specialized Agent — curated for a particular domain or task (its own instructions, skills, and tools). |
+
+## Channels
+
+| Term | What it is |
+|---|---|
 | **Channel** | An independent gateway that bridges an agent runtime (Claude Code, Codex, OpenClaw, Claw, Hermes) into Octo IM. See [Choose a channel](/guides/bot-developers/choose-a-channel). |
-| **Skill** | A packaged, reusable agent capability (a `SKILL.md` directory) an agent picks up automatically. See [Build & publish a Skill](/guides/bot-developers/publish-a-skill). |
 | **Channel type** | The conversation kind on the wire: `1` = DM, `2` = group, `5` = thread. |
+
+## Marketplace
+
+| Term | What it is |
+|---|---|
+| **Marketplace** | The control plane for discovering and distributing Skills and MCP servers. See [Publish to the Marketplace](/guides/integrators/marketplace). |
+| **Skill** | A packaged, reusable Agent capability (a `SKILL.md` directory) an Agent picks up automatically. See [Build & publish a Skill](/guides/bot-developers/publish-a-skill). |
+| **MCP** | A Model Context Protocol server listing — a connection recipe an Agent runtime can add to gain external tools. |
+| **CLI** | [`octo-cli`](/guides/bot-developers/drive-octo-with-cli), the command-line client Agents use to call the API and the Marketplace. |
 
 ## Platform & integration
 
@@ -32,7 +47,7 @@ and relationships — see [Data model and entities](/reference/data-model).
 | **Daemon** | The per-machine runtime monitor (`octo-daemon`) that reports agent-CLI inventory and applies upgrades. See [Upgrades](/guides/operators/upgrades). |
 
 <Info>
-  Two credentials you'll see everywhere: **`bf_…`** (a User Bot token — what bots and channels
+  Two credentials you'll see everywhere: **`bf_…`** (an Assistant token — what agents and channels
   use) and **`uk_…`** (a long-lived user API key). Both are verified through the same contract —
   see [Security & auth](/concepts/security-and-auth).
 </Info>
