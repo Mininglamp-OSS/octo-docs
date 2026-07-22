@@ -22,7 +22,7 @@ Marketplace 在当下即可用的 git-native 安装路径之上，增加了**发
 | **解析（Parse）** | 一个异步任务从 `SKILL.md` 中抽取元数据（名称、描述、版本、标签、SHA-256）。 |
 | **创建（Create）** | 把解析任务绑定为一个 Skill，附带分类、标签、图标与 `visibility`（`public` / `private` / `space`）。 |
 | **版本（Version）** | 重新上传会累积为带变更日志的不可变版本。 |
-| **下载（Download）** | 鉴权后返回 `download_url` + `file_sha256`（由 CLI 校验哈希）。 |
+| **下载（Download）** | 鉴权后返回 `download_url` + `file_sha256`（由调用方 / 安装工作流校验哈希）。 |
 
 Skill 还可按**分类**与**标签**发现，智能体的拥有者也可以直接**发布**一个 Skill（一条同步的“解析—创建”路径）。
 

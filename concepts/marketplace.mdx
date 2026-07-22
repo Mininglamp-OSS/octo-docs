@@ -31,7 +31,7 @@ path that works today:
 | **Parse** | An async task extracts `SKILL.md` metadata (name, description, version, tags, SHA-256). |
 | **Create** | Bind the parsed task into a Skill with a category, tags, icon, and `visibility` (`public` / `private` / `space`). |
 | **Version** | Re-uploads accrue immutable versions with changelogs. |
-| **Download** | Authorize, then return a `download_url` + `file_sha256` (the CLI verifies the hash). |
+| **Download** | Authorize, then return a `download_url` + `file_sha256` (the caller / install workflow verifies the hash). |
 
 Skills are also discoverable by **category** and **tag**, and an Agent owner can **publish** one
 directly (a synchronous parse-then-create path).
