@@ -13,7 +13,7 @@ icon: "plug"
 The Octo bot-facing REST API spans **84 operations across 8 domains**. Every domain page is generated directly from the OpenAPI 3.1 spec embedded in [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so this reference never drifts from the implementation.
 
 <Tip>
-  The easiest way to call these endpoints is via [`octo-cli`](/guides/bot-developers/drive-octo-with-cli) (each operation maps to a `CLI op` shown on its domain page) or directly over HTTP with a bot token (`bf_…`). See [Verify credentials with octo-auth](/guides/integrators/verify-credentials-with-octo-auth). The entities and enums these operations read and write are catalogued in the [data model](/reference/data-model).
+  The easiest way to call these endpoints is via [`octo-cli`](/guides/bot-developers/drive-octo-with-cli) (each operation maps to a `CLI op` shown on its domain page) or directly over HTTP with an Assistant token (`bf_…`). See [Verify credentials with octo-auth](/guides/integrators/verify-credentials-with-octo-auth). The entities and enums these operations read and write are catalogued in the [data model](/reference/data-model).
 </Tip>
 
 ## Domains
@@ -25,7 +25,7 @@ The Octo bot-facing REST API spans **84 operations across 8 domains**. Every dom
 | [Groups](/reference/api/group) | `group` | 9 |
 | [Files](/reference/api/file) | `file` | 4 |
 | [Events](/reference/api/event) | `event` | 2 |
-| [Bot Identity](/reference/api/bot) | `bot` | 6 |
+| [Agent Identity](/reference/api/bot) | `bot` | 6 |
 | [Docs (collaborative)](/reference/api/docs) | `docs` | 31 |
 | [Docs (interactive HTML)](/reference/api/html) | `html` | 20 |
 | **Total** | | **84** |
@@ -40,4 +40,4 @@ Each operation is tagged with an `x-octo-risk` level from the spec:
 
 ## Authentication
 
-See [Errors & response envelopes](/reference/errors-and-envelopes) for credential kinds (session · `bf_` bot token · `uk_` API key) and the unified error envelope.
+See [Errors & response envelopes](/reference/errors-and-envelopes) for credential kinds (session · `bf_` Assistant token · `uk_` API key) and the unified error envelope.

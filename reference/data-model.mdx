@@ -1,6 +1,6 @@
 ---
 title: "Data model and entities"
-description: "The core Octo entities — Space, User, Bot, Channel, Message, Thread — with their key attributes, enums, and relationships."
+description: "The core Octo entities — Space, User, Agent, Channel, Message, Thread — with their key attributes, enums, and relationships."
 icon: "diagram-project"
 ---
 
@@ -28,8 +28,8 @@ graph LR
 
   subgraph identity["Identities"]
     user["User<br/>uid"]
-    ubot["User Bot · bf_<br/>robot"]
-    abot["App Bot · app_<br/>app_bot"]
+    assistant["Assistant · bf_<br/>robot"]
+    iapp["Intelligent App · app_<br/>app_bot"]
   end
 
   subgraph messaging["Messaging"]
@@ -40,9 +40,9 @@ graph LR
   end
 
   space -->|members| user
-  space -->|members| ubot
-  space -->|scope: space| abot
-  user -->|is a bot when robot=1| ubot
+  space -->|members| assistant
+  space -->|scope: space| iapp
+  user -->|is an agent when robot=1| assistant
   group -->|hosts| thread
   channel -->|carries| msg
   group -.->|group channel| channel
@@ -50,7 +50,7 @@ graph LR
   user -->|from_uid| msg
 ```
 
-Bots are a specialization of users, not a separate identity plane. Channels are a WuKongIM concept
+Agents are a specialization of users, not a separate identity plane. Channels are a WuKongIM concept
 keyed by an id plus a `channel_type`; groups and threads project onto channel types 2 and 5.
 
 ## Space
@@ -79,7 +79,7 @@ Members are recorded in `space_member` (`space_id` + `uid`, a `role`, and a `sta
 ## User
 
 The canonical identity. `uid` is the universal key referenced by space members, group members,
-message senders, and bots. Defined in `octo-server/modules/user/db.go` (`user` table).
+message senders, and agents. Defined in `octo-server/modules/user/db.go` (`user` table).
 
 | Attribute | Meaning |
 |---|---|
@@ -88,7 +88,7 @@ message senders, and bots. Defined in `octo-server/modules/user/db.go` (`user` t
 | `category` | Account kind (see enum). |
 | `status` | Enabled/disabled (see enum). |
 | `role` | System role string (see enum). |
-| `robot` | `1` when this user is a bot. |
+| `robot` | `1` when this user is an agent. |
 | `is_destroy` | Account-destruction lifecycle (see enum). |
 | `language` | Preferred UI language. |
 
@@ -102,13 +102,13 @@ message senders, and bots. Defined in `octo-server/modules/user/db.go` (`user` t
 Enum sources: `octo-server/modules/user/const.go` and `db.go`. The `role` column is the authoritative
 system role for RBAC — see [Security & auth model](/concepts/security-and-auth).
 
-## Bot — two kinds
+## Agents
 
-A bot is a user (`robot=1`) fronted by one of two credential-bearing records. Identity resolution
-routes by **token prefix** (`app_*` → App Bot, `bf_*` → User Bot) in
+An **Agent** is a user (`robot=1`) fronted by one of two credential-bearing records. Identity
+resolution routes by **token prefix** (`app_*` → Intelligent Application, `bf_*` → Assistant) in
 `octo-server/modules/botidentity`.
 
-### User Bot (`bf_`)
+### Assistant (`bf_`)
 
 The `robot` table (`octo-server/modules/robot` + `botfather`). Created and managed through
 **BotFather** chat commands (`/newbot`, `/token`, `/revoke`). Can participate in **DM, group, and
@@ -116,7 +116,7 @@ thread** channels (with membership).
 
 | Attribute | Meaning |
 |---|---|
-| `robot_id` · `username` | Bot identity (`username` ends in `_bot`). |
+| `robot_id` · `username` | Agent identity (`username` ends in `_bot`). |
 | `token` / `bot_token` | Credential (`bf_…`). |
 | `creator_uid` | Owning user. |
 | `bot_commands` | Declared command menu (JSON). |
@@ -125,18 +125,24 @@ thread** channels (with membership).
 
 Long-lived user API keys (`uk_`) are issued alongside in the same module.
 
-### App Bot (`app_`)
+### Intelligent Application (`app_`)
 
 The `app_bot` table (`octo-server/modules/app_bot`). **DM-only** and requires a friend relationship.
 
 | Attribute | Meaning |
 |---|---|
-| `uid` | App Bot identity (`app_…`). |
+| `uid` | Intelligent Application identity (`app_…`). |
 | `display_name` · `description` · `avatar` | Presentation. |
 | `token` | Credential (`app_…`). |
 | `scope` | `platform` (global) · `space` (single space). |
 | `status` | `0` draft · `1` published · `2` unpublished. |
 | `welcome_msg` | First-contact message. |
+
+### Expert
+
+An **Expert** is a specialized Agent — an Assistant curated for a particular domain or task (its own
+instructions, skills, and tools). It is a **product-level specialization, not a distinct backing
+table**: on the wire an Expert is an Assistant (`bf_…`, the `robot` record above).
 
 ## Channel
 
@@ -220,7 +226,7 @@ composite (`groupNo` + `____` + `shortID`) and it maps to `channel_type=5`.
   <Accordion title="Integration & incoming webhook — octo-server/modules/integration, incomingwebhook">
     External connectors authenticate as OIDC principals with `uk_` API keys (`integration`), while
     inbound webhooks post as synthetic senders with an `iwh_` prefix (`incomingwebhook`). These are
-    how outside systems send into channels without being full bots.
+    how outside systems send into channels without being full agents.
   </Accordion>
   <Accordion title="App — octo-server/modules/base/app">
     A low-level multi-tenant registration (`app_id`, `app_key`, `app_name`, `status`). It underpins
@@ -237,8 +243,8 @@ Every credential is recognizable by its prefix — the same set the
 
 | Prefix | Credential |
 |---|---|
-| `bf_` | User Bot token |
-| `app_` | App Bot token |
+| `bf_` | Assistant token |
+| `app_` | Intelligent Application token |
 | `uk_` | Long-lived user API key |
 | `iwh_` | Incoming-webhook sender |
 
