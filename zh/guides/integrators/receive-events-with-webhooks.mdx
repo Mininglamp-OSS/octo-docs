@@ -1,12 +1,12 @@
 ---
 title: "用 incoming webhook 接收事件"
-description: "让外部服务通过带 token 的 URL 把消息推送进 Octo 的群组或话题——无需运行机器人进程。"
+description: "让外部服务通过带 token 的 URL 把消息推送进 Octo 的群组或话题——无需运行智能体进程。"
 icon: "inbox"
 ---
 
 **incoming webhook（入站 webhook）**让外部系统通过向一个带 token 的 URL 发起 POST，把消息推送进
 某个 Octo **群组**或**话题**。该消息会以一个合成的 webhook 发送者（一个 `iwh_…` 身份）出现在频道中
-——你无需运行机器人进程，也无需持有登录态。它是把 CI 结果、告警或第三方事件送入会话的最轻量方式。
+——你无需运行智能体进程，也无需持有登录态。它是把 CI 结果、告警或第三方事件送入会话的最轻量方式。
 
 <Info>
   incoming webhook 由 `octo-server`(`incomingwebhook` 模块)作为 **REST 功能**提供——它**不属于**
@@ -103,8 +103,8 @@ https://your-octo-instance.com/v1/incoming-webhooks/iwh_…/…/github
 `@` 提及由 webhook 的**配置**驱动,而绝非投递请求体(载荷中的 `mention` 字段会被忽略)。请在
 创建/更新时设置:
 
-- **`mention_uids`**——要 @ 的具体用户/机器人(至多 50 个)。
-- **`allow_mention_bots`**——允许 `@所有AI`(所有机器人)。
+- **`mention_uids`**——要 @ 的具体用户/智能体(至多 50 个)。
+- **`allow_mention_bots`**——允许 `@所有AI`(所有智能体)。
 - **`allow_mention_all`**——允许 `@所有人`;广播式提及还会受群组策略进一步限制。
 
 对于 `text` 消息,服务端会自动前置提及气泡并生成对应的线级 mention 实体。
@@ -132,7 +132,7 @@ https://your-octo-instance.com/v1/incoming-webhooks/iwh_…/…/github
 
 <CardGroup cols={2}>
   <Card title="调用 REST 与 WebSocket API" icon="plug" href="/zh/guides/integrators/call-the-rest-api">
-    以机器人身份认证并驱动完整 API。
+    以智能体身份认证并驱动完整 API。
   </Card>
   <Card title="编写适配器" icon="puzzle-piece" href="/zh/guides/integrators/write-an-adapter">
     当 webhook 不够用时,桥接整个外部系统。

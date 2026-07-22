@@ -21,8 +21,8 @@ openclaw gateway run --force
 ```
 
 Requires Node ≥ 22 and OpenClaw ≥ 2026.4.15. Account config lives in `~/.openclaw/openclaw.json`
-under `channels.octo.accounts` and hot-reloads. Tokens can be `bf_` (User Bot, full group +
-thread) or `app_` (App Bot, DM-only).
+under `channels.octo.accounts` and hot-reloads. Tokens can be `bf_` (Assistant, full group +
+thread) or `app_` (Intelligent Application, DM-only).
 
 <Info>
   The plugin registers one agent tool, **`octo_management`** (groups, `GROUP.md`/`THREAD.md`,
@@ -30,7 +30,7 @@ thread) or `app_` (App Bot, DM-only).
   installs default to the `coding` profile, so add it via `tools.alsoAllow`.
 </Info>
 
-Lifecycle: REST-register the bot → WebSocket connect → auto-reconnect → greet the owner →
+Lifecycle: REST-register the Assistant → WebSocket connect → auto-reconnect → greet the owner →
 dispatch, with typing indicators, read receipts, and progress / display cards.
 
 ## claw-channel-octo

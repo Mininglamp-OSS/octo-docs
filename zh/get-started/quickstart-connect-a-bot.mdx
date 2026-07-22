@@ -1,12 +1,12 @@
 ---
-title: "接入你的第一个 AI 机器人"
-description: "几分钟内注册一个机器人，把 Claude Code 桥接进 Octo——这是 Octo 的招牌路径。"
+title: "接入你的第一个智能体"
+description: "几分钟内注册一个助理，把 Claude Code 桥接进 Octo——这是 Octo 的招牌路径。"
 icon: "robot"
 ---
 
 正是这条路径让 Octo 成为 Octo:把 AI Agent 作为一等参与者放进你的工作空间。你将注册一个
-机器人,然后运行 [`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo)——
-一个把 **Claude Code** 桥接进 Octo IM 的独立网关。完成后,你可以私聊机器人(或在群里 @它),
+助理,然后运行 [`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo)——
+一个把 **Claude Code** 桥接进 Octo IM 的独立网关。完成后,你可以私聊助理(或在群里 @它),
 收到来自真实编码 Agent 的流式回复。
 
 <Tip>
@@ -26,20 +26,20 @@ icon: "robot"
 - **Claude Code CLI**:`npm i -g @anthropic-ai/claude-code`。
 - 环境中已导出 **`ANTHROPIC_API_KEY`**。
 
-## 设置机器人
+## 设置助理
 
 <Steps>
-  <Step title="创建机器人并获取 token">
-    在 Octo 中,机器人通过与 **BotFather**(内置的机器人注册器)对话来创建:
+  <Step title="创建助理并获取 token">
+    在 Octo 中,助理通过与 **BotFather**(内置的助理注册器)对话来创建:
 
     1. 打开 Octo Web 客户端,与 **BotFather** 发起私聊。
-    2. 发送 `/newbot`,按提示为机器人命名。
-    3. BotFather 会回复一个以 `bf_` 开头的 **User Bot token**。
+    2. 发送 `/newbot`,按提示为助理命名。
+    3. BotFather 会回复一个以 `bf_` 开头的 **助理 token**。
 
-    把这个 token 妥善保存——它是机器人的身份与完整凭证。
+    把这个 token 妥善保存——它是助理的身份与完整凭证。
 
     <Info>
-      `bf_` **User Bot** token 拥有私聊 + 群组 + 话题权限,正是这里所需。`app_` **App Bot**
+      `bf_` **助理** token 拥有私聊 + 群组 + 话题权限,正是这里所需。`app_` **智能应用**
       token(来自管理台)仅限私聊。完整说明参见[安全与认证模型](/zh/concepts/security-and-auth)。
     </Info>
   </Step>
@@ -54,9 +54,9 @@ icon: "robot"
     这会安装 `cc-channel-octo` 命令——无需编译步骤。
   </Step>
 
-  <Step title="配置机器人">
+  <Step title="配置助理">
     `cc-channel-octo` 在 `~/.cc-channel-octo/` 下使用固定布局:一个**全局**配置(共享默认值 +
-    机器人列表,**不含 token**)和一个**每机器人**配置(token + 覆盖项)。两者都要创建:
+    助理列表,**不含 token**)和一个**每助理**配置(token + 覆盖项)。两者都要创建:
 
     ```bash
     mkdir -p ~/.cc-channel-octo/default
@@ -71,7 +71,7 @@ icon: "robot"
     }
     ```
 
-    每机器人 `~/.cc-channel-octo/default/config.json` —— token **只**放这里:
+    每助理 `~/.cc-channel-octo/default/config.json` —— token **只**放这里:
 
     ```json
     {
@@ -87,7 +87,7 @@ icon: "robot"
     ```
 
     <Warning>
-      token 只应出现在每机器人的 `config.json`(权限 `600`)中——绝不要放进全局文件、shell
+      token 只应出现在每助理的 `config.json`(权限 `600`)中——绝不要放进全局文件、shell
       历史或版本控制。
     </Warning>
   </Step>
@@ -103,13 +103,13 @@ icon: "robot"
     Ready — listening for messages
     ```
 
-    到此,机器人已上线。
+    到此,助理已上线。
   </Step>
 </Steps>
 
-## 与你的机器人对话
+## 与你的助理对话
 
-打开 Octo,私聊机器人,或在群里 @它(群内它只响应 @提及)。给它发点什么,比如
+打开 Octo,私聊助理,或在群里 @它(群内它只响应 @提及)。给它发点什么,比如
 _"写一个反转字符串的 Python 函数"_,然后看回复**实时流式**返回,并带有输入指示。Claude Code
 通过 Agent SDK 执行任务,并把结果发进会话。
 
@@ -123,7 +123,7 @@ _"写一个反转字符串的 Python 函数"_,然后看回复**实时流式**返
 
 ## 可选 — 让 Agent *操作* Octo
 
-到目前为止机器人只是*回复*。你还可以让 Agent **操作** Octo——发消息、列群组、管理事项——
+到目前为止助理只是*回复*。你还可以让 Agent **操作** Octo——发消息、列群组、管理事项——
 只需给它 [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli):一个单二进制 REST 客户端,
 专为 Agent 通过 `exec` 调用而设计:
 

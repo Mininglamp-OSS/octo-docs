@@ -11,7 +11,7 @@ icon: "robot"
 
 <Warning>
   **早期测试版本（v0.1.0）。** 核心路径——注册、连接、多轮聊天、
-  多机器人——已经过验证，但**尚无 cron，也尚无技能**。若需一个功能完整的
+  多助理——已经过验证，但**尚无 cron，也尚无技能**。若需一个功能完整的
   频道，请使用 [cc-channel-octo](/zh/guides/bot-developers/claude-code-channel)。
 </Warning>
 
@@ -32,9 +32,9 @@ npm start           # 或：node dist/（参见仓库 README）
 
 发布后,一行命令即可：`npm install -g @mininglamp-oss/codex-channel-octo` → `codex-channel-octo start`。
 
-需要 Node ≥ 22 以及一个 Octo 机器人令牌（`bf_…`）。该网关注册为一个 Octo 机器人、
+需要 Node ≥ 22 以及一个 Octo 助理令牌（`bf_…`）。该网关注册为一个 Octo 助理、
 通过 WebSocket 连接、用本地 Codex 运行一项编码任务，然后把回复回发。它
-支持私聊（DM）、群组（@提及）和社区话题、多轮对话、在一个进程中运行多个机器人，
+支持私聊（DM）、群组（@提及）和社区话题、多轮对话、在一个进程中运行多个助理，
 以及配置热重载。
 
 ## Codex 线程互通
@@ -58,7 +58,7 @@ codex exec resume <threadId>
 
 - `sandboxMode` 默认为 **`read-only`**；启用写入需要经过一次刻意的双重切换。
 - `danger-full-access` 会被直接拒绝。
-- 每个机器人拥有自己的 `CODEX_HOME`，从而按机器人隔离 Codex 状态。
+- 每个助理拥有自己的 `CODEX_HOME`，从而按助理隔离 Codex 状态。
 
 <Card title="对比所有频道" icon="code-compare" href="/zh/guides/bot-developers/choose-a-channel">
   看看 Codex 相对于其他四个频道处于什么位置。

@@ -5,7 +5,7 @@ icon: "terminal"
 ---
 
 **[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli)** is a single-binary REST client
-designed for **AI agent bots to call via `exec`**. Where a [channel](/guides/bot-developers/choose-a-channel)
+designed for **AI agents to call via `exec`**. Where a [channel](/guides/bot-developers/choose-a-channel)
 lets an agent *reply*, `octo-cli` lets it *act* — send messages, list groups, manage threads,
 upload files. Every invocation emits a structured JSON envelope on stdout; there is no
 interactive I/O.
@@ -22,14 +22,14 @@ The npm package resolves the matching prebuilt platform binary.
 
 ## Authenticate
 
-`octo-cli` is bot-only — there's no user login. Point it at your instance with two env vars:
+`octo-cli` is Assistant-only — there's no user login. Point it at your instance with two env vars:
 
 ```bash
 export OCTO_BOT_TOKEN="bf_your_user_bot_token"    # or app_… (DM-only)
 export OCTO_API_BASE_URL="https://your-octo-instance.com"
 ```
 
-Optional: `OCTO_SPACE_ID` (space context for platform-scoped bots), `OCTO_FORMAT`
+Optional: `OCTO_SPACE_ID` (space context for platform-scoped Assistants), `OCTO_FORMAT`
 (`json` | `table` | `csv` | `ndjson`).
 
 ## Use it
@@ -54,7 +54,7 @@ REST operation.
 
 ## Wiring it into an agent
 
-Give the agent permission to `exec octo-cli` (for example, a Claude Code bot's `allowedTools`,
+Give the agent permission to `exec octo-cli` (for example, a Claude Code Assistant's `allowedTools`,
 or the Claw runtime's Agent Skills). The agent then calls `octo-cli` commands to operate Octo
 directly — this is exactly how the
 [Claw channel](/guides/bot-developers/openclaw-and-claw-channels) implements its "hands."

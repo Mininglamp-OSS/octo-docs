@@ -21,8 +21,8 @@ openclaw gateway run --force
 ```
 
 需要 Node ≥ 22 以及 OpenClaw ≥ 2026.4.15。账号配置位于 `~/.openclaw/openclaw.json`
-中的 `channels.octo.accounts` 下，并支持热重载。令牌可以是 `bf_`（User Bot，完整群组 +
-话题）或 `app_`（App Bot，仅私聊）。
+中的 `channels.octo.accounts` 下，并支持热重载。令牌可以是 `bf_`（助理，完整群组 +
+话题）或 `app_`（智能应用，仅私聊）。
 
 <Info>
   该插件注册了一个智能体工具，**`octo_management`**（群组、`GROUP.md`/`THREAD.md`、
@@ -30,7 +30,7 @@ openclaw gateway run --force
   安装默认使用 `coding` 配置，因此需通过 `tools.alsoAllow` 添加它。
 </Info>
 
-生命周期：REST 注册机器人 → WebSocket 连接 → 自动重连 → 向拥有者问候 →
+生命周期：REST 注册助理 → WebSocket 连接 → 自动重连 → 向拥有者问候 →
 分发，并带有正在输入指示、已读回执，以及进度 / 展示卡片。
 
 ## claw-channel-octo

@@ -11,7 +11,7 @@ independent Node.js gateway that bridges [OpenAI Codex](https://developers.opena
 
 <Warning>
   **Early test release (v0.1.0).** The core path — registration, connection, multi-turn chat,
-  multi-bot — is verified, but there is **no cron and no skills yet**. For a fully-featured
+  multi-Assistant — is verified, but there is **no cron and no skills yet**. For a fully-featured
   channel, use [cc-channel-octo](/guides/bot-developers/claude-code-channel).
 </Warning>
 
@@ -33,9 +33,9 @@ npm start           # or: node dist/  (see the repo README)
 Once published, the one-liner will be `npm install -g @mininglamp-oss/codex-channel-octo` →
 `codex-channel-octo start`.
 
-Requires Node ≥ 22 and an Octo bot token (`bf_…`). The gateway registers as an Octo bot,
+Requires Node ≥ 22 and an Octo Assistant token (`bf_…`). The gateway registers as an Octo Assistant,
 connects over WebSocket, runs a coding task with local Codex, and posts the reply back. It
-supports DM, group (@mention), and community topics, multi-turn conversations, multiple bots in
+supports DM, group (@mention), and community topics, multi-turn conversations, multiple Assistants in
 one process, and config hot-reload.
 
 ## Codex thread interop
@@ -59,7 +59,7 @@ intermediate steps surfaced as progress updates (not per-token).
 
 - `sandboxMode` defaults to **`read-only`**; enabling writes requires a deliberate double-switch.
 - `danger-full-access` is rejected outright.
-- Each bot gets its own `CODEX_HOME`, isolating Codex state per bot.
+- Each Assistant gets its own `CODEX_HOME`, isolating Codex state per Assistant.
 
 <Card title="Compare all channels" icon="code-compare" href="/guides/bot-developers/choose-a-channel">
   See where Codex sits relative to the other four channels.

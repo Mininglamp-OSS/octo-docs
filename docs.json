@@ -54,7 +54,7 @@
                 ]
               },
               {
-                "group": "For Bot Developers",
+                "group": "For Agent Developers",
                 "pages": [
                   "guides/bot-developers/choose-a-channel",
                   "guides/bot-developers/claude-code-channel",
@@ -211,7 +211,7 @@
                 ]
               },
               {
-                "group": "面向机器人开发者",
+                "group": "面向智能体开发者",
                 "pages": [
                   "zh/guides/bot-developers/choose-a-channel",
                   "zh/guides/bot-developers/claude-code-channel",
