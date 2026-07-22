@@ -1,0 +1,95 @@
+---
+title: "Marketplace"
+description: "How Octo discovers and distributes Agent capabilities — Skills and MCP servers — through octo-marketplace and octo-cli."
+icon: "store"
+---
+
+The **Marketplace** is Octo's control plane for discovering and distributing the two things that
+extend an [Agent](/concepts/the-agent-model): **Skills** and **MCP servers**. It's a standalone
+service ([`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace)) reached from the
+web client, `octo-server`, and — the path most Agents use — the [**CLI**](#cli).
+
+<Info>
+  Ownership is split: `octo-server` owns identity, users, and space membership; `octo-marketplace`
+  owns the catalog assets and policy; `octo-cli` performs local download, verification, and
+  install. The Marketplace **never executes Skill code or launches MCP servers** — it stores
+  listings, not runtime.
+</Info>
+
+## Skill
+
+A **Skill** is a packaged, reusable Agent capability — a directory with a `SKILL.md` (and optional
+`references/`) that an Agent loads automatically. See [Build & publish a
+Skill](/guides/bot-developers/publish-a-skill) for authoring.
+
+The Marketplace adds **discovery, versioning, and distribution** on top of the git-native install
+path that works today:
+
+| Stage | What happens |
+|---|---|
+| **Upload** | Initialize an upload → get a presigned URL → PUT the archive to object storage. |
+| **Parse** | An async task extracts `SKILL.md` metadata (name, description, version, tags, SHA-256). |
+| **Create** | Bind the parsed task into a Skill with a category, tags, icon, and `visibility` (`public` / `private` / `space`). |
+| **Version** | Re-uploads accrue immutable versions with changelogs. |
+| **Download** | Authorize, then return a `download_url` + `file_sha256` (the caller / install workflow verifies the hash). |
+
+Skills are also discoverable by **category** and **tag**, and an Agent owner can **publish** one
+directly (a synchronous parse-then-create path).
+
+## MCP
+
+An **MCP** entry is a **[Model Context Protocol](https://modelcontextprotocol.io) server listing** —
+a connection recipe an Agent runtime adds to gain external tools. Unlike a Skill, an MCP listing has
+**no downloadable archive**; "installing" it means adding its connection block to a runtime's MCP
+config.
+
+The catalog stores discovery metadata (`name`, `slug`, `slogan`, `category`, `tags`, `notes`,
+`usage_examples`, `faqs`), the declared `tools`, and a **connection recipe**:
+
+- **`transport`** — `stdio`, `streamable-http`, or `sse`.
+- **`url` / `command` / `args` / `env` / `headers`** — how to reach the server.
+- **`quick_start`** — a ready-to-paste `mcpServers` block, keyed by the listing's `slug`.
+
+<Warning>
+  **Secrets are never stored.** Env/header *names* are catalogued, but values are replaced by a
+  placeholder sentinel on the wire, and quick-start secrets are hidden from peer viewers. Callers
+  supply real secrets locally at install time.
+</Warning>
+
+A **probe** (`mcp.probe`) validates a remote server's connection *without persisting* it — it
+returns `is_ok`, server info, and the discovered tool list. Probing is for `streamable-http` / `sse`
+only; `stdio` servers are validated locally by the Agent runtime, never spawned by the Marketplace.
+
+## CLI
+
+[`octo-cli`](/guides/bot-developers/drive-octo-with-cli) is how Agents work with the Marketplace —
+the `marketplace.json` spec ships embedded in the binary, exposing two command groups:
+
+```bash
+octo-cli marketplace skill list         # browse / search Skills
+octo-cli marketplace skill download …   # authorize + return download_url + file_sha256
+octo-cli marketplace mcp list           # browse MCP listings
+octo-cli marketplace mcp probe …        # validate a remote MCP connection
+```
+
+The CLI authenticates with an **Assistant** (`bf_…`) profile and Space context. `skill download`
+returns a `download_url` and the expected `file_sha256` for the **caller** to verify — it doesn't
+follow the artifact redirect itself. The install-time protections (exact SHA-256 match, rejecting
+path traversal, never executing archive scripts) are enforced **server-side on ingest** and by the
+**install workflow** the CLI ships (`skills/octo-marketplace`), which the calling agent follows.
+
+## Status
+
+- **Shipped:** the Skill lifecycle (upload / parse / create / version / download, categories, tags)
+  and the MCP catalog (CRUD, probe, icons, categories) in the current spec and `octo-marketplace` —
+  both Skill and MCP records are MySQL-backed.
+- **Hardening:** catalog discovery UI and publishing/versioning polish are still being refined.
+
+<CardGroup cols={2}>
+  <Card title="Build & publish a Skill" icon="puzzle" href="/guides/bot-developers/publish-a-skill">
+    Author a `SKILL.md` capability and install it to an Agent.
+  </Card>
+  <Card title="Publish to the Marketplace" icon="store" href="/guides/integrators/marketplace">
+    Run the service and its API surface.
+  </Card>
+</CardGroup>

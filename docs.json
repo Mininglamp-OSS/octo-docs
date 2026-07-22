@@ -147,7 +147,8 @@
                   "concepts/messaging-and-im-core",
                   "concepts/collaborative-docs",
                   "concepts/search-and-export-pipeline",
-                  "concepts/design-philosophy"
+                  "concepts/design-philosophy",
+                  "concepts/marketplace"
                 ]
               }
             ]
@@ -304,7 +305,8 @@
                   "zh/concepts/messaging-and-im-core",
                   "zh/concepts/collaborative-docs",
                   "zh/concepts/search-and-export-pipeline",
-                  "zh/concepts/design-philosophy"
+                  "zh/concepts/design-philosophy",
+                  "zh/concepts/marketplace"
                 ]
               }
             ]
