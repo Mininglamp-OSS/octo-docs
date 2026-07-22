@@ -5,7 +5,7 @@ icon: "terminal"
 ---
 
 **[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli)** 是一个单一二进制的 REST 客户端，
-专为 **AI 智能体机器人通过 `exec` 调用** 而设计。如果说[频道](/zh/guides/bot-developers/choose-a-channel)
+专为 **AI 智能体通过 `exec` 调用** 而设计。如果说[频道](/zh/guides/bot-developers/choose-a-channel)
 让智能体能够*回复*，那么 `octo-cli` 就让它能够*行动*——发送消息、列出群组、管理话题、
 上传文件。每一次调用都会在 stdout 上输出一个结构化的 JSON 信封（envelope）；不存在
 交互式 I/O。
@@ -22,14 +22,14 @@ npm 包会解析出匹配的、预构建的平台二进制。
 
 ## 认证
 
-`octo-cli` 仅面向机器人——没有用户登录。用两个环境变量把它指向你的实例：
+`octo-cli` 仅面向助理——没有用户登录。用两个环境变量把它指向你的实例：
 
 ```bash
 export OCTO_BOT_TOKEN="bf_your_user_bot_token"    # or app_… (DM-only)
 export OCTO_API_BASE_URL="https://your-octo-instance.com"
 ```
 
-可选：`OCTO_SPACE_ID`（面向平台级机器人的空间上下文）、`OCTO_FORMAT`
+可选：`OCTO_SPACE_ID`（面向平台级助理的空间上下文）、`OCTO_FORMAT`
 （`json` | `table` | `csv` | `ndjson`）。
 
 ## 使用它
@@ -53,7 +53,7 @@ octo-cli file download abc123 --jq '.data.url'
 
 ## 将其接入智能体
 
-给智能体授予 `exec octo-cli` 的权限（例如，一个 Claude Code 机器人的 `allowedTools`，
+给智能体授予 `exec octo-cli` 的权限（例如，一个 Claude Code 助理的 `allowedTools`，
 或 Claw 运行时的 Agent Skills）。随后智能体便调用 `octo-cli` 命令来直接操作 Octo——
 这正是 [Claw 频道](/zh/guides/bot-developers/openclaw-and-claw-channels)实现其“手”的方式。
 

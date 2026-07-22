@@ -11,7 +11,7 @@ skills, and scheduled tasks.
 
 <Note>
   The end-to-end first run is covered in
-  [Connect your first AI bot](/get-started/quickstart-connect-a-bot). This page is the reference
+  [Connect your first agent](/get-started/quickstart-connect-a-bot). This page is the reference
   for its features and configuration.
 </Note>
 
@@ -22,7 +22,7 @@ npm install -g @mininglamp-oss/cc-channel-octo
 cc-channel-octo        # after writing the config files below
 ```
 
-Requires Node ≥ 22, an Octo bot token (`bf_…`), the Claude Code CLI
+Requires Node ≥ 22, an Octo Assistant token (`bf_…`), the Claude Code CLI
 (`npm i -g @anthropic-ai/claude-code`), and `ANTHROPIC_API_KEY`.
 
 ## Configuration layout
@@ -42,9 +42,9 @@ Everything lives under `~/.cc-channel-octo/`:
     └── memory/          long-term auto-memory
 ```
 
-Config is **JSON files only** — there are no environment-variable overrides. A bot's
-`data`/`workspace`/`memory` are *derived* from `<baseDir>/<id>/…` and aren't configurable, so a
-bot can never escape its own subtree.
+Config is **JSON files only** — there are no environment-variable overrides. An Assistant's
+`data`/`workspace`/`memory` are *derived* from `<baseDir>/<id>/…` and aren't configurable, so an
+Assistant can never escape its own subtree.
 
 ## Features
 
@@ -72,12 +72,12 @@ token bucket rate-limits requests (default 5/min).
 
 - **`allowedTools` whitelist** — the agent can only invoke tools you permit.
 - **Workspace isolation** — each session gets a derived `workspace/` sandbox.
-- **Bot-loop prevention** — the gateway won't respond to its own or other bots' messages.
+- **Assistant-loop prevention** — the gateway won't respond to its own or other Assistants' messages.
 
-## Multi-bot & scheduled tasks
+## Multi-Assistant & scheduled tasks
 
-List several bots under the global `bots[]` (each with its own `<id>/config.json`) to run many
-in one process. Scheduled tasks let a bot run on a cron-like trigger. See the repo README for
+List several Assistants under the global `bots[]` (each with its own `<id>/config.json`) to run many
+in one process. Scheduled tasks let an Assistant run on a cron-like trigger. See the repo README for
 the full field reference.
 
 <CardGroup cols={2}>

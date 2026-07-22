@@ -5,9 +5,9 @@ icon: "code-compare"
 ---
 
 **频道（channel）**是一个独立的网关，它把一个 AI 智能体运行时桥接进 Octo IM：它
-注册为一个机器人、连接以接收消息、运行智能体，并把回复回发。Octo
+注册为一个助理、连接以接收消息、运行智能体，并把回复回发。Octo
 随附五个频道，每个都封装了不同的智能体内核。它们全部使用同一个
-[机器人令牌](/zh/concepts/security-and-auth)（`bf_…`）以及同一套
+[助理令牌](/zh/concepts/security-and-auth)（`bf_…`）以及同一套
 [BotFather 流程](/zh/get-started/quickstart-connect-a-bot)。
 
 ## 一览
@@ -43,7 +43,7 @@ icon: "code-compare"
 <Note>
   这五个都是**独立的网关**——它们作为独立进程运行在你的智能体运行时旁边，
   并通过网络与 Octo 通信。它们都不要求 fork `octo-server`。你可以同时运行
-  多个，甚至每个网关运行多个机器人。
+  多个，甚至每个网关运行多个助理。
 </Note>
 
 ## 想构建自己的？

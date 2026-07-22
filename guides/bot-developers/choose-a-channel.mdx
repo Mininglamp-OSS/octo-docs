@@ -5,9 +5,9 @@ icon: "code-compare"
 ---
 
 A **channel** is an independent gateway that bridges an AI agent runtime into Octo IM: it
-registers as a bot, connects to receive messages, runs the agent, and posts replies back. Octo
+registers as an Assistant, connects to receive messages, runs the agent, and posts replies back. Octo
 ships five, each wrapping a different agent core. They all use the same
-[bot token](/concepts/security-and-auth) (`bf_…`) and the same
+[Assistant token](/concepts/security-and-auth) (`bf_…`) and the same
 [BotFather flow](/get-started/quickstart-connect-a-bot).
 
 ## At a glance
@@ -43,7 +43,7 @@ ships five, each wrapping a different agent core. They all use the same
 <Note>
   All five are **independent gateways** — they run as their own process next to your agent
   runtime and speak to Octo over the network. None require forking `octo-server`. You can run
-  several at once, even multiple bots per gateway.
+  several at once, even multiple Assistants per gateway.
 </Note>
 
 ## Want to build your own?

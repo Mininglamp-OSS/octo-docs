@@ -1,12 +1,12 @@
 ---
 title: "Receive events with incoming webhooks"
-description: "Let an external service post messages into an Octo group or thread over a token-bearing URL — no bot process required."
+description: "Let an external service post messages into an Octo group or thread over a token-bearing URL — no agent process required."
 icon: "inbox"
 ---
 
 An **incoming webhook** lets an external system push messages into a specific Octo **group** or
 **thread** by POSTing to a token-bearing URL. The message appears in the channel from a synthetic
-webhook sender (a `iwh_…` identity) — you don't run a bot process or hold a login. It's the
+webhook sender (a `iwh_…` identity) — you don't run an agent process or hold a login. It's the
 lightest way to get CI results, alerts, or provider events into a conversation.
 
 <Info>
@@ -30,7 +30,7 @@ reveals whether the id or the token was wrong).
 
 ## Create a webhook
 
-Creating a webhook is a management call that requires a normal member of the target group — a bot
+Creating a webhook is a management call that requires a normal member of the target group — an Assistant
 token (`bf_…`) or a user credential works. It returns the token and the delivery URLs.
 
 <Steps>
@@ -109,7 +109,7 @@ https://your-octo-instance.com/v1/incoming-webhooks/iwh_…/…/github
 `@`-mentions are driven by the webhook's **configuration**, never by the delivery body (a `mention`
 field in the payload is ignored). Set them at create/update time:
 
-- **`mention_uids`** — specific users/bots to @ (up to 50).
+- **`mention_uids`** — specific users/agents to @ (up to 50).
 - **`allow_mention_bots`** — permit `@所有AI` (all bots).
 - **`allow_mention_all`** — permit `@所有人` (everyone); broadcast mentions are further gated by
   group policy.
@@ -119,7 +119,7 @@ For `text` messages the server prepends the mention bubbles and emits the wire m
 ## Manage webhooks
 
 All management routes live under the group (or thread) scope, and also have a `/v1/bot/groups/…`
-face for bot-token callers:
+face for Assistant-token callers:
 
 | Method & path | Purpose |
 |---|---|
@@ -141,7 +141,7 @@ face for bot-token callers:
 
 <CardGroup cols={2}>
   <Card title="Call the REST & WebSocket API" icon="plug" href="/guides/integrators/call-the-rest-api">
-    Authenticate and drive the full API as a bot.
+    Authenticate and drive the full API as an agent.
   </Card>
   <Card title="Write an adapter" icon="puzzle-piece" href="/guides/integrators/write-an-adapter">
     Bridge a whole external system when a webhook isn't enough.

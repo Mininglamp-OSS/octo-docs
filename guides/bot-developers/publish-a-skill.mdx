@@ -1,6 +1,6 @@
 ---
 title: "Build and publish a Skill"
-description: "Author an AgentSkill for Octo/OpenClaw and install it to your bot."
+description: "Author an AgentSkill for Octo/OpenClaw and install it to your Assistant."
 icon: "puzzle"
 ---
 
@@ -23,7 +23,7 @@ Existing skills in the collection:
 | `octo-loop` ⚗️ | An experimental OpenClaw loop-engineering standard: a three-ring orchestration / execution / verification contract with an uncheatable acceptance gate. |
 | `multica-squad-onboarding` | A conversational advisor that designs and provisions Multica squads via the `multica` CLI. |
 
-## Install a skill to your bot
+## Install a skill to your Assistant
 
 Drop it into your agent's skills directory. For OpenClaw / Octo:
 
@@ -33,8 +33,8 @@ curl -fsSL https://raw.githubusercontent.com/Mininglamp-OSS/octo-skills/main/ins
 # or clone + copy into ~/.openclaw/skills/ (or a bot's skills/ dir)
 ```
 
-For a [cc-channel-octo](/guides/bot-developers/claude-code-channel) bot, place the skill under
-`~/.cc-channel-octo/skills/` (shared) or `~/.cc-channel-octo/<botId>/skills/` (per-bot).
+For a [cc-channel-octo](/guides/bot-developers/claude-code-channel) Assistant, place the skill under
+`~/.cc-channel-octo/skills/` (shared) or `~/.cc-channel-octo/<botId>/skills/` (per-Assistant).
 
 ## Author to the standard: octo-spec
 

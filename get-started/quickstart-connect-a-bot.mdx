@@ -1,13 +1,13 @@
 ---
-title: "Connect your first AI bot"
-description: "Register a bot and bridge Claude Code into Octo in minutes — Octo's signature path."
+title: "Connect your first agent"
+description: "Register an Assistant and bridge Claude Code into Octo in minutes — Octo's signature path."
 icon: "robot"
 ---
 
 This is the path that makes Octo _Octo_: putting an AI agent into your workspace as a
-first-class participant. You'll register a bot, then run
+first-class participant. You'll register an Assistant, then run
 [`cc-channel-octo`](https://github.com/Mininglamp-OSS/cc-channel-octo) — an independent gateway
-that bridges **Claude Code** into Octo IM. When you're done, you can DM the bot (or @mention it
+that bridges **Claude Code** into Octo IM. When you're done, you can DM the Assistant (or @mention it
 in a group) and get streamed replies from a real coding agent.
 
 <Tip>
@@ -27,21 +27,21 @@ in a group) and get streamed replies from a real coding agent.
 - The **Claude Code CLI**: `npm i -g @anthropic-ai/claude-code`.
 - An **`ANTHROPIC_API_KEY`** exported in your environment.
 
-## Set up the bot
+## Set up the Assistant
 
 <Steps>
-  <Step title="Create a bot and get its token">
-    In Octo, bots are created by chatting with **BotFather** (the built-in bot registrar):
+  <Step title="Create an Assistant and get its token">
+    In Octo, Assistants are created by chatting with **BotFather** (the built-in Assistant registrar):
 
     1. Open your Octo web client and start a DM with **BotFather**.
-    2. Send `/newbot` and follow the prompts to name your bot.
-    3. BotFather replies with a **User Bot token** that starts with `bf_`.
+    2. Send `/newbot` and follow the prompts to name your Assistant.
+    3. BotFather replies with an **Assistant token** that starts with `bf_`.
 
-    Copy that token somewhere safe — it's the bot's identity and full credential.
+    Copy that token somewhere safe — it's the Assistant's identity and full credential.
 
     <Info>
-      A `bf_` **User Bot** token has DM + group + thread access and is what you want here. `app_`
-      **App Bot** tokens (from the admin console) are DM-only. See the
+      A `bf_` **Assistant** token has DM + group + thread access and is what you want here. `app_`
+      **Intelligent Application** tokens (from the admin console) are DM-only. See the
       [Security & auth model](/concepts/security-and-auth) for the full picture.
     </Info>
   </Step>
@@ -56,9 +56,9 @@ in a group) and get streamed replies from a real coding agent.
     This installs the `cc-channel-octo` command — no compile step.
   </Step>
 
-  <Step title="Configure the bot">
+  <Step title="Configure the Assistant">
     `cc-channel-octo` uses a fixed layout under `~/.cc-channel-octo/`: a **global** config
-    (shared defaults + the list of bots, **no token**) and a **per-bot** config (the token +
+    (shared defaults + the list of Assistants, **no token**) and a **per-Assistant** config (the token +
     overrides). Create both:
 
     ```bash
@@ -74,7 +74,7 @@ in a group) and get streamed replies from a real coding agent.
     }
     ```
 
-    Per-bot `~/.cc-channel-octo/default/config.json` — the token goes **only** here:
+    Per-Assistant `~/.cc-channel-octo/default/config.json` — the token goes **only** here:
 
     ```json
     {
@@ -90,7 +90,7 @@ in a group) and get streamed replies from a real coding agent.
     ```
 
     <Warning>
-      The token belongs only in the per-bot `config.json` (mode `600`) — never in the global
+      The token belongs only in the per-Assistant `config.json` (mode `600`) — never in the global
       file, shell history, or version control.
     </Warning>
   </Step>
@@ -106,13 +106,13 @@ in a group) and get streamed replies from a real coding agent.
     Ready — listening for messages
     ```
 
-    That's it — the bot is online.
+    That's it — the Assistant is online.
   </Step>
 </Steps>
 
-## Talk to your bot
+## Talk to your Assistant
 
-Open Octo and either **DM the bot** directly, or **@mention it** in a group (it only responds
+Open Octo and either **DM the Assistant** directly, or **@mention it** in a group (it only responds
 to @mentions in groups). Send it something like _"write a Python function that reverses a
 string"_ and watch the reply **stream back in real time**, with typing indicators. Claude Code
 runs the task via the Agent SDK and posts the result into the conversation.
@@ -128,7 +128,7 @@ in-chat commands:
 
 ## Optional — let the agent _drive_ Octo
 
-So far the bot _replies_. You can also let the agent **act** on Octo — send messages, list
+So far the Assistant _replies_. You can also let the agent **act** on Octo — send messages, list
 groups, manage threads — by giving it
 [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli), a single-binary REST client built for
 agents to call via `exec`:
