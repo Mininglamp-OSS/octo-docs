@@ -159,7 +159,8 @@
               {
                 "group": "Ecosystem",
                 "pages": [
-                  "ecosystem/repository-guide"
+                  "ecosystem/repository-guide",
+                  "ecosystem/open-marketplace-work"
                 ]
               },
               {
@@ -317,7 +318,8 @@
               {
                 "group": "生态",
                 "pages": [
-                  "zh/ecosystem/repository-guide"
+                  "zh/ecosystem/repository-guide",
+                  "zh/ecosystem/open-marketplace-work"
                 ]
               },
               {

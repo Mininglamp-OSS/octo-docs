@@ -1,0 +1,41 @@
+---
+title: "MCP 与 Skills 市场待处理事项"
+description: "MCP 与 Skills 市场相关 Open Issue 和 PR 的状态快照。"
+icon: "list-check"
+---
+
+本页跟踪 [`octo-web`](https://github.com/Mininglamp-OSS/octo-web) 与
+[`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace) 中 MCP、Skills 市场相关的待处理事项。
+已合并和已关闭事项不在此列。
+
+<Note>
+  本页是 2026 年 8 月 3 日的状态快照；最新状态以 GitHub 为准。
+</Note>
+
+## Open PR
+
+| 仓库 | PR | 草稿 | Review 状态 | 内容 | 关联 Issue |
+| --- | --- | --- | --- | --- | --- |
+| `octo-web` | [#1042](https://github.com/Mininglamp-OSS/octo-web/pull/1042) | **是** | Approved | 展示并统计 MCP 浏览量 | [octo-marketplace #21](https://github.com/Mininglamp-OSS/octo-marketplace/issues/21) |
+| `octo-marketplace` | [#22](https://github.com/Mininglamp-OSS/octo-marketplace/pull/22) | **是** | Approved | MCP 浏览量统计的后端支持 | [#21](https://github.com/Mininglamp-OSS/octo-marketplace/issues/21) |
+| `octo-marketplace` | [#31](https://github.com/Mininglamp-OSS/octo-marketplace/pull/31) | 否 | Changes requested | Skill/MCP 分类计数跟随搜索和标签过滤 | [#30](https://github.com/Mininglamp-OSS/octo-marketplace/issues/30) |
+
+## Open Issue：octo-web
+
+| Issue | 范围 | 内容 |
+| --- | --- | --- |
+| [#1191](https://github.com/Mininglamp-OSS/octo-web/issues/1191) | Skills | 拉取技能、从运行时导入技能时经常返回 HTTP 502 |
+| [#1112](https://github.com/Mininglamp-OSS/octo-web/issues/1112) | Skills | 用户浏览或下载后，浏览量和下载量未增加 |
+| [#1104](https://github.com/Mininglamp-OSS/octo-web/issues/1104) | MCP | 分类计数不一致；分类字段应必选或增加“其他”选项 |
+| [#1103](https://github.com/Mininglamp-OSS/octo-web/issues/1103) | Skills | 删除 Skill 后分类计数未同步刷新 |
+| [#1004](https://github.com/Mininglamp-OSS/octo-web/issues/1004) | Skills | Skill 卡片应显示 Bot 名称，而非 Space Owner 姓名 |
+| [#893](https://github.com/Mininglamp-OSS/octo-web/issues/893) | MCP | MCP 市场草稿生命周期与发布安全门槛 |
+
+## Open Issue：octo-marketplace
+
+| Issue | 范围 | 内容 | 关联 PR |
+| --- | --- | --- | --- |
+| [#41](https://github.com/Mininglamp-OSS/octo-marketplace/issues/41) | MCP / Skills | 增加用户评分功能 | — |
+| [#21](https://github.com/Mininglamp-OSS/octo-marketplace/issues/21) | MCP | 统计并展示 MCP 查看次数 | [#22（草稿）](https://github.com/Mininglamp-OSS/octo-marketplace/pull/22)、[octo-web #1042（草稿）](https://github.com/Mininglamp-OSS/octo-web/pull/1042) |
+| [#16](https://github.com/Mininglamp-OSS/octo-marketplace/issues/16) | Skills | 确认 `creator_name` 与 `owner_name` 字段语义 | — |
+| [#5](https://github.com/Mininglamp-OSS/octo-marketplace/issues/5) | MCP | 增加即时验证与周期健康状态探测 | — |
