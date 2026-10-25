@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "coverage_note": "Preserve the existing 84 documented operations in eight domains; adding coverage requires an explicit manifest and navigation review.",
+  "sources": {
+    "cli": {
+      "repository": "Mininglamp-OSS/octo-cli",
+      "directory": "octo-cli",
+      "label": "v0.18.0",
+      "revision": "d564a63bbd8ec2dd4305a40a64fe0179ca9c667f",
+      "files": {
+        "internal/registry/specs/bot.json": "a9320461b5579fc7668df780f286d7df93a78e142a53de6cf91604657c7da949",
+        "internal/registry/specs/docs.json": "53f1dc167b8e373c618a0fb40a6106b41fe9d5c1cd78fb7cf506ffdfaf84b121",
+        "internal/registry/specs/event.json": "88504b38a39023ea9912120ba89431ac84fa2125c5b65b149537f431caf86d59",
+        "internal/registry/specs/file.json": "066ea86c4d3d1cc7409844a9b5c1c549c6c9a56b54a700fd3b593fcb3ca6e8db",
+        "internal/registry/specs/group.json": "6a58cef2fce32003cf9de3191d1a07d99bb477f3107d0b7ad41d3e80eb826870",
+        "internal/registry/specs/html.json": "de3b5b13166b7a42bec736345c7b13e53f449429337bac131985e195b15ac3c5",
+        "internal/registry/specs/message.json": "39e3d90a803f6832f5c72b0be601e916a4ace5bc686145284c8f880550023bfd",
+        "internal/registry/specs/thread.json": "0f13c1f8a74700ad902ae56830101bd4714eb399b306e8526824b05a765a9eaa"
+      }
+    },
+    "auth": {
+      "repository": "Mininglamp-OSS/octo-auth",
+      "directory": "octo-auth",
+      "label": "contract snapshot (no release tag claimed)",
+      "revision": "94045414467c0a30fb7022dcbba699c7bb333901",
+      "files": {
+        "contract/auth-v1.yaml": "e3af618c5b62faca222fe3a35b5ae21b8531a5914a37704ba43711870848d388",
+        "contract/errors-v1.yaml": "3ecee1120bd7179b252969868bd7a1a291e2df87f5fdf73681edab7973ce0312"
+      }
+    },
+    "server": {
+      "repository": "Mininglamp-OSS/octo-server",
+      "directory": "octo-server",
+      "label": "v1.22.0",
+      "revision": "8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62",
+      "files": {
+        "configs/tsdd.yaml": "6a62ab071e2a32ae61a2ea8306b8b4fc939a46d9b08fb811fdb1adc40aaea311"
+      }
+    }
+  },
+  "operations": {
+    "bot": [
+      "bot.register",
+      "bot.set-commands",
+      "bot.user-info",
+      "bot.space-members",
+      "bot.typing",
+      "bot.heartbeat"
+    ],
+    "docs": [
+      "docs.list",
+      "docs.create",
+      "docs.get",
+      "docs.rename",
+      "docs.delete",
+      "docs.scene.export",
+      "docs.content.get",
+      "docs.content.edit",
+      "docs.sheet.get",
+      "docs.sheet.edit",
+      "docs.scene.get",
+      "docs.scene.edit",
+      "docs.members.list",
+      "docs.members.set",
+      "docs.members.remove",
+      "docs.share.get",
+      "docs.share.set",
+      "docs.forward-grant",
+      "docs.comments.list",
+      "docs.comments.add",
+      "docs.comments.edit",
+      "docs.comments.delete",
+      "docs.versions.list",
+      "docs.versions.create",
+      "docs.versions.state",
+      "docs.versions.rename",
+      "docs.versions.delete",
+      "docs.versions.restore",
+      "docs.attachments.presign",
+      "docs.attachments.get",
+      "docs.attachments.resolve"
+    ],
+    "event": [
+      "event.list",
+      "event.ack"
+    ],
+    "file": [
+      "file.upload",
+      "file.download",
+      "file.credentials",
+      "file.presigned"
+    ],
+    "group": [
+      "group.list",
+      "group.get",
+      "group.members",
+      "group.md-get",
+      "group.md-update",
+      "group.create",
+      "group.update",
+      "group.member-add",
+      "group.member-remove"
+    ],
+    "html": [
+      "html.list",
+      "html.publish",
+      "html.get",
+      "html.rm",
+      "html.versions",
+      "html.draft.save",
+      "html.draft.promote",
+      "html.share",
+      "html.unshare",
+      "html.grant.list",
+      "html.grant.add",
+      "html.grant.rm",
+      "html.asset.ls",
+      "html.asset.add",
+      "html.asset.rm",
+      "html.comment.list",
+      "html.comment.add",
+      "html.reply",
+      "html.element.get",
+      "html.element.replace"
+    ],
+    "message": [
+      "message.send",
+      "message.edit",
+      "message.sync",
+      "message.read-receipt"
+    ],
+    "thread": [
+      "thread.list",
+      "thread.create",
+      "thread.get",
+      "thread.members",
+      "thread.join",
+      "thread.leave",
+      "thread.md-get",
+      "thread.md-update"
+    ]
+  }
+}
