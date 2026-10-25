@@ -14,6 +14,7 @@
  */
 
 import fs from 'node:fs';
+import { verifySource, sourceUrl, sourceDescription, sourceLabel } from './reference-sources.mjs';
 import path from 'node:path';
 import { DOCS_ROOT, WORKSPACE, banner, mdEscape, codeEscape, createSink } from './_lib.mjs';
 
@@ -33,7 +34,7 @@ const S = {
   en: {
     title: 'Configuration Reference',
     desc: 'Server configuration template and supplemental environment-only settings.',
-    intro: (k, s) => `Generated from the annotated config template [\`octo-server/configs/tsdd.yaml\`](https://github.com/Mininglamp-OSS/octo-server/blob/main/configs/tsdd.yaml) — **${k} keys across ${s} sections**.`,
+    intro: (k, s) => `Generated from the annotated config template [\`octo-server/configs/tsdd.yaml\`](${sourceUrl('server', 'configs/tsdd.yaml')}) — **${k} keys across ${s} sections**.`,
     info: (link) => `Keys are shown in dotted form (e.g. \`db.mysqlAddr\`). Most keys are commented out in the template and fall back to a built-in default; keys marked _(active default)_ are set explicitly in the shipped template. Many keys also accept an environment-variable override — see the inline notes and the [deployment guide](${link}/guides/operators/deploy-compose).`,
     environment: 'Environment-only settings', verified: 'Implementation verified at', sources: 'Sources', guide: 'Deployment instructions',
     thKey: 'Key', thDefault: 'Default', thDesc: 'Description', active: ' _(active default)_',
@@ -41,7 +42,7 @@ const S = {
   zh: {
     title: '配置参考',
     desc: '服务端配置模板与补充的纯环境变量配置说明。',
-    intro: (k, s) => `由带注释的配置模板 [\`octo-server/configs/tsdd.yaml\`](https://github.com/Mininglamp-OSS/octo-server/blob/main/configs/tsdd.yaml) 生成 —— **${s} 个分组、共 ${k} 个配置项**。`,
+    intro: (k, s) => `由带注释的配置模板 [\`octo-server/configs/tsdd.yaml\`](${sourceUrl('server', 'configs/tsdd.yaml')}) 生成 —— **${s} 个分组、共 ${k} 个配置项**。`,
     info: (link) => `配置项以点分形式展示(例如 \`db.mysqlAddr\`)。模板中大多数项默认被注释,回退到内置默认值;标注 _(active default)_ 的项在随附模板中被显式设置。许多项还支持环境变量覆盖 —— 参见内联说明与[部署指南](${link}/guides/operators/deploy-compose)。`,
     environment: '纯环境变量配置', verified: '实现核实版本', sources: '来源', guide: '部署说明',
     thKey: '配置项', thDefault: '默认值', thDesc: '说明', active: ' _(默认已启用)_',
@@ -131,6 +132,7 @@ function renderEnvironment(config, lang, t, L) {
 
 function main() {
   if (!fs.existsSync(CONFIG_FILE)) { console.error(`[gen-config] config not found: ${CONFIG_FILE}`); process.exit(2); }
+  verifySource('server');
   const sections = parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
   const environment = JSON.parse(fs.readFileSync(ENVIRONMENT_FILE, 'utf8'));
   if (!/^[0-9a-f]{40}$/.test(environment.revision)) throw new Error('Environment sources require a full upstream commit SHA');
@@ -155,6 +157,8 @@ function main() {
       banner({ ...SRC, spec: 'octo-server/configs/tsdd.yaml + scripts/config-environment.json (pinned implementation sources)' }),
       '',
       t.intro(totalKeys, sections.length),
+      '',
+      `> ${lang === 'en' ? 'Pinned source' : '固定来源'}: ${sourceLabel('server')}.`,
       '',
       '<Info>',
       `  ${t.info(L.link)}`,

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -13,13 +14,16 @@ function fixture(t) {
   t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
   const docs = path.join(workspace, 'octo-docs');
   fs.mkdirSync(path.join(docs, 'scripts'), { recursive: true });
-  for (const file of ['gen-config.mjs', '_lib.mjs', 'config-environment.json']) {
+  for (const file of ['gen-config.mjs', '_lib.mjs', 'config-environment.json', 'reference-sources.mjs']) {
     fs.copyFileSync(path.join(scripts, file), path.join(docs, 'scripts', file));
   }
   const configDir = path.join(workspace, 'octo-server/configs');
   fs.mkdirSync(configDir, { recursive: true });
   // No environment variable in the YAML: this is the original omission case.
   fs.writeFileSync(path.join(configDir, 'tsdd.yaml'), 'mode: "debug" # mode\n');
+  const lock = JSON.parse(fs.readFileSync(path.join(scripts, 'reference-sources.json')));
+  lock.sources.server.files['configs/tsdd.yaml'] = createHash('sha256').update(fs.readFileSync(path.join(configDir, 'tsdd.yaml'))).digest('hex');
+  fs.writeFileSync(path.join(docs, 'scripts/reference-sources.json'), JSON.stringify(lock));
   return {
     docs,
     run: (...args) => spawnSync(process.execPath, [path.join(docs, 'scripts/gen-config.mjs'), ...args], { encoding: 'utf8' }),

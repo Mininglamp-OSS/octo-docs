@@ -7,33 +7,29 @@
  * for each language (en, zh), with translated scaffolding.
  *
  * Emits reference/cli/<domain>.mdx + reference/octo-cli.mdx (zh under zh/).
- * Usage:  node scripts/gen-cli.mjs [--check] [--domains message,file]
+ * Usage:  node scripts/gen-cli.mjs [--check]
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import {
   DOCS_ROOT, WORKSPACE, HTTP_METHODS, banner,
   deref, mdEscape, typeOf, readJson, createSink,
 } from './_lib.mjs';
 
+import { readLockedSpecs, sourceUrl, sourceDescription, sourceLabel } from './reference-sources.mjs';
+
 const CLI_SPECS_DIR = path.join(WORKSPACE, 'octo-cli/internal/registry/specs');
 
 const check = process.argv.includes('--check');
 const domainsIndex = process.argv.indexOf('--domains');
 const selectedDomains = domainsIndex < 0 ? null : process.argv[domainsIndex + 1]?.split(',');
-const SOURCE_LOCK = readJson(path.join(DOCS_ROOT, 'scripts/cli-reference-sources.json'));
-if (!/^[a-f0-9]{40}$/.test(SOURCE_LOCK.revision)) throw new Error('CLI source lock requires a full release commit SHA');
-if (domainsIndex >= 0 && (!selectedDomains?.length || selectedDomains.some((name) => !name || name.startsWith('--')))) {
-  throw new Error('--domains requires comma-separated domain names');
-}
+if (domainsIndex >= 0 && (!selectedDomains?.length || selectedDomains.some((n) => !n || n.startsWith('--')))) throw new Error('--domains requires comma-separated names');
 const sink = createSink({ check, generator: 'gen-cli' });
 const SRC = { generator: 'gen-cli.mjs' };
 
-// Domains withheld from the docs (deprecated / internal). matter is deprecated.
-const EXCLUDE = new Set(['matter', 'marketplace']);
+// Documented domains and operation IDs are explicit in reference-sources.json.
 
 const LANGS = {
   en: { dir: DOCS_ROOT, link: '' },
@@ -49,30 +45,28 @@ const RISK = {
 
 const S = {
   en: {
-    scope: 'This page preserves the existing command subset; it does not enumerate every command in this release.',
     cmds: 'commands', genFrom: 'generated from', envelope: 'Every invocation emits a structured JSON envelope on stdout.',
-    domainNote: (link) => `Authenticate by exporting \`OCTO_BOT_TOKEN\` (\`bf_…\`) and \`OCTO_API_BASE_URL\`. See the [CLI overview](${link}/reference/octo-cli) for common flags and the output contract.`,
+    domainNote: (link) => `Configure credentials and verify the gateway using the [CLI guide](${link}/guides/bot-developers/drive-octo-with-cli). See the [CLI overview](${link}/reference/octo-cli) for common flags and the output contract.`,
     domainDesc: (n) => `octo-cli commands in the ${n} domain — generated from the embedded OpenAPI spec.`,
     args: 'Arguments', flags: 'Flags', thArg: 'Arg', thDesc: 'Description', pathParam: 'path parameter',
     thFlag: 'Flag', thType: 'Type', thReq: 'Required',
     idxTitle: 'octo-cli Command Reference',
-    idxDesc: 'All octo-cli commands across every domain, generated from the embedded OpenAPI specs.',
-    idxIntro: (t, d) => `[\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) is a single-binary REST client designed for AI agents to call via \`exec\`. Its command tree — **${t} commands across ${d} domains** — is auto-registered from embedded OpenAPI specs at startup, so this reference stays in lock-step with the CLI and the server.`,
+    idxDesc: 'The documented command subset from a fixed released CLI contract.',
+    idxIntro: (t, d) => `[\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) is a single-binary REST client designed for AI agents to call via \`exec\`. This reference documents **${t} commands across ${d} domains**, rendered from the pinned released OpenAPI specs. This is the existing documentation subset, not every command in that release.`,
     info: (link) => `Every invocation prints a structured JSON envelope on stdout; errors go to stderr with a deterministic taxonomy. There is no interactive I/O — ideal for agent runtimes. Pair with the [REST API reference](${link}/reference/rest-websocket-api) (each command maps to one API operation).`,
     hCommon: 'Common flags', thPurpose: 'Purpose',
     dataFlag: 'JSON request body for create/update commands.', jqFlag: 'Post-process the JSON envelope with a jq expression.',
     hDomains: 'Domains', thGroup: 'Command group', thCount: 'Commands', total: 'Total',
   },
   zh: {
-    scope: '本页保留既有命令子集，不枚举此发布版的全部命令。',
     cmds: '条命令', genFrom: '由以下规范生成：', envelope: '每次调用都会在 stdout 输出结构化的 JSON 信封。',
-    domainNote: (link) => `鉴权方式：导出 \`OCTO_BOT_TOKEN\`(\`bf_…\`)与 \`OCTO_API_BASE_URL\`。通用标志与输出约定见 [CLI 总览](${link}/reference/octo-cli)。`,
+    domainNote: (link) => `按 [CLI 指南](${link}/guides/bot-developers/drive-octo-with-cli) 配置凭据并核对网关；通用标志与输出约定见 [CLI 总览](${link}/reference/octo-cli)。`,
     domainDesc: (n) => `${n} 领域的 octo-cli 命令 —— 由内嵌的 OpenAPI 规范生成。`,
     args: '位置参数', flags: '标志', thArg: '参数', thDesc: '说明', pathParam: '路径参数',
     thFlag: '标志', thType: '类型', thReq: '必填',
     idxTitle: 'octo-cli 命令参考',
-    idxDesc: '跨所有领域的全部 octo-cli 命令 —— 由内嵌的 OpenAPI 规范生成。',
-    idxIntro: (t, d) => `[\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) 是一个单二进制 REST 客户端,专为 AI 智能体通过 \`exec\` 调用而设计。它的命令树 —— **${d} 个领域、共 ${t} 条命令** —— 在启动时由内嵌的 OpenAPI 规范自动注册,因此本参考始终与 CLI 和服务端保持同步。`,
+    idxDesc: '固定发行版 CLI 合同中已收录的命令子集。',
+    idxIntro: (t, d) => `[\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) 是一个单二进制 REST 客户端,专为 AI 智能体通过 \`exec\` 调用而设计。本参考收录 **${d} 个领域、共 ${t} 条命令**，由固定发行版的 OpenAPI 规范生成，不枚举该发行的全部命令。`,
     info: (link) => `每次调用都会在 stdout 输出结构化的 JSON 信封;错误输出到 stderr,并带有确定性的分类。没有交互式 I/O —— 非常适合 Agent 运行时。可与 [REST API 参考](${link}/reference/rest-websocket-api) 搭配使用(每条命令对应一个 API 接口)。`,
     hCommon: '通用标志', thPurpose: '用途',
     dataFlag: '用于创建/更新命令的 JSON 请求体。', jqFlag: '用 jq 表达式对 JSON 信封做后处理。',
@@ -142,16 +136,9 @@ function renderCommand(operationId, op, root, t, riskMap) {
 function generateDomain(name, spec, lang) {
   const t = S[lang], L = LANGS[lang], riskMap = RISK[lang];
   const specPath = `octo-cli/internal/registry/specs/${name}.json`;
-  const locked = SOURCE_LOCK.specs[name];
-  const sourceRef = locked ? SOURCE_LOCK.revision : 'main';
   const cmds = [];
   for (const [, item] of Object.entries(spec.paths || {})) {
     for (const method of HTTP_METHODS) if (item[method]?.operationId) cmds.push([item[method].operationId, item[method]]);
-  }
-  const included = SOURCE_LOCK.operations?.[name];
-  if (included) {
-    for (let i = cmds.length - 1; i >= 0; i--) if (!included.includes(cmds[i][0])) cmds.splice(i, 1);
-    if (included.some((id) => !cmds.some(([found]) => found === id))) throw new Error(`Pinned operation missing from ${name}.json`);
   }
   cmds.sort((a, b) => a[0].localeCompare(b[0]));
   const body = [
@@ -161,11 +148,10 @@ function generateDomain(name, spec, lang) {
     'icon: "terminal"',
     '---',
     '',
-    banner({ ...SRC, spec: locked ? `${specPath} @ ${SOURCE_LOCK.release} (${SOURCE_LOCK.revision})` : specPath }),
+    banner({ ...SRC, spec: sourceDescription('cli', `internal/registry/specs/${name}.json`) }),
     '',
-    `> ${cmds.length} ${t.cmds}, ${t.genFrom} [\`${specPath}\`](https://github.com/Mininglamp-OSS/octo-cli/blob/${sourceRef}/internal/registry/specs/${name}.json)${locked ? ` (${SOURCE_LOCK.release})` : ''}. ${t.envelope}`,
+    `> ${cmds.length} ${t.cmds}, ${t.genFrom} [\`${specPath}\`](${sourceUrl('cli', `internal/registry/specs/${name}.json`)}) — ${sourceLabel('cli')}. ${t.envelope}`,
     '',
-    ...(locked ? [t.scope, ''] : []),
     t.domainNote(L.link),
     '',
     cmds.map(([id, op]) => renderCommand(id, op, spec, t, riskMap)).join('\n---\n\n'),
@@ -185,9 +171,11 @@ function generateIndex(summaries, total, lang) {
     'icon: "terminal"',
     '---',
     '',
-    banner({ ...SRC, spec: 'octo-cli/internal/registry/specs/*.json' }),
+    banner({ ...SRC, spec: sourceDescription('cli', 'internal/registry/specs/*.json') }),
     '',
     t.idxIntro(total, summaries.length),
+    '',
+    `> ${t.genFrom} ${sourceLabel('cli')}.`,
     '',
     '<Info>',
     `  ${t.info(L.link)}`,
@@ -213,20 +201,10 @@ function generateIndex(summaries, total, lang) {
 
 function main() {
   if (!fs.existsSync(CLI_SPECS_DIR)) { console.error(`[gen-cli] spec dir not found: ${CLI_SPECS_DIR}`); process.exit(2); }
-  const names = fs.readdirSync(CLI_SPECS_DIR)
-    .filter((f) => f.endsWith('.json')).map((f) => path.basename(f, '.json'))
-    .filter((n) => !EXCLUDE.has(n))
-    .filter((n) => !selectedDomains || selectedDomains.includes(n))
-    .sort((a, b) => (ORDER[a] ?? 99) - (ORDER[b] ?? 99));
-  if (selectedDomains?.some((name) => !names.includes(name))) throw new Error('Unknown or excluded domain in --domains');
-  for (const name of names) {
-    const expected = SOURCE_LOCK.specs[name];
-    if (!expected) continue;
-    const input = fs.readFileSync(path.join(CLI_SPECS_DIR, `${name}.json`));
-    const actual = createHash('sha256').update(input).digest('hex');
-    if (actual !== expected) throw new Error(`${name}.json differs from released ${SOURCE_LOCK.release} (${SOURCE_LOCK.revision}); check out the pinned release before generating`);
-  }
-  const specs = Object.fromEntries(names.map((n) => [n, readJson(path.join(CLI_SPECS_DIR, `${n}.json`))]));
+  const allSpecs = readLockedSpecs();
+  const names = Object.keys(allSpecs).filter((n) => !selectedDomains || selectedDomains.includes(n)).sort((a, b) => (ORDER[a] ?? 99) - (ORDER[b] ?? 99));
+  if (selectedDomains?.some((n) => !names.includes(n))) throw new Error('Unknown or undocumented domain in --domains');
+  const specs = Object.fromEntries(names.map((n) => [n, allSpecs[n]]));
 
   let total = 0;
   for (const lang of Object.keys(LANGS)) {
@@ -234,7 +212,7 @@ function main() {
     total = summaries.reduce((n, s) => n + s.count, 0);
     if (!selectedDomains) generateIndex(summaries, total, lang);
   }
-  const ok = sink.finish(`[gen-cli] wrote ${names.length} CLI domain pages (${total} commands)${selectedDomains ? '' : ' + index'} × ${Object.keys(LANGS).length} langs.`);
+  const ok = sink.finish(`[gen-cli] wrote ${names.length} CLI domain pages (${total} commands) + index × ${Object.keys(LANGS).length} langs.`);
   if (!ok) process.exit(1);
 }
 

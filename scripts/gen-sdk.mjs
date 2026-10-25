@@ -19,6 +19,8 @@ import {
   deref, mdEscape, propsTable, createSink,
 } from './_lib.mjs';
 
+import { verifySource, sourceUrl, sourceDescription, sourceLabel } from './reference-sources.mjs';
+
 const CONTRACT = path.join(WORKSPACE, 'octo-auth/contract/auth-v1.yaml');
 
 const check = process.argv.includes('--check');
@@ -90,6 +92,7 @@ function main() {
     console.error(`[gen-sdk] contract not found: ${CONTRACT}`);
     process.exit(2);
   }
+  verifySource('auth');
   const doc = yaml.load(fs.readFileSync(CONTRACT, 'utf8'));
   const endpoints = [];
   for (const [route, item] of Object.entries(doc.paths || {})) {
@@ -105,7 +108,7 @@ function main() {
       'icon: "key"',
       '---',
       '',
-      banner({ ...SRC, spec: 'octo-auth/contract/auth-v1.yaml' }),
+      banner({ ...SRC, spec: sourceDescription('auth', 'contract/auth-v1.yaml') }),
       '',
       t.intro(endpoints.length).replaceAll('{LINK}', L.link),
       '',
@@ -113,7 +116,7 @@ function main() {
       `  ${t.tip(L.link)}`,
       '</Tip>',
       '',
-      `> ${t.genFrom} [\`octo-auth/contract/auth-v1.yaml\`](https://github.com/Mininglamp-OSS/octo-auth/blob/main/contract/auth-v1.yaml).`,
+      `> ${t.genFrom} [\`octo-auth/contract/auth-v1.yaml\`](${sourceUrl('auth', 'contract/auth-v1.yaml')}) — ${sourceLabel('auth')}.`,
       '',
       endpoints.map(([route, op]) => renderEndpoint(route, op, doc, t)).join('\n---\n\n'),
       '',

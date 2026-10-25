@@ -47,11 +47,12 @@ function fixture(t) {
   t.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
   const docs = path.join(tmp, 'octo-docs');
   fs.mkdirSync(path.join(docs, 'scripts'), { recursive: true });
-  for (const name of ['gen-cli.mjs', '_lib.mjs']) fs.copyFileSync(path.join(scripts, name), path.join(docs, 'scripts', name));
+  for (const name of ['gen-cli.mjs', '_lib.mjs', 'reference-sources.mjs']) fs.copyFileSync(path.join(scripts, name), path.join(docs, 'scripts', name));
   const specDir = path.join(tmp, 'octo-cli/internal/registry/specs');
   fs.mkdirSync(specDir, { recursive: true });
-  const lock = JSON.parse(fs.readFileSync(path.join(scripts, 'cli-reference-sources.json')));
+  const lock = JSON.parse(fs.readFileSync(path.join(scripts, 'reference-sources.json')));
   lock.operations = { message: ['message.send'], file: ['file.upload'] };
+  lock.sources.cli.files = {};
   const specs = {
     message: { paths: { '/send': { post: { operationId: 'message.send', parameters: [{ in: 'query', name: 'channel_id', schema: { type: 'string' } }] } }, '/outside-scope': { get: { operationId: 'message.other' } } } },
     file: { paths: { '/upload': { post: { operationId: 'file.upload', 'x-octo-multipart': true, requestBody: { content: { 'multipart/form-data': { schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } } } } } } } },
@@ -60,9 +61,9 @@ function fixture(t) {
   for (const [name, spec] of Object.entries(specs)) {
     const content = JSON.stringify(spec);
     fs.writeFileSync(path.join(specDir, `${name}.json`), content);
-    if (name in lock.specs) lock.specs[name] = createHash('sha256').update(content).digest('hex');
+    if (name in lock.operations) lock.sources.cli.files[`internal/registry/specs/${name}.json`] = createHash('sha256').update(content).digest('hex');
   }
-  fs.writeFileSync(path.join(docs, 'scripts/cli-reference-sources.json'), JSON.stringify(lock));
+  fs.writeFileSync(path.join(docs, 'scripts/reference-sources.json'), JSON.stringify(lock));
   return { docs, specDir, run: (...args) => spawnSync(process.execPath, [path.join(docs, 'scripts/gen-cli.mjs'), ...args], { encoding: 'utf8' }) };
 }
 
@@ -89,6 +90,6 @@ test('changed upstream input fails before any output; release preparation is not
   fs.appendFileSync(path.join(f.specDir, 'message.json'), '\n');
   const result = f.run('--domains', 'message,file');
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /differs from released v0.18.0/);
+  assert.match(result.stderr, /differs from pinned v0.18.0/);
   assert.equal(fs.existsSync(path.join(f.docs, 'reference')), false);
 });
