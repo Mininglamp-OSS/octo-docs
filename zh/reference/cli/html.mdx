@@ -334,6 +334,10 @@ octo-cli html rm <doc_id>
 
 Bots must not invoke this operation, even for documents they authored, own, or administer. Ask a human with document admin permission to delete it in Octo; do not use docs.delete or raw API calls as a workaround. This command targets the HTML service, not the docs-backend bot deletion route, so enforcement must be verified for that service separately. If bot_delete_forbidden is returned, stop without retrying or changing identity/Space. Publishing and editing remain governed by their existing permissions.
 
+<Warning>
+  Bot 使用政策与响应 schema 是两回事。Bot 不得调用此删除操作。`200 Deleted` 响应 schema 记录一种可能的服务响应，不授予 Bot 删除权限，也不证明哪些凭据能够得到该响应。固定的 HTML 规范不能证明 Bot 请求必定返回 HTTP 403；本文未验证 HTML 服务的实际执行限制。若返回 `bot_delete_forbidden`，应停止，不重试或切换身份/Space。请具备文档管理权限的人在 Octo 中删除，不得换接口绕过。
+</Warning>
+
 **位置参数**
 
 | 参数 | 说明 |
