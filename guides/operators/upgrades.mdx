@@ -113,9 +113,28 @@ before restarting custom Extras. These CLI manifests do not configure SDK hosts.
   [released renderer](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-cross-service/src/systemd.ts).
 </Warning>
 
+For **Linux v1.1.3**, use separate foreground sessions. Keep the Kernel session running:
+
+```bash
+octo-runtime executor-kernel run
+```
+
+In another session, keep the Gateway running:
+
+```bash
+octo-runtime channel-gateway run
+```
+
+For **macOS and Windows**, start the native user services:
+
 ```bash
 octo-runtime executor-kernel start
 octo-runtime channel-gateway start
+```
+
+On either path, check status from a separate session:
+
+```bash
 octo-runtime status --json
 ```
 

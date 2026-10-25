@@ -93,9 +93,28 @@ manifest 使用相对模块路径时，应省略配置中的旧字段；保存�
   Kernel 与各 Extra 需分别保留前台会话。参见[发行版生成实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-cross-service/src/systemd.ts)。
 </Warning>
 
+**Linux v1.1.3** 使用独立前台会话，先让 Kernel 会话持续运行：
+
+```bash
+octo-runtime executor-kernel run
+```
+
+在另一个会话中持续运行 Gateway：
+
+```bash
+octo-runtime channel-gateway run
+```
+
+**macOS 和 Windows** 可启动原生用户服务：
+
 ```bash
 octo-runtime executor-kernel start
 octo-runtime channel-gateway start
+```
+
+两条路径均在额外的会话中检查状态：
+
+```bash
 octo-runtime status --json
 ```
 
