@@ -52,16 +52,3 @@ This baseline keeps argument-rendering changes in the separate CLI argument-cont
 操作，既不是完整产品能力清单，也不是取消漂移检查。新增领域/操作须显式审查锁文件与导航；
 缺失操作、重复操作、输入变化或中文输出陈旧仍会使门禁失败。auth 仅为既有合同快照，
 不冒称正式 SDK 发行。更新参考须改源/生成器后重生成，不能手改派生页。
-
-## CLI argument contract correction
-
-The argument correction uses the shared v0.18.0 lock and the same 84-operation
-coverage; there is no second partial source lock. It replaces underscores with dashes,
-preserves explicit aliases/camelCase and adds required multipart `--file`.
-Regenerate all affected existing CLI pages with `npm run gen:cli`, then run
-`npm run test:cli` and `npm run gen:check`. `--domains message,file` remains available
-for focused inspection, but cannot replace the full generation gate.
-
-参数规则修订复用统一发行锁，不另建两个领域的重复版本源。全局命名规则变化后，
-必须重生成所有受影响的已有 CLI 页面；覆盖仍是原来的 84 个操作。局部 --domains
-检查不能替代整站门禁，不能仅改部分派生页而留下其余页陈旧。
