@@ -15,6 +15,8 @@ Redis、MinIO 以及一个 nginx 反向代理，全部由一份 `docker-compose.
 
 ## 三步上手路径
 
+执行第 2 步前，请先完成下方的用户 API 密钥主密钥配置。
+
 ```bash
 git clone https://github.com/Mininglamp-OSS/octo-deployment.git
 cd octo-deployment
@@ -26,6 +28,33 @@ sudo ./setup.sh --smoke-test   # 3. 11-probe end-to-end check
 `--up` 是**仅启动**——它运行 `docker compose up -d --wait`，绝不会重新生成密钥
 （缺少 `.env` 时会直接失败，除非传入 `--force`）。`--up` 与 `--smoke-test` 都需要 sudo，
 因为 `docker/.env` 始终保持 `root:600`。
+
+## 配置用户 API 密钥主密钥
+
+启动前，为密钥管理器与加固后的用户 API 密钥配置 `OCTO_USER_API_KEY_SECRET`。
+它与 `OCTO_MASTER_KEY` / `DMWORK_MASTER_KEY` 不同。准确的字节格式、生成命令、
+故障表现及备份 / 轮换要求见[配置参考](/zh/reference/configuration)。
+
+1. 在限制访问的 `docker/.env` 中，将 `OCTO_USER_API_KEY_SECRET` 设为安全配置流程提供的值。
+   升级或恢复时沿用已有值；仅在首次配置此主密钥、并确认没有数据依赖旧值后生成。
+2. 确保 `docker/docker-compose.yaml` 中的 `octo-server` 服务传入此变量。如果你的部署版本
+   缺少映射，在该服务的 `environment` 块中添加：
+
+   ```yaml
+   OCTO_USER_API_KEY_SECRET: ${OCTO_USER_API_KEY_SECRET:?Set the existing or newly provisioned 32-byte secret}
+   ```
+
+3. 修改环境配置后，重新创建 `octo-server` 容器。只重启容器不会读取修改后的 Compose 配置。
+   所有副本必须使用相同的值。
+
+<Warning>
+  仅在 `.env` 中添加变量并不会将它注入容器。不要假设 `setup.sh`、容器健康状态或通用冒烟测试
+  已验证密钥管理器。验证其需要登录的功能流程时，不要打印密钥值或完整容器环境。
+</Warning>
+
+部署模板核实于
+[`octo-deployment@d88f5e29b8cd70923464cfef036693ea81c89432`](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/docker/docker-compose.yaml)。
+该版本的 `.env` 示例与服务环境映射均缺少此变量；启动或升级前请检查你的版本。
 
 ## 网络暴露面
 

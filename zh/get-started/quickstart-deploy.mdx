@@ -57,6 +57,13 @@ icon: "rocket"
     </Note>
   </Step>
 
+  <Step title="配置用户 API 密钥主密钥">
+    启动前，按[配置用户 API 密钥主密钥](/zh/guides/operators/deploy-compose)的说明配置并注入
+    `OCTO_USER_API_KEY_SECRET`。它必须恰好是 32 个原始文本字节；缺少服务端服务环境映射时，
+    仅填写 `.env` 不足以完成注入。升级或恢复时沿用已有值，并安全备份。
+    容器健康并不能证明密钥管理器已配置正确。
+  </Step>
+
   <Step title="拉起技术栈">
     ```bash
     sudo ./setup.sh --up

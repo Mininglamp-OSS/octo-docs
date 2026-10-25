@@ -6,6 +6,8 @@
  * grouped reference table, for each language (en, zh). The config's own section
  * titles and key descriptions are already Chinese in the source, so only the
  * page chrome (frontmatter, intro, callout, table headers) is translated.
+ * Environment-only settings are curated in config-environment.json with pinned
+ * implementation sources, since they do not appear in the YAML template.
  *
  * Emits reference/configuration.mdx (zh under zh/).
  * Usage:  node scripts/gen-config.mjs [--check]
@@ -15,6 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DOCS_ROOT, WORKSPACE, banner, mdEscape, codeEscape, createSink } from './_lib.mjs';
 
+const ENVIRONMENT_FILE = path.join(DOCS_ROOT, 'scripts/config-environment.json');
 const CONFIG_FILE = path.join(WORKSPACE, 'octo-server/configs/tsdd.yaml');
 
 const check = process.argv.includes('--check');
@@ -29,16 +32,18 @@ const LANGS = {
 const S = {
   en: {
     title: 'Configuration Reference',
-    desc: 'Every octo-server configuration key, default, and description — generated from the config template.',
+    desc: 'Server configuration template and supplemental environment-only settings.',
     intro: (k, s) => `Generated from the annotated config template [\`octo-server/configs/tsdd.yaml\`](https://github.com/Mininglamp-OSS/octo-server/blob/main/configs/tsdd.yaml) — **${k} keys across ${s} sections**.`,
     info: (link) => `Keys are shown in dotted form (e.g. \`db.mysqlAddr\`). Most keys are commented out in the template and fall back to a built-in default; keys marked _(active default)_ are set explicitly in the shipped template. Many keys also accept an environment-variable override — see the inline notes and the [deployment guide](${link}/guides/operators/deploy-compose).`,
+    environment: 'Environment-only settings', verified: 'Implementation verified at', sources: 'Sources', guide: 'Deployment instructions',
     thKey: 'Key', thDefault: 'Default', thDesc: 'Description', active: ' _(active default)_',
   },
   zh: {
     title: '配置参考',
-    desc: 'octo-server 的每一个配置项、默认值与说明 —— 由配置模板生成。',
+    desc: '服务端配置模板与补充的纯环境变量配置说明。',
     intro: (k, s) => `由带注释的配置模板 [\`octo-server/configs/tsdd.yaml\`](https://github.com/Mininglamp-OSS/octo-server/blob/main/configs/tsdd.yaml) 生成 —— **${s} 个分组、共 ${k} 个配置项**。`,
     info: (link) => `配置项以点分形式展示(例如 \`db.mysqlAddr\`)。模板中大多数项默认被注释,回退到内置默认值;标注 _(active default)_ 的项在随附模板中被显式设置。许多项还支持环境变量覆盖 —— 参见内联说明与[部署指南](${link}/guides/operators/deploy-compose)。`,
+    environment: '纯环境变量配置', verified: '实现核实版本', sources: '来源', guide: '部署说明',
     thKey: '配置项', thDefault: '默认值', thDesc: '说明', active: ' _(默认已启用)_',
   },
 };
@@ -105,9 +110,37 @@ function renderSection(sec, t) {
   return [`## ${mdEscape(sec.title)}`, '', `| ${t.thKey} | ${t.thDefault} | ${t.thDesc} |`, '|---|---|---|', rows.join('\n'), ''].join('\n');
 }
 
+function renderEnvironment(config, lang, t, L) {
+  const base = `https://github.com/${config.repository}/blob/${config.revision}`;
+  const sources = config.sources.map((file) => `[\`${file}\`](${base}/${file})`).join(', ');
+  return [
+    `## ${t.environment}`, '',
+    `${t.verified}: [\`${config.revision}\`](https://github.com/${config.repository}/commit/${config.revision}). ${t.sources}: ${sources}.`, '',
+    ...config.variables.flatMap((entry) => {
+      const text = entry[lang];
+      return [
+        `### ${entry.name}`, '', text.requirement, '', text.format, '',
+        text.generation, '', '```bash', entry.generateCommand, '```', '',
+        text.storage, '', '<Warning>', `  ${text.rotation}`, '</Warning>', '',
+        text.failure, '',
+        `${t.guide}: [Docker Compose](${L.link}/guides/operators/deploy-compose), [Kubernetes](${L.link}/guides/operators/deploy-kubernetes).`, '',
+      ];
+    }),
+  ].join('\n');
+}
+
 function main() {
   if (!fs.existsSync(CONFIG_FILE)) { console.error(`[gen-config] config not found: ${CONFIG_FILE}`); process.exit(2); }
   const sections = parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+  const environment = JSON.parse(fs.readFileSync(ENVIRONMENT_FILE, 'utf8'));
+  if (!/^[0-9a-f]{40}$/.test(environment.revision)) throw new Error('Environment sources require a full upstream commit SHA');
+  for (const entry of environment.variables) {
+    for (const lang of Object.keys(LANGS)) {
+      for (const field of ['requirement', 'format', 'generation', 'storage', 'failure', 'rotation']) {
+        if (!entry[lang]?.[field]?.trim()) throw new Error(`Missing ${lang}.${field} for ${entry.name}`);
+      }
+    }
+  }
   const totalKeys = sections.reduce((n, s) => n + s.entries.length, 0);
 
   for (const lang of Object.keys(LANGS)) {
@@ -119,7 +152,7 @@ function main() {
       'icon: "sliders"',
       '---',
       '',
-      banner({ ...SRC, spec: 'octo-server/configs/tsdd.yaml' }),
+      banner({ ...SRC, spec: 'octo-server/configs/tsdd.yaml + scripts/config-environment.json (pinned implementation sources)' }),
       '',
       t.intro(totalKeys, sections.length),
       '',
@@ -127,6 +160,7 @@ function main() {
       `  ${t.info(L.link)}`,
       '</Info>',
       '',
+      renderEnvironment(environment, lang, t, L),
       sections.map((s) => renderSection(s, t)).filter(Boolean).join('\n'),
     ].join('\n');
     sink.emit(path.join(L.dir, 'reference/configuration.mdx'), doc);

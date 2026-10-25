@@ -7,7 +7,7 @@ never drifts from the code. See `DESIGN.md` §4. They share helpers from `_lib.m
 |---|---|---|
 | `gen-api.mjs` | `octo-cli/internal/registry/specs/*.json` (`matter` excluded → 8 domains, 84 ops) + `octo-auth/contract/errors-v1.yaml` | `reference/api/<domain>.mdx` + `reference/rest-websocket-api.mdx` + `reference/errors-and-envelopes.mdx` |
 | `gen-cli.mjs` | the same octo-cli specs (metadata-driven CLI) | `reference/cli/<domain>.mdx` + `reference/octo-cli.mdx` (84 commands) |
-| `gen-config.mjs` | `octo-server/configs/tsdd.yaml` | `reference/configuration.mdx` (133 keys / 14 sections) |
+| `gen-config.mjs` | `octo-server/configs/tsdd.yaml` + `scripts/config-environment.json` | EN + ZH `reference/configuration.mdx` (template + environment-only settings) |
 
 ## Commands
 
@@ -25,6 +25,25 @@ npm run gen:check    # CI: exit 1 if any page is stale (drift detection)
   generated pages.
 - New reference pages must also be added to `docs.json` navigation (the nav is
   maintained by hand; the 9 API + 9 CLI domain pages are already listed).
+
+## Configuration environment supplement
+
+`config-environment.json` covers settings read directly from the process environment
+that are absent from `tsdd.yaml`. Its bilingual text is curated against the implementation
+files listed in `sources`, pinned to the full upstream `revision` SHA. It contains no secret
+values. When the implementation changes, verify the raw input format, consumers, failure
+behavior, and migration risks, then update both languages and the source revision together.
+The existing YAML template remains the source for the template tables.
+
+```bash
+npm run gen:config                  # regenerate only the EN/ZH configuration pages
+node scripts/gen-config.mjs --check # configuration-only drift check
+npm run test:config                 # generator regression checks, no sibling repos needed
+```
+
+This supplement is intentionally limited to `OCTO_USER_API_KEY_SECRET`; it is not an audit
+of every environment variable. Source revisions for unrelated API/CLI/SDK references are
+unchanged by this maintenance pass.
 
 ## Planned
 
