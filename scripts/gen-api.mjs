@@ -24,6 +24,8 @@ import {
   deref, mdEscape, typeOf, readJson, createSink,
 } from './_lib.mjs';
 
+import { readLockedSpecs, verifySource, sourceUrl, sourceDescription, sourceLabel } from './reference-sources.mjs';
+
 const CLI_SPECS_DIR = path.join(WORKSPACE, 'octo-cli/internal/registry/specs');
 const AUTH_CONTRACT_DIR = path.join(WORKSPACE, 'octo-auth/contract');
 
@@ -31,8 +33,7 @@ const check = process.argv.includes('--check');
 const sink = createSink({ check, generator: 'gen-api' });
 const SRC = { generator: 'gen-api.mjs' };
 
-// Domains withheld from the docs (deprecated / internal). matter is deprecated.
-const EXCLUDE = new Set(['matter', 'marketplace']);
+// Documented domains and operation IDs are explicit in reference-sources.json.
 
 // Per-language output roots and label prefixes.
 const LANGS = {
@@ -66,8 +67,8 @@ const S = {
     genFrom: 'Generated from', apiDesc: (l) => `${l} endpoints — generated from the octo-cli OpenAPI spec.`,
     domainNote: (link) => `Call these with an Assistant token (\`bf_…\`) as a bearer credential, or via [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli). See the [API overview](${link}/reference/rest-websocket-api) for authentication and risk levels.`,
     idxTitle: 'REST & WebSocket API',
-    idxDesc: 'The authoritative Octo REST API, generated from the octo-cli embedded OpenAPI 3.1 specs.',
-    idxIntro: (t, d) => `The Octo bot-facing REST API spans **${t} operations across ${d} domains**. Every domain page is generated directly from the OpenAPI 3.1 spec embedded in [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) — the same spec that drives the CLI and the server, so this reference never drifts from the implementation.`,
+    idxDesc: 'The documented REST API subset from a fixed released CLI contract.',
+    idxIntro: (t, d) => `This reference documents **${t} operations across ${d} domains**. Every domain page is generated directly from the OpenAPI 3.1 spec embedded in [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) — a preserved documentation subset of the pinned released CLI contract. Other released operations are outside this reference.`,
     tip: (link) => `The easiest way to call these endpoints is via [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli) (each operation maps to a \`CLI op\` shown on its domain page) or directly over HTTP with an Assistant token (\`bf_…\`). See [Verify credentials with octo-auth](${link}/guides/integrators/verify-credentials-with-octo-auth). The entities and enums these operations read and write are catalogued in the [data model](${link}/reference/data-model).`,
     hDomains: 'Domains', thDomain: 'Domain', thSpec: 'Spec', thOps: 'Operations', total: 'Total',
     hRisk: 'Risk levels', riskIntro: 'Each operation is tagged with an `x-octo-risk` level from the spec:',
@@ -88,8 +89,8 @@ const S = {
     genFrom: '由以下规范生成：', apiDesc: (l) => `${l} 领域的接口 —— 由 octo-cli OpenAPI 规范生成。`,
     domainNote: (link) => `用助理 token(\`bf_…\`)作为 bearer 凭证调用这些接口，或通过 [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli) 调用。鉴权与风险级别见 [API 总览](${link}/reference/rest-websocket-api)。`,
     idxTitle: 'REST 与 WebSocket API',
-    idxDesc: 'Octo 权威 REST API —— 由 octo-cli 内嵌的 OpenAPI 3.1 规范生成。',
-    idxIntro: (t, d) => `Octo 面向机器人的 REST API 覆盖 **${d} 个领域、共 ${t} 个接口**。每个领域页面都直接由内嵌于 [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) 的 OpenAPI 3.1 规范生成 —— 与驱动 CLI 和服务端的是同一份规范,因此本参考永不与实现漂移。`,
+    idxDesc: '固定发行版 CLI 合同中已收录的 REST API 子集。',
+    idxIntro: (t, d) => `本参考收录 **${d} 个领域、共 ${t} 个接口**。每个领域页面都直接由内嵌于 [\`octo-cli\`](https://github.com/Mininglamp-OSS/octo-cli) 的 OpenAPI 3.1 规范生成 —— 这里只保留固定发行版 CLI 合同中已收录的文档子集，不枚举该版本的其他接口。`,
     tip: (link) => `调用这些接口最简单的方式是使用 [\`octo-cli\`](${link}/guides/bot-developers/drive-octo-with-cli)(每个接口都对应领域页中标注的 \`CLI 命令\`),或用助理 token(\`bf_…\`)直接走 HTTP。参见 [用 octo-auth 校验凭证](${link}/guides/integrators/verify-credentials-with-octo-auth)。这些操作读写的实体与枚举,汇总于[数据模型](${link}/reference/data-model)。`,
     hDomains: '领域', thDomain: '领域', thSpec: '规范', thOps: '接口数', total: '合计',
     hRisk: '风险级别', riskIntro: '每个接口都带有来自规范的 `x-octo-risk` 级别标记:',
@@ -160,9 +161,9 @@ function generateDomainPage(name, spec, lang) {
     'icon: "code"',
     '---',
     '',
-    banner({ ...SRC, spec: source }),
+    banner({ ...SRC, spec: sourceDescription('cli', `internal/registry/specs/${name}.json`) }),
     '',
-    `> ${t.genFrom} [\`${source}\`](https://github.com/Mininglamp-OSS/octo-cli/blob/main/internal/registry/specs/${name}.json) — **${ops.length} ${t.opsSuffix}**.`,
+    `> ${t.genFrom} [\`${source}\`](${sourceUrl('cli', `internal/registry/specs/${name}.json`)}) — ${sourceLabel('cli')} — **${ops.length} ${t.opsSuffix}**.`,
     '',
     t.domainNote(L.link),
     '',
@@ -183,9 +184,11 @@ function generateIndex(summaries, totalOps, lang) {
     'icon: "plug"',
     '---',
     '',
-    banner({ ...SRC, spec: 'octo-cli/internal/registry/specs/*.json' }),
+    banner({ ...SRC, spec: sourceDescription('cli', 'internal/registry/specs/*.json') }),
     '',
     t.idxIntro(totalOps, summaries.length),
+    '',
+    `> ${t.genFrom} ${sourceLabel('cli')}.`,
     '',
     '<Tip>',
     `  ${t.tip(L.link)}`,
@@ -228,9 +231,9 @@ function generateErrors(errDoc, lang) {
     'icon: "triangle-exclamation"',
     '---',
     '',
-    banner({ ...SRC, spec: 'octo-auth/contract/errors-v1.yaml' }),
+    banner({ ...SRC, spec: sourceDescription('auth', 'contract/errors-v1.yaml') }),
     '',
-    `> ${t.errGen} [\`octo-auth/contract/errors-v1.yaml\`](https://github.com/Mininglamp-OSS/octo-auth/blob/main/contract/errors-v1.yaml).`,
+    `> ${t.errGen} [\`octo-auth/contract/errors-v1.yaml\`](${sourceUrl('auth', 'contract/errors-v1.yaml')}) — ${sourceLabel('auth')}.`,
     '',
     errDoc.info?.description ? errDoc.info.description.trim() : '',
     '',
@@ -245,11 +248,9 @@ function main() {
     console.error(`[gen-api] spec dir not found: ${CLI_SPECS_DIR}`);
     process.exit(2);
   }
-  const names = fs.readdirSync(CLI_SPECS_DIR)
-    .filter((f) => f.endsWith('.json')).map((f) => path.basename(f, '.json'))
-    .filter((n) => !EXCLUDE.has(n))
-    .sort((a, b) => (DOMAIN_META[a]?.order ?? 99) - (DOMAIN_META[b]?.order ?? 99));
-  const specs = Object.fromEntries(names.map((n) => [n, readJson(path.join(CLI_SPECS_DIR, `${n}.json`))]));
+  const specs = readLockedSpecs();
+  verifySource('auth');
+  const names = Object.keys(specs).sort((a, b) => (DOMAIN_META[a]?.order ?? 99) - (DOMAIN_META[b]?.order ?? 99));
   const errorsFile = path.join(AUTH_CONTRACT_DIR, 'errors-v1.yaml');
   const errDoc = fs.existsSync(errorsFile) ? yaml.load(fs.readFileSync(errorsFile, 'utf8')) : null;
 
