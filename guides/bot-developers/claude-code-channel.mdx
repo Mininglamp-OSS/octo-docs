@@ -18,7 +18,7 @@ skills, and scheduled tasks.
 ## Run it
 
 ```bash
-npm install -g @mininglamp-oss/cc-channel-octo
+npm install -g @mininglamp-oss/cc-channel-octo@1.0.3
 cc-channel-octo        # after writing the config files below
 ```
 
@@ -38,13 +38,13 @@ Everything lives under `~/.cc-channel-octo/`:
     ├── SOUL.md          optional personality (overrides sdk.systemPrompt)
     ├── skills/          optional: skills for THIS bot
     ├── data/            SQLite history
-    ├── workspace/       per-session cwd sandboxes
+    ├── workspace/       per-session working directories
     └── memory/          long-term auto-memory
 ```
 
-Config is **JSON files only** — there are no environment-variable overrides. An Assistant's
-`data`/`workspace`/`memory` are *derived* from `<baseDir>/<id>/…` and aren't configurable, so an
-Assistant can never escape its own subtree.
+Gateway config is **JSON files only** — there are no environment-variable overrides.
+The gateway derives its managed `data`/`workspace`/`memory` paths from `<baseDir>/<id>/…`.
+This directory layout organizes the gateway's files; it does not confine Agent tools to that subtree.
 
 ## Features
 
@@ -70,9 +70,27 @@ token bucket rate-limits requests (default 5/min).
 
 ## Security model
 
-- **`allowedTools` whitelist** — the agent can only invoke tools you permit.
-- **Workspace isolation** — each session gets a derived `workspace/` sandbox.
-- **Assistant-loop prevention** — the gateway won't respond to its own or other Assistants' messages.
+This page targets the published [v1.0.3](https://github.com/Mininglamp-OSS/cc-channel-octo/releases/tag/v1.0.3),
+verified at [`1340db74ab54`](https://github.com/Mininglamp-OSS/cc-channel-octo/blob/1340db74ab549230ce8a0b480159b6ef9a2c5987/src/config.ts).
+
+<Warning>
+  The default configuration uses `sdk.allowedTools: "*"` and
+  `sdk.permissionMode: "bypassPermissions"`. The bridge also passes
+  `allowDangerouslySkipPermissions: true` to the Claude Agent SDK. Do not expect a human
+  permission prompt before tools run. Review these defaults before connecting the Bot.
+</Warning>
+
+For `"*"`, the bridge omits the SDK's `allowedTools` option, leaving SDK tool selection at
+its default. An explicit tool-name array is forwarded; it does not automatically change
+`permissionMode`. Check the selected SDK's permission behavior before relying on a tool list
+as an access restriction. See the [released option forwarding](https://github.com/Mininglamp-OSS/cc-channel-octo/blob/1340db74ab549230ce8a0b480159b6ef9a2c5987/src/agent-bridge.ts).
+
+Each session gets a derived working directory. That `cwd` is a starting directory, not an
+OS filesystem or network sandbox. It does not prevent tools from using absolute paths or
+other resources available to the gateway's OS account. System-prompt safety instructions
+also do not impose OS access controls. Run the gateway with only the files, credentials,
+and network access you intend to delegate; use OS-level isolation where you need that boundary.
+See the [released working-directory implementation](https://github.com/Mininglamp-OSS/cc-channel-octo/blob/1340db74ab549230ce8a0b480159b6ef9a2c5987/src/cwd-resolver.ts).
 
 ## Multi-Assistant & scheduled tasks
 

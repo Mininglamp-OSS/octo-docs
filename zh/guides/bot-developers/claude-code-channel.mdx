@@ -18,7 +18,7 @@ SDK 把 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 桥接进 
 ## 运行它
 
 ```bash
-npm install -g @mininglamp-oss/cc-channel-octo
+npm install -g @mininglamp-oss/cc-channel-octo@1.0.3
 cc-channel-octo        # after writing the config files below
 ```
 
@@ -38,13 +38,13 @@ cc-channel-octo        # after writing the config files below
     ├── SOUL.md          optional personality (overrides sdk.systemPrompt)
     ├── skills/          optional: skills for THIS bot
     ├── data/            SQLite history
-    ├── workspace/       per-session cwd sandboxes
+    ├── workspace/       per-session working directories
     └── memory/          long-term auto-memory
 ```
 
-配置**仅为 JSON 文件**——没有环境变量覆盖机制。一个助理的
-`data`/`workspace`/`memory` 是从 `<baseDir>/<id>/…` *派生* 出来的、不可配置，因此一个
-助理永远无法逃离它自己的子树。
+网关配置**仅为 JSON 文件**——没有环境变量覆盖机制。网关从 `<baseDir>/<id>/…` 派生
+自己管理的 `data`/`workspace`/`memory` 路径。这种目录布局用于组织网关文件，
+不会把智能体工具的访问范围限制在该子树内。
 
 ## 功能
 
@@ -70,9 +70,26 @@ cc-channel-octo        # after writing the config files below
 
 ## 安全模型
 
-- **`allowedTools` 白名单**——智能体只能调用你允许的工具。
-- **工作区隔离**——每个会话获得一个派生的 `workspace/` 沙箱。
-- **助理循环防护**——网关不会响应它自己或其他助理的消息。
+本页针对已发布的 [v1.0.3](https://github.com/Mininglamp-OSS/cc-channel-octo/releases/tag/v1.0.3)，
+核实源码为 [`1340db74ab54`](https://github.com/Mininglamp-OSS/cc-channel-octo/blob/1340db74ab549230ce8a0b480159b6ef9a2c5987/src/config.ts)。
+
+<Warning>
+  默认配置为 `sdk.allowedTools: "*"` 和 `sdk.permissionMode: "bypassPermissions"`；
+  桥接层还会向 Claude Agent SDK 传入 `allowDangerouslySkipPermissions: true`。
+  不要预期工具执行前会等待人工权限确认。连接 Bot 前，请先检查这些默认值。
+</Warning>
+
+当值为 `"*"` 时，桥接层省略 SDK 的 `allowedTools` 选项，由 SDK 使用默认工具选择。
+显式工具名数组会直接转发，但不会自动改变 `permissionMode`。
+将工具列表当作访问限制前，先核对所选 SDK 的权限行为。
+参见[发行版选项转发实现](https://github.com/Mininglamp-OSS/cc-channel-octo/blob/1340db74ab549230ce8a0b480159b6ef9a2c5987/src/agent-bridge.ts)。
+
+每个会话获得一个派生工作目录。`cwd` 是起始目录，不是操作系统级文件系统或网络沙箱；
+它不会阻止工具使用绝对路径，或访问网关操作系统账号可用的其他资源。
+系统提示词中的安全指令也不会施加操作系统访问控制。
+运行网关时，只提供你打算交给它的文件、凭据与网络访问权限；
+需要该安全边界时，使用操作系统级隔离。
+参见[发行版工作目录实现](https://github.com/Mininglamp-OSS/cc-channel-octo/blob/1340db74ab549230ce8a0b480159b6ef9a2c5987/src/cwd-resolver.ts)。
 
 ## 多助理与定时任务
 

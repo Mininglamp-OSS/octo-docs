@@ -50,7 +50,7 @@ in a group) and get streamed replies from a real coding agent.
     The fastest path is the prebuilt npm package:
 
     ```bash
-    npm install -g @mininglamp-oss/cc-channel-octo
+    npm install -g @mininglamp-oss/cc-channel-octo@1.0.3
     ```
 
     This installs the `cc-channel-octo` command — no compile step.
@@ -96,6 +96,13 @@ in a group) and get streamed replies from a real coding agent.
   </Step>
 
   <Step title="Start the gateway">
+    <Warning>
+      In cc-channel-octo v1.0.3, defaults allow the SDK's default tool set and use
+      `bypassPermissions`, without human permission prompts. A per-session working directory
+      does not confine filesystem or network access. Before starting, review the
+      [execution permissions](/guides/bot-developers/claude-code-channel#security-model)
+      and limit the gateway's OS-account access to what you intend to delegate.
+    </Warning>
     ```bash
     cc-channel-octo
     ```
