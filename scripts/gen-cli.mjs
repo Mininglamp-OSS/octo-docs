@@ -12,6 +12,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   DOCS_ROOT, WORKSPACE, HTTP_METHODS, banner,
   deref, mdEscape, typeOf, readJson, createSink,
@@ -75,12 +76,15 @@ const S = {
 
 const commandFor = (operationId) => operationId.split('.').join(' ');
 
-function flagsFor(op, root) {
+// Released flags.go converts wire underscores unless an explicit alias is set.
+export const flagName = (name, schema) => schema['x-octo-flag'] || name.replaceAll('_', '-');
+
+export function flagsFor(op, root) {
   const flags = [];
   for (const raw of op.parameters || []) {
     const p = deref(raw, root);
     if (p.in === 'path') continue;
-    flags.push({ flag: `--${p['x-octo-flag'] || p.name}`, type: typeOf(p.schema), required: !!p.required, desc: p.description || '' });
+    flags.push({ flag: `--${flagName(p.name, p)}`, type: typeOf(p.schema), required: !!p.required, desc: p.description || '' });
   }
   const body = deref(op.requestBody?.content?.['application/json']?.schema, root);
   if (body?.properties) {
@@ -90,7 +94,7 @@ function flagsFor(op, root) {
       if (pv.type === 'object' || pv.type === 'array') {
         flags.push({ flag: '--data', type: 'json', required: required.has(pn), desc: `${pn}: ${pv.description || 'JSON payload'}` });
       } else {
-        flags.push({ flag: `--${pv['x-octo-flag'] || pn}`, type: typeOf(pv), required: required.has(pn), desc: pv.description || '' });
+        flags.push({ flag: `--${flagName(pn, pv)}`, type: typeOf(pv), required: required.has(pn), desc: pv.description || '' });
       }
     }
   }
@@ -205,4 +209,4 @@ function main() {
   if (!ok) process.exit(1);
 }
 
-main();
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) main();
