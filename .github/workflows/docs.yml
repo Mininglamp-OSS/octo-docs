@@ -9,38 +9,64 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      # octo-docs into a subdir so the sibling spec repos can live alongside it —
-      # the SSOT generators resolve specs from ../octo-cli, ../octo-auth, ../octo-server.
       - uses: actions/checkout@v4
         with:
           path: octo-docs
 
-      - name: Check out sibling spec repos
-        run: |
-          git clone --depth 1 https://github.com/Mininglamp-OSS/octo-cli.git octo-cli
-          git clone --depth 1 https://github.com/Mininglamp-OSS/octo-auth.git octo-auth
-          git clone --depth 1 https://github.com/Mininglamp-OSS/octo-server.git octo-server
-
-      # Mintlify CLI requires an LTS Node (does not support Node 25+).
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      - name: Read fixed reference revisions
+        id: sources
+        working-directory: octo-docs
+        run: node scripts/reference-sources.mjs --github-output >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: Mininglamp-OSS/octo-cli
+          ref: ${{ steps.sources.outputs.cli }}
+          path: octo-cli
+      - uses: actions/checkout@v4
+        with:
+          repository: Mininglamp-OSS/octo-auth
+          ref: ${{ steps.sources.outputs.auth }}
+          path: octo-auth
+      - uses: actions/checkout@v4
+        with:
+          repository: Mininglamp-OSS/octo-server
+          ref: ${{ steps.sources.outputs.server }}
+          path: octo-server
+
+      - name: Record and verify input revisions
+        run: |
+          for repo in cli auth server; do
+            actual=$(git -C "octo-$repo" rev-parse HEAD)
+            case "$repo" in
+              cli) expected='${{ steps.sources.outputs.cli }}' ;;
+              auth) expected='${{ steps.sources.outputs.auth }}' ;;
+              server) expected='${{ steps.sources.outputs.server }}' ;;
+            esac
+            echo "octo-$repo: $actual"
+            test "$actual" = "$expected"
+          done
+          node octo-docs/scripts/reference-sources.mjs
+
       - name: Install deps
         working-directory: octo-docs
-        run: npm install
+        run: npm ci
 
       - name: Check generated reference is up to date (SSOT drift)
         working-directory: octo-docs
         run: npm run gen:check
 
       - name: Install Mintlify CLI
-        run: npm install -g mint
+        run: npm install -g mint@4.2.1040
 
       - name: Validate build (strict)
         working-directory: octo-docs
-        run: mint validate
+        run: mint validate --telemetry false
 
       - name: Check for broken links
         working-directory: octo-docs
-        run: mint broken-links
+        run: mint broken-links --telemetry false
