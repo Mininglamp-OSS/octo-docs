@@ -13,19 +13,20 @@ icon: "terminal"
 ## 安装
 
 ```bash
-npm install -g @mininglamp-oss/octo-cli
+npm install -g @mininglamp-oss/octo-cli@0.18.0
 # or
-go install github.com/Mininglamp-OSS/octo-cli/cmd/octo-cli@latest
+go install github.com/Mininglamp-OSS/octo-cli/cmd/octo-cli@v0.18.0
 ```
 
-npm 包会解析出匹配的、预构建的平台二进制。
+两种安装方式均固定为下文的 v0.18.0 契约；npm 包会解析出匹配的预构建平台二进制。
+其他 tag 或 `latest` 的 URL 选择规则可能不同。
 
 ## 认证
 
 本节核实于已发布的 [CLI v0.18.0](https://github.com/Mininglamp-OSS/octo-cli/releases/tag/v0.18.0)，
 源码版本为 [`d564a63bbd8e`](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/cmdutil/factory.go)。先用 `octo-cli version` 确认本机版本。
 
-Bot 命令可从已保存的 profile 或智能体宿主提供的 `OCTO_BOT_TOKEN` 环境变量取得 Bot 凭据。
+普通凭据模式（未设置 `OCTO_CREDENTIAL_MODE`）先尝试已保存的 profile，再尝试环境凭据。
 创建 profile 时，由操作人员运行以下配置命令，在隐藏提示中输入 token，不要把 token 放进命令参数：
 
 ```bash
@@ -37,11 +38,21 @@ octo-cli auth login --profile staging-bot --api-base-url "https://octo-staging.e
 `auth login` 是操作人员的配置步骤，与智能体执行的非交互命令分开。
 
 <Warning>
+  没有选择器时，即使设置了 `OCTO_BOT_TOKEN`，唯一的已保存 profile 仍会被选中；
+  多个 profile 会报歧义错误，不会回落到该 token。只有存储中没有 profile 时才回落到环境凭据。
+  环境 provider 先检查 `OCTO_TOKEN`，再检查 `OCTO_BOT_TOKEN`。
+
   v0.18.0 中，继承的非空 `OCTO_API_BASE_URL` 优先于所选 profile 保存的 URL。
   因此，`--profile` 可以选中一个 Bot 的凭据，请求却仍发往另一个网关。
   切换 profile 不会撤销先前的全局 `export`。`auth status` 展示保存的 profile 元数据，
   其中的 URL 不能证明实际请求目标。执行业务命令前，先确认凭据与可信网关匹配。
 </Warning>
+
+`--profile` 与显式 `--bot-id` 用于选择已保存的 profile；找不到或匹配冲突都会失败。
+`OCTO_BOT_ID` 也可选择已保存的 profile；存储为空且未显式指定 profile 时，
+该环境 ID 可标识环境凭据，存储非空却匹配不到则失败。
+`OCTO_CREDENTIAL_MODE=task` 不走上述普通凭据链，而是单独使用 daemon 注入的 Loop 任务凭据，
+拒绝 profile/Bot 选择器及非 Loop 命令。不要为使用本 Bot 指南而改掉 daemon 的任务模式标记。
 
 ### 检查本地请求配置
 
@@ -69,7 +80,26 @@ OCTO_API_BASE_URL="https://octo-staging.example.com" \
 如果 profile 的 URL 为空，v0.18.0 会回退到生产默认地址 `https://im.deepminer.com.cn`。
 仅清除环境变量并不能安全地选中 staging；任何变更后都应重新核对解析结果。
 
-发行版分别实现了 [URL 选择](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/cmdutil/factory.go)、
+### 不使用 profile 的环境凭据预检
+
+普通 Bot 进程可由密钥管理器注入 `OCTO_BOT_TOKEN`。使用独立、有效且没有已保存 profile 的
+`OCTO_CONFIG_DIR`，省略 profile/Bot 标志，并为当前命令清空竞争的 `OCTO_TOKEN` 和 `OCTO_BOT_ID`。
+替换以下目录和可信网关地址：
+
+```bash
+OCTO_CONFIG_DIR="/path/to/dedicated-empty-octo-config" \
+  OCTO_TOKEN="" OCTO_BOT_ID="" OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --format json config show
+```
+
+预期 `data.profile: null`、`data.bot_token_source: "env:OCTO_BOT_TOKEN"`、一致的
+`identity.source` 及目标 `data.api_base_url`。仅退出成功，或配置错误后显示环境来源，均不足以继续：
+应先排除错误并确认该存储有效且为空。此预检不验证 token 在远端对应的 Bot 身份或权限。
+后续命令保持相同目录、环境与 URL；采用 profile 的进程则应保留上文的显式 profile。
+
+发行版分别实现了[凭据选择](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/credential/file_provider.go)、
+[环境回落](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/credential/env_provider.go)、
+[URL 选择](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/cmdutil/factory.go)、
 [保存的认证元数据](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/cmd/auth.go)、
 [配置诊断](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/cmd/config.go)与
 [请求目标及 Bearer 凭据](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/client/client.go)。
@@ -79,16 +109,24 @@ OCTO_API_BASE_URL="https://octo-staging.example.com" \
 
 ## 使用它
 
-以下示例展示命令形状。每次调用都应按上文加入已核对的网关 URL 与显式 profile。
+以下示例逐条使用已核对的 profile 与网关组合：
 
 ```bash
-octo-cli group list
-octo-cli message send --data '{"channel_id":"chat-1","channel_type":1,"payload":{"text":"hi"}}'
-octo-cli thread create --chat-id chat-1 --name "design review"
-octo-cli file upload --file ./report.pdf
-octo-cli docs list --sort updatedAt:desc
-octo-cli file download abc123 --jq '.data.url'
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot group list
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot message send --data '{"channel_id":"chat-1","channel_type":1,"payload":{"text":"hi"}}'
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot thread create group-no-example --name "design review"
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot file upload --file ./report.pdf
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot docs list --sort updatedAt:desc
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot file download abc123 --jq '.data.url'
 ```
+
+将 `group-no-example` 替换为你的群组编号；`thread create` 使用位置参数接收它。CLI 标志名可能与 JSON 字段名不同，例如 `--channel-id` 对应 `channel_id`。话题创建、消息发送与文件上传三种参数形式以 [octo-cli v0.18.0](https://github.com/Mininglamp-OSS/octo-cli/releases/tag/v0.18.0) 为准。添加 `--dry-run` 可以在发送前预览请求。
 
 整个命令树——**覆盖所有域的每一个 REST 操作**——是从内嵌在二进制中的 OpenAPI 规范
 自动注册的，因此它与服务器保持步调一致。每个命令都与一个 REST 操作 1:1 对应。
@@ -106,7 +144,7 @@ octo-cli file download abc123 --jq '.data.url'
 
 <CardGroup cols={2}>
   <Card title="完整命令参考" icon="terminal" href="/zh/reference/octo-cli">
-    每一个命令、标志和参数——从内嵌的规范生成。
+    由固定规范生成的 REST 命令收录子集；auth/config 诊断命令见本指南。
   </Card>
   <Card title="REST API 参考" icon="plug" href="/zh/reference/rest-websocket-api">
     与之相同的操作，以 HTTP 端点形式呈现。
