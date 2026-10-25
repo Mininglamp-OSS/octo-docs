@@ -7,8 +7,8 @@ icon: "terminal"
 **[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli)** 是一个单一二进制的 REST 客户端，
 专为 **AI 智能体通过 `exec` 调用** 而设计。如果说[频道](/zh/guides/bot-developers/choose-a-channel)
 让智能体能够*回复*，那么 `octo-cli` 就让它能够*行动*——发送消息、列出群组、管理话题、
-上传文件。每一次调用都会在 stdout 上输出一个结构化的 JSON 信封（envelope）；不存在
-交互式 I/O。
+上传文件。智能体调用会在 stdout 上输出结构化的 JSON 信封（envelope），以非交互方式运行；
+凭据配置另由操作人员完成。
 
 ## 安装
 
@@ -22,17 +22,64 @@ npm 包会解析出匹配的、预构建的平台二进制。
 
 ## 认证
 
-`octo-cli` 仅面向助理——没有用户登录。用两个环境变量把它指向你的实例：
+本节核实于已发布的 [CLI v0.18.0](https://github.com/Mininglamp-OSS/octo-cli/releases/tag/v0.18.0)，
+源码版本为 [`d564a63bbd8e`](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/cmdutil/factory.go)。先用 `octo-cli version` 确认本机版本。
+
+Bot 命令可从已保存的 profile 或智能体宿主提供的 `OCTO_BOT_TOKEN` 环境变量取得 Bot 凭据。
+创建 profile 时，由操作人员运行以下配置命令，在隐藏提示中输入 token，不要把 token 放进命令参数：
 
 ```bash
-export OCTO_BOT_TOKEN="bf_your_user_bot_token"    # or app_… (DM-only)
-export OCTO_API_BASE_URL="https://your-octo-instance.com"
+octo-cli auth login --profile staging-bot --api-base-url "https://octo-staging.example.com"
 ```
+
+将示例 URL 替换为该凭据对应的可信网关 origin，不带 API 路径。
+此命令只保存本地凭据与元数据，不验证远端认证是否通过。
+`auth login` 是操作人员的配置步骤，与智能体执行的非交互命令分开。
+
+<Warning>
+  v0.18.0 中，继承的非空 `OCTO_API_BASE_URL` 优先于所选 profile 保存的 URL。
+  因此，`--profile` 可以选中一个 Bot 的凭据，请求却仍发往另一个网关。
+  切换 profile 不会撤销先前的全局 `export`。`auth status` 展示保存的 profile 元数据，
+  其中的 URL 不能证明实际请求目标。执行业务命令前，先确认凭据与可信网关匹配。
+</Warning>
+
+### 检查本地请求配置
+
+显式选择 profile，并将 URL 限定在当前命令。这项预检不发送 HTTP：
+
+```bash
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot --format json config show
+```
+
+配置有效时，核对 `data.api_base_url`、`data.profile`、`data.bot_token_source` 与 `identity`
+是否符合预期网关及 Bot。本例应显示可信的 staging 地址、profile `staging-bot`，
+以及来源 `profile:staging-bot`。遇到配置错误或身份字段不符时，先排查，不要继续执行。
+部分非结构化配置错误会使 `config show` 回落到环境值；仅退出成功不代表所选 profile、
+身份、网关可信性或远端权限已经验证。`config show` 和 `auth status` 都不测试远端授权。
+
+每条业务命令都重复使用相同 URL 与 profile：
+
+```bash
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot group list
+```
+
+只有该 profile **已经保存正确的网关 URL** 时，移除继承的 URL 后才能依赖它。
+如果 profile 的 URL 为空，v0.18.0 会回退到生产默认地址 `https://im.deepminer.com.cn`。
+仅清除环境变量并不能安全地选中 staging；任何变更后都应重新核对解析结果。
+
+发行版分别实现了 [URL 选择](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/cmdutil/factory.go)、
+[保存的认证元数据](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/cmd/auth.go)、
+[配置诊断](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/cmd/config.go)与
+[请求目标及 Bearer 凭据](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/client/client.go)。
 
 可选：`OCTO_SPACE_ID`（面向平台级助理的空间上下文）、`OCTO_FORMAT`
 （`json` | `table` | `csv` | `ndjson`）。
 
 ## 使用它
+
+以下示例展示命令形状。每次调用都应按上文加入已核对的网关 URL 与显式 profile。
 
 ```bash
 octo-cli group list

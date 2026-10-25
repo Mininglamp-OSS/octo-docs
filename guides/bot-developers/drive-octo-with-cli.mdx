@@ -7,8 +7,8 @@ icon: "terminal"
 **[`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli)** is a single-binary REST client
 designed for **AI agents to call via `exec`**. Where a [channel](/guides/bot-developers/choose-a-channel)
 lets an agent *reply*, `octo-cli` lets it *act* — send messages, list groups, manage threads,
-upload files. Every invocation emits a structured JSON envelope on stdout; there is no
-interactive I/O.
+upload files. Agent invocations emit a structured JSON envelope on stdout and run without
+interactive I/O; credential setup is a separate operator step.
 
 ## Install
 
@@ -22,17 +22,70 @@ The npm package resolves the matching prebuilt platform binary.
 
 ## Authenticate
 
-`octo-cli` is Assistant-only — there's no user login. Point it at your instance with two env vars:
+These instructions were checked against the published [CLI v0.18.0](https://github.com/Mininglamp-OSS/octo-cli/releases/tag/v0.18.0)
+at [`d564a63bbd8e`](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/cmdutil/factory.go). Check your binary with `octo-cli version`.
+
+For Bot commands, supply a Bot credential through a stored profile or your agent host's
+`OCTO_BOT_TOKEN` environment. To create a profile, run this operator setup command and enter
+the token at its hidden prompt. Do not put the token in command arguments:
 
 ```bash
-export OCTO_BOT_TOKEN="bf_your_user_bot_token"    # or app_… (DM-only)
-export OCTO_API_BASE_URL="https://your-octo-instance.com"
+octo-cli auth login --profile staging-bot --api-base-url "https://octo-staging.example.com"
 ```
+
+Replace the example URL with the trusted gateway origin for that credential, without an API
+path. This saves local credentials and metadata; it does not verify remote authentication.
+`auth login` is an operator setup step, separate from noninteractive agent commands.
+
+<Warning>
+  In v0.18.0, a nonempty inherited `OCTO_API_BASE_URL` overrides the URL saved in the selected
+  profile. `--profile` can therefore select one Bot's credential while requests still target
+  another gateway. An earlier global `export` remains in effect when you switch profiles.
+  `auth status` displays saved profile metadata, so its URL does not prove the actual request
+  destination. Match the credential to a trusted gateway before running business commands.
+</Warning>
+
+### Check the local request configuration
+
+Use a command-scoped URL and an explicit profile. This preflight does not send HTTP:
+
+```bash
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot --format json config show
+```
+
+With valid configuration, check `data.api_base_url`, `data.profile`, `data.bot_token_source`,
+and `identity` against the gateway and Bot you intend to use. For this example, expect the
+trusted staging URL, profile `staging-bot`, and source `profile:staging-bot`.
+Resolve configuration errors or unexpected identity fields before continuing. Some
+non-structured configuration errors make `config show` fall back to environment values;
+a successful exit alone does not validate the selected profile, identity, gateway trust,
+or remote permissions. Neither `config show` nor `auth status` tests remote authorization.
+
+Repeat the same URL and profile for each business command:
+
+```bash
+OCTO_API_BASE_URL="https://octo-staging.example.com" \
+  octo-cli --profile staging-bot group list
+```
+
+Removing an inherited URL only lets you rely on a profile **if that profile already saves
+the correct gateway URL**. If its URL is empty, v0.18.0 falls back to the production default,
+`https://im.deepminer.com.cn`. Clearing the environment variable alone is not a safe way to
+select staging. Verify the resolved configuration again after any change.
+
+The released implementation separates [URL selection](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/cmdutil/factory.go),
+[saved auth metadata](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/cmd/auth.go),
+[configuration diagnostics](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/cmd/config.go), and
+[request destination and Bearer credential](https://github.com/Mininglamp-OSS/octo-cli/blob/d564a63bbd8ec2dd4305a40a64fe0179ca9c667f/internal/client/client.go).
 
 Optional: `OCTO_SPACE_ID` (space context for platform-scoped Assistants), `OCTO_FORMAT`
 (`json` | `table` | `csv` | `ndjson`).
 
 ## Use it
+
+These examples show command shapes. Apply the checked gateway URL and explicit profile to
+each invocation, as shown above.
 
 ```bash
 octo-cli group list
