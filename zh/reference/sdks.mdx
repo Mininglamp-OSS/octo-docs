@@ -33,7 +33,7 @@ Gateway 默认为 `MemoryImSessionStore`；持久会话存储由宿主负责，�
   通过 `AbortSignal` 或 `cancelInvocation` 请求取消，再读取最终结果；取消请求被接受不代表清理已完成。
 </Warning>
 
-v1.1.3 的 Context 固定标记使用英文 XML 注释；字面标签 `<guidence>` 保留传入 Markdown 与换行，
+v1.1.3 的 Context 固定标记使用英文 XML 注释；字面标签 `<guidance>` 保留传入 Markdown 与换行，
 API 字段仍为 `guidance`。`<data>` 用 CDATA 包裹 JSON，并拆分内容中的 `]]>` 终止符。
 业务内容保留原文。这些标记只是格式，不构成授权或信任边界。参见[发行版 Context 渲染实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-executor-core/src/model-input.ts)。
 
