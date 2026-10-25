@@ -14,7 +14,7 @@ graph LR
   server --> im
   server --> svc["核心服务<br/>smart-summary · speech<br/>docs · marketplace"]
   server --> data[("MySQL · Redis · MinIO")]
-  agents["智能体平面<br/>channels · octo-cli · octo-daemon"] --> server
+  agents["智能体平面<br/>channels · octo-cli · octo-runtime"] --> server
   server -. 可选 .-> search["搜索与导出<br/>Kafka · OpenSearch"]
   server -. 依赖 .-> shared["octo-lib · octo-auth · octo-adapters"]
 ```

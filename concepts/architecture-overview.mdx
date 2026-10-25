@@ -39,7 +39,7 @@ graph LR
   subgraph agents["Agent plane"]
     chan["Channels · cc / codex / hermes / claw / openclaw"]
     cli["octo-cli"]
-    daemon["octo-daemon-cli"]
+    runtime["octo-runtime"]
   end
 
   subgraph pipe["Search & export · optional"]
@@ -81,7 +81,7 @@ graph LR
   server --> obj
   chan --> server
   cli --> server
-  daemon --> server
+  runtime --> server
   prod -. reads .-> my
   prod -->|octo.message.v1| kf
   kf --> esi

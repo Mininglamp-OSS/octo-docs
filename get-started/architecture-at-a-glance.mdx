@@ -16,7 +16,7 @@ graph LR
   server --> im
   server --> svc["Core services<br/>smart-summary · speech<br/>docs · marketplace"]
   server --> data[("MySQL · Redis · MinIO")]
-  agents["Agent plane<br/>channels · octo-cli · octo-daemon"] --> server
+  agents["Agent plane<br/>channels · octo-cli · octo-runtime"] --> server
   server -. optional .-> search["Search & export<br/>Kafka · OpenSearch"]
   server -. uses .-> shared["octo-lib · octo-auth · octo-adapters"]
 ```
