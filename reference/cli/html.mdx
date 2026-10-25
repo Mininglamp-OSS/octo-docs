@@ -179,9 +179,9 @@ Swap one artifact's outer HTML (located by aid in base_version, 0 = latest) with
 | Flag | Type | Required | Description |
 |---|---|---|---|
 | `--slug` | string | ✓ | Document reference: canonical doc_id for a new document, or the retained legacy slug for an old document. The wire name remains slug for server compatibility. |
-| `--base_version` | integer |  | version whose aid to locate; 0 or omitted = latest |
+| `--base-version` | integer |  | version whose aid to locate; 0 or omitted = latest |
 | `--aid` | string | ✓ | the artifact's stamped data-odoc-aid |
-| `--new_html` | string | ✓ | replacement single top-level element |
+| `--new-html` | string | ✓ | replacement single top-level element |
 
 ---
 
@@ -293,12 +293,12 @@ Create by omitting slug; the CLI generates a fresh idempotency_key unless one is
 |---|---|---|---|
 | `--slug` | string |  | Legacy wire name for an existing document reference. Omit when creating. For every later publish pass the prior response data.slug: it is the canonical doc_id for a new document or the legacy slug for an old document. Never pass a display name as identity. |
 | `--html` | string | ✓ | the full self-contained HTML document body |
-| `--idempotency_key` | string |  | Optional caller key for retrying this exact creation operation; otherwise the CLI generates a cryptographically random key once per invocation and reuses it for transport retries. Omit when republishing an existing slug. |
+| `--idempotency-key` | string |  | Optional caller key for retrying this exact creation operation; otherwise the CLI generates a cryptographically random key once per invocation and reuses it for transport retries. Omit when republishing an existing slug. |
 | `--version` | integer |  | New output version: for updates send the source version read before editing plus one. On servers with octo-docs-html#34 deployed, the server requires current latest+1 for bot updates (428 version_required if missing/zero, 409 version_conflict if mismatched). The HTML backend will be deployed and verified on every serving instance before this CLI workflow is released. Omit for first publication. Do not increase this value without rereading and editing the latest source. |
 | `--data` | json |  | meta: optional metadata (e.g. &#123;"title":"..."&#125;) |
-| `--mount_type` | enum(`group`, `space`, `thread`) |  | Optional placement in docs-backend and the file sidebar; 'group', 'space', and 'thread' are supported. Mounting does not determine document identity. |
-| `--group_no` | string |  | group number; supply when mount_type=group |
-| `--thread_id` | string |  | thread id; supply when mount_type=thread |
+| `--mount-type` | enum(`group`, `space`, `thread`) |  | Optional placement in docs-backend and the file sidebar; 'group', 'space', and 'thread' are supported. Mounting does not determine document identity. |
+| `--group-no` | string |  | group number; supply when mount_type=group |
+| `--thread-id` | string |  | thread id; supply when mount_type=thread |
 
 ---
 
@@ -317,10 +317,10 @@ Reply to a comment thread as the agent (identity odoc-agent) with an optional ve
 | Flag | Type | Required | Description |
 |---|---|---|---|
 | `--slug` | string | ✓ | Document reference: canonical doc_id for a new document, or the retained legacy slug for an old document. The wire name remains slug for server compatibility. |
-| `--parent_id` | string | ✓ | the comment thread root id being replied to |
+| `--parent-id` | string | ✓ | the comment thread root id being replied to |
 | `--text` | string | ✓ | reply body |
 | `--status` | enum(`applied`, `partial`, `question`) |  | optional verdict rendered on the parent |
-| `--applied_in` | integer |  | optional version the change was applied in |
+| `--applied-in` | integer |  | optional version the change was applied in |
 
 ---
 
