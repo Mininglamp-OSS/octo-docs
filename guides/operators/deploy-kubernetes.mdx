@@ -44,6 +44,33 @@ Requires Kubernetes 1.24+, Helm 3.10+, and a default StorageClass. When healthy,
 its `external<Service>` block (it fails fast if that block is empty). `values-china.yaml` switches
 app images to a Tencent registry.
 
+## Configure the user API key secret
+
+Both deployment paths must inject `OCTO_USER_API_KEY_SECRET` into every `octo-server`
+container. Use the exact 32-byte text value described in the
+[configuration reference](/reference/configuration). Provision it through your secret
+management workflow; keep it stable and backed up across replicas, upgrades, and restores.
+Setting `OCTO_MASTER_KEY` / `DMWORK_MASTER_KEY` does not supply this variable.
+
+- **Kustomize:** add `OCTO_USER_API_KEY_SECRET` to the `stringData` of your private
+  `octo-server-secret.yaml`, using the securely provisioned value. The base Deployment already
+  imports `octo-server-secret` with `envFrom.secretRef`. Keep the populated file out of Git.
+- **Helm:** the checked chart does not expose a values entry for this variable. Create a
+  separately managed Secret and extend the rendered server Deployment with an `env` entry
+  named `OCTO_USER_API_KEY_SECRET`, using `valueFrom.secretKeyRef` to reference it. Preserve
+  this change in your chart customization / post-renderer; do not assume adding a key to
+  the chart Secret alone injects it into the server.
+
+After a Secret update, recreate/restart the server pods so they read the new environment.
+Verify the authenticated secrets-manager workflow; a passing readiness probe does not
+prove the master key is configured. Never regenerate an existing key as a deployment step.
+
+Template wiring verified at
+[`octo-deployment@d88f5e29b8cd70923464cfef036693ea81c89432`](https://github.com/Mininglamp-OSS/octo-deployment/commit/d88f5e29b8cd70923464cfef036693ea81c89432):
+[Kustomize Deployment](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/kustomize/base/octo-server.yaml),
+[Helm server Deployment](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/helm/octo/templates/deployment-octo-server.yaml).
+Check your deployment revision before applying these instructions.
+
 ## Exposing it
 
 nginx is the single entrypoint (`ClusterIP` by default). Expose it via a LoadBalancer, an Ingress

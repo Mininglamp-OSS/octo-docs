@@ -52,3 +52,22 @@ This baseline keeps argument-rendering changes in the separate CLI argument-cont
 操作，既不是完整产品能力清单，也不是取消漂移检查。新增领域/操作须显式审查锁文件与导航；
 缺失操作、重复操作、输入变化或中文输出陈旧仍会使门禁失败。auth 仅为既有合同快照，
 不冒称正式 SDK 发行。更新参考须改源/生成器后重生成，不能手改派生页。
+
+## Configuration environment supplement
+
+`config-environment.json` covers settings read directly from the process environment
+that are absent from `tsdd.yaml`. Its bilingual text is curated against the implementation
+files listed in `sources`, pinned to the full upstream `revision` SHA. It contains no secret
+values. When the implementation changes, verify the raw input format, consumers, failure
+behavior, and migration risks, then update both languages and the source revision together.
+The existing YAML template remains the source for the template tables.
+
+```bash
+npm run gen:config                  # regenerate only the EN/ZH configuration pages
+node scripts/gen-config.mjs --check # configuration-only drift check
+npm run test:config                 # generator regression checks, no sibling repos needed
+```
+
+This supplement is intentionally limited to `OCTO_USER_API_KEY_SECRET`; it is not an audit
+of every environment variable. Source revisions for unrelated API/CLI/SDK references are
+unchanged by this maintenance pass.

@@ -1,0 +1,33 @@
+{
+  "repository": "Mininglamp-OSS/octo-server",
+  "revision": "32ffcff4539736d833a0e61e1ef2e31e83b51a74",
+  "sources": [
+    "modules/usersecret/crypto.go",
+    "modules/usersecret/api.go",
+    "modules/botfather/service_userapikey_crypto.go",
+    "modules/botfather/db.go",
+    "docs/user-secret-alias-api.md"
+  ],
+  "variables": [
+    {
+      "name": "OCTO_USER_API_KEY_SECRET",
+      "en": {
+        "requirement": "Required for the user-secret alias / secrets manager and hardened user API keys (`uk_`). No default. Set this exact environment variable on every `octo-server` process; it is read directly, not from a YAML key or a `TS_` override.",
+        "format": "Exactly **32 bytes of the environment string**, used as-is. The server does not hex-decode, Base64-decode, or trim it. Use 32 ASCII characters to avoid ambiguity with multibyte text; do not include a newline.",
+        "generation": "For first-time provisioning only, after confirming that no existing encrypted data or user API keys depend on an earlier value, generate the value in your secure provisioning workflow with the command below. It produces 32 ASCII hex characters (32 raw bytes). Keep the output as text: do not decode it. `openssl rand -hex 32` produces 64 characters and is invalid for this variable.",
+        "storage": "Store the value in your deployment secret store, restrict access, and back it up securely with your database recovery material. Keep the same value across all server replicas, restarts, upgrades, and restores. It is separate from `OCTO_MASTER_KEY` / `DMWORK_MASTER_KEY`; setting those does not supply it.",
+        "failure": "A missing or invalid value does not stop the server from starting. The usersecret module logs a startup error containing `OCTO_USER_API_KEY_SECRET must be exactly 32 bytes`; its manager CRUD and bot resolve endpoints return HTTP 500 (`err.server.usersecret.resolve_failed`). User API key operations that depend on this value also fail. After correcting the injected environment, recreate/restart all server processes; container health alone does not verify this feature.",
+        "rotation": "Do not regenerate the value during normal deployment. Changing or losing it makes existing encrypted aliases and user API keys unreadable, and changes the HMAC verifier used for hardened user API key lookup. There is no built-in multi-key rotation. Rotation needs a planned migration of encrypted data and API key verifiers (or reissuance); replacing the variable alone is unsafe."
+      },
+      "zh": {
+        "requirement": "用户密钥别名 / 密钥管理器与加固后的用户 API 密钥（`uk_`）需要此变量。没有默认值。为每个 `octo-server` 进程注入这个准确名称的环境变量；代码直接读取它，不读取 YAML 配置项或 `TS_` 覆盖项。",
+        "format": "必须恰好是**环境字符串的 32 个字节**，直接使用原值。服务端不会做 hex 解码、Base64 解码或去除空白。使用 32 个 ASCII 字符以避免多字节文本带来的歧义，不要包含换行。",
+        "generation": "仅在首次配置此主密钥、并确认没有已有密文或用户 API 密钥依赖旧值时，在安全的密钥配置流程中使用下方命令生成。它输出 32 个 ASCII 十六进制字符，即 32 个原始字节。按文本原样保存，不要解码。`openssl rand -hex 32` 会输出 64 个字符，不符合此变量要求。",
+        "storage": "将值保存在部署密钥存储中，限制访问，并随数据库恢复材料安全备份。所有服务端副本、重启、升级及恢复必须使用相同的值。它与 `OCTO_MASTER_KEY` / `DMWORK_MASTER_KEY` 不同；设置后两者不会自动提供此变量。",
+        "failure": "缺失或长度错误不会阻止服务端启动。usersecret 模块会在启动时记录包含 `OCTO_USER_API_KEY_SECRET must be exactly 32 bytes` 的错误；密钥管理 CRUD 与 bot resolve 接口返回 HTTP 500（`err.server.usersecret.resolve_failed`）。依赖此值的用户 API 密钥操作也会失败。修正注入的环境变量后，重新创建或重启全部服务端进程；容器健康并不代表此功能正常。",
+        "rotation": "不要在日常部署时重新生成此值。修改或丢失它会导致已有密钥别名及用户 API 密钥的密文无法解密，也会改变加固后的用户 API 密钥查询所依赖的 HMAC 校验值。当前没有内建多密钥轮换。轮换需要规划密文和 API 密钥校验值迁移（或重新签发）；不能只替换环境变量。"
+      },
+      "generateCommand": "openssl rand -hex 16"
+    }
+  ]
+}

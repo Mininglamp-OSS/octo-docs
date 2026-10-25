@@ -15,6 +15,8 @@ Redis, MinIO, and an nginx reverse proxy, wired by one `docker-compose.yaml`.
 
 ## The three-step path
 
+Before step 2, complete the user API key secret configuration below.
+
 ```bash
 git clone https://github.com/Mininglamp-OSS/octo-deployment.git
 cd octo-deployment
@@ -26,6 +28,37 @@ sudo ./setup.sh --smoke-test   # 3. 11-probe end-to-end check
 `--up` is **start-only** — it runs `docker compose up -d --wait` and never regenerates secrets
 (a missing `.env` is fatal unless you pass `--force`). Both `--up` and `--smoke-test` need sudo
 because `docker/.env` stays `root:600`.
+
+## Configure the user API key secret
+
+Before starting the stack, configure `OCTO_USER_API_KEY_SECRET` for the secrets manager
+and hardened user API keys. This is separate from `OCTO_MASTER_KEY` / `DMWORK_MASTER_KEY`.
+See the [configuration reference](/reference/configuration) for the exact byte format,
+generation command, failure symptoms, and backup / rotation requirements.
+
+1. In your restricted `docker/.env`, set `OCTO_USER_API_KEY_SECRET` to the securely provisioned
+   value. Reuse the existing value when upgrading or restoring; generate it only when first
+   provisioning this master key, after checking for data that depends on an earlier value.
+2. Ensure the `octo-server` service in `docker/docker-compose.yaml` passes it through. If your
+   deployment checkout omits the mapping, add this entry to that service's `environment` block:
+
+   ```yaml
+   OCTO_USER_API_KEY_SECRET: ${OCTO_USER_API_KEY_SECRET:?Set the existing or newly provisioned 32-byte secret}
+   ```
+
+3. Recreate the `octo-server` container after changing its environment. A plain container
+   restart does not pick up changed Compose configuration. Keep the same value on every replica.
+
+<Warning>
+  Adding a variable to `.env` alone does not inject it into the container. Do not assume
+  `setup.sh`, a healthy container, or the general smoke test validates the secrets manager.
+  Verify its authenticated workflow without printing the value or a full container environment.
+</Warning>
+
+The deployment templates were checked at
+[`octo-deployment@d88f5e29b8cd70923464cfef036693ea81c89432`](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/docker/docker-compose.yaml).
+At that revision, both the `.env` example and service environment mapping omit this variable;
+check your checkout before starting or upgrading.
 
 ## Network surface
 

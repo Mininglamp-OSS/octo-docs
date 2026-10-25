@@ -44,6 +44,31 @@ helm install octo oci://ghcr.io/mininglamp-oss/octo --version 0.3.1
 对应的 `external<Service>` 块（若该块为空则会快速失败）。`values-china.yaml` 会将
 应用镜像切换到腾讯镜像仓库。
 
+## 配置用户 API 密钥主密钥
+
+两种部署路径都必须将 `OCTO_USER_API_KEY_SECRET` 注入每个 `octo-server` 容器。
+使用[配置参考](/zh/reference/configuration)说明的恰好 32 字节文本值。
+通过密钥管理流程配置，安全备份，并在所有副本、升级及恢复中保持稳定。
+设置 `OCTO_MASTER_KEY` / `DMWORK_MASTER_KEY` 不会自动提供此变量。
+
+- **Kustomize：**在你私有的 `octo-server-secret.yaml` 的 `stringData` 中添加
+  `OCTO_USER_API_KEY_SECRET`，填入安全配置流程提供的值。base Deployment 已通过
+  `envFrom.secretRef` 引入 `octo-server-secret`。不要将填好值的文件提交到 Git。
+- **Helm：**核实的 chart 没有暴露此变量的 values 配置项。创建单独管理的 Secret，
+  并在渲染后的服务端 Deployment 中扩展名为 `OCTO_USER_API_KEY_SECRET` 的 `env` 项，
+  通过 `valueFrom.secretKeyRef` 引用它。在 chart 定制或 post-renderer 中保存此修改；
+  仅向 chart Secret 添加键并不会自动将其注入服务端。
+
+更新 Secret 后，重新创建或重启服务端 pod，使其读取新的环境变量。
+验证需要登录的密钥管理器功能流程；就绪探针通过不能证明主密钥配置正确。
+不要把重新生成已有密钥当成部署步骤。
+
+模板注入方式核实于
+[`octo-deployment@d88f5e29b8cd70923464cfef036693ea81c89432`](https://github.com/Mininglamp-OSS/octo-deployment/commit/d88f5e29b8cd70923464cfef036693ea81c89432)：
+[Kustomize Deployment](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/kustomize/base/octo-server.yaml)、
+[Helm 服务端 Deployment](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/helm/octo/templates/deployment-octo-server.yaml)。
+应用这些说明前，请检查你的部署版本。
+
 ## 对外暴露
 
 nginx 是唯一入口（默认 `ClusterIP`）。可通过 LoadBalancer、Ingress
