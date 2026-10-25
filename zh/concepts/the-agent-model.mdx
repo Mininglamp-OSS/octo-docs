@@ -47,9 +47,40 @@ OBO 让智能体在获得明确授权后**以某个用户人格的身份**行动
 
 当智能体执行某个动作时，结果通过**交互式卡片协议**（Adaptive Cards 1.5，`octo/v1` 配置文件）呈现，使工具调用的预览与操作在客户端中原生渲染——也就是你在 [octo-web](/zh/guides/teams/use-chat-and-docs) 中看到的“内联工具调用预览”。
 
-## 智能体令牌只留在服务端
+## 凭据与本地执行权限
 
-智能体令牌从不离开 `octo-server`。浏览器只能看到一个 `bot_uid`；本地的 Agent 运行时通过其自身受限作用域的凭据来获取所需的令牌，因此该密钥从不暴露给客户端。哪些 Daemon 存活、它们承载哪些智能体，都在服务端追踪，并通过 [Agent 运行时升级流程](/zh/guides/operators/upgrades)对外呈现。
+Channel Gateway 使用 Bot 凭据向 Octo 认证。在 Runtime v1.1.3 中，CLI 将配置的 `bf_token`
+保存在本地 Gateway 声明中，POSIX 权限为 `0600`；SDK 宿主从自有存储提供凭据。
+因此，凭据在本地机器与服务端都需要保护。参见[Runtime 配置及生命周期指南](/zh/guides/operators/upgrades)。
+
+Gateway 的 `approval_mode` 默认为 `full_access`，支持情况取决于所选 Adapter。
+它控制本地执行审批，不代表 Octo 资源授权，也不代表自动继承人类所有者的文档权限。
+本地 IPC 信任同一操作系统账号；workdir 不是文件系统或网络沙箱。
+业务宿主必须认证调用者、授权资源访问，并确认控制指令来源可信。
+
+对于 OpenClaw，`ask` 可能回退为有效 `full_access` 并自动回答 `allow-once`；
+警告提示不会等待人工同意。部分 scopes 组合会改为拒绝执行。
+请核对[准确的回退条件](/zh/guides/operators/upgrades#openclaw-审批兼容性)。
+
+### Gateway 消息准入
+
+Runtime v1.1.3 省略 `allowed_sender_ids` 时，Gateway 不额外限制发送者：
+DM 沿用平台准入策略；其他用户与 Bot 只要在群 / 话题中真实点名当前 Bot 并通过其余范围检查，也能触发执行。
+
+| 配置 | 效果 |
+|---|---|
+| 省略 `allowed_sender_ids` | 不增加发送者限制；不会默认仅允许 owner。 |
+| `allowed_sender_ids: []` | 拒绝全部发送者。 |
+| 非空 `allowed_sender_ids` | 只允许名单内发送者，owner 不会隐式补入。 |
+| 省略 `group_ids`、`null` 或 `[]` | 不增加群范围限制；不会禁用群。 |
+| 非空 `group_ids` | 按父群 ID 限制群与话题，不限制 DM。 |
+| `groups_enabled: false` | 关闭群 / 话题准入，不关闭 DM。 |
+
+自消息仍被拒绝。群 / 话题仍须通过 Space、频道与真实 @ 检查。
+卡片操作必须匹配原任务发起者与原卡片范围。消息准入不授予业务资源权限。
+
+以上边界见发行版 [Gateway 合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-extra-channel-gateway/README.md)与
+[Runtime 架构](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/zh-CN/concepts/architecture.md)，核实版本为 `fe19d3504315`。
 
 <Card title="把一个智能体接入 Octo" icon="robot" href="/zh/get-started/quickstart-connect-a-bot">
   动手实践路径：几分钟内注册一个助理并桥接 Claude Code。

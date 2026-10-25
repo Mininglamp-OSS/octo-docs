@@ -1,10 +1,66 @@
 ---
 title: "SDKs"
-description: "The octo-auth verifier SDK (Go + TypeScript) and the octo-lib shared library."
+description: "The Octo Runtime SDK, octo-auth verifier SDK, and octo-lib shared library."
 icon: "cubes"
 ---
 
-Octo ships two libraries you'll reach for when building on the platform.
+Choose a library for local Agent execution, credential verification, or shared service primitives.
+
+## Octo Runtime — local execution SDK
+
+The published [Runtime v1.1.3](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.3)
+requires **Node.js 24.x or 26.x**. Install a fixed version:
+
+```bash
+npm install @mininglamp-oss/octo-runtime@1.1.3
+```
+
+| Public entry | Purpose in v1.1.3 |
+|---|---|
+| `@mininglamp-oss/octo-runtime/host` | Construct native Kernel and Extra services with `createKernelService` / `createExtraService`; the host owns their lifecycle. |
+| `@mininglamp-oss/octo-runtime/executor-kernel` | Use `KernelClient.invoke` for execution in a worker supervised by the Kernel. |
+| `@mininglamp-oss/octo-runtime/extras/channel-gateway` | Gateway configuration/types and the host-injected `createSessionStore` contract. |
+
+Embed the SDK for desktop or custom applications. The host natively imports its selected
+Extra modules and passes them to `createExtraService`; it constructs Kernel and Extra services
+in the calling process. Its own worker entry imports the selected Adapters and calls
+`serveWorker`. SDK composition does not require, read, or generate a permanent or temporary
+manifest, or use an external Node/CLI launcher for top-level services. The standard CLI
+package's full catalog does not become every SDK product's implicit dependency set. See the
+[released native SDK and module-loading contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/en/concepts/module-loading.md).
+Agent execution still uses the isolated worker. Gateway defaults to `MemoryImSessionStore`; durable
+session storage is a host responsibility, not an included SQLite backend.
+
+<Warning>
+  Breaking out of a `KernelClient.invoke` iterator or closing the client stops observation,
+  not execution. Request cancellation with an `AbortSignal` or `cancelInvocation`, then read
+  the terminal result; an accepted cancellation request is not proof that cleanup finished.
+</Warning>
+
+Runtime-generated Context framing uses English XML comments in v1.1.3. The literal
+`<guidence>` tag preserves supplied Markdown and newlines; the API field remains `guidance`.
+`<data>` wraps JSON in CDATA and splits embedded `]]>` terminators. Supplied business content
+keeps its original language. These markers are formatting, not an authorization or trust boundary. See the [released Context renderer](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-executor-core/src/model-input.ts).
+
+Context JSON validation checks structure, not the author's identity or permission.
+The trusted host must explicitly resolve configuration layers; `KernelClient` does not load
+`defaults` / `mandatory` automatically. When using configuration resolution, place session
+instructions in trusted `mandatory` configuration. Local IPC trusts clients under the same OS account; the host
+still authenticates business callers and authorizes resource access.
+
+The release also includes the `grok-build` Adapter. Its upstream real-harness evidence is
+limited to macOS arm64, Grok Build 1.0.67, text streaming, and explicit continuation across
+CLI processes. Native tools, approvals/questions/plan review, MCP, images, and other platforms
+are not established by those checks. The host/harness owns authentication. Review the
+[pinned Adapter contract and validation limits](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-grok-build/README.md)
+before selecting it; source/fixture coverage does not prove production Provider or IM operation.
+
+Contracts verified at [`fe19d3504315`](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/README.md):
+[native service entry](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/public/host.ts),
+[execution and cancellation](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/en/reference/output-and-control.md),
+[host-owned Gateway sessions](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/SDK_CHANNEL_GATEWAY_GUIDE.md), and
+[Context trust boundaries](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/en/reference/contexts.md).
+For the CLI service lifecycle and legacy reinstallation, see [Upgrades](/guides/operators/upgrades).
 
 ## octo-auth — credential verifier
 

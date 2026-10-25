@@ -43,7 +43,7 @@ icon: "book"
 | 术语 | 含义 |
 |---|---|
 | **Adapter** | 一座桥梁，在不 fork 核心的前提下把外部系统（IM 栈、AI 供应商、数据源）接入 Octo。参见[编写适配器](/zh/guides/integrators/write-an-adapter)。 |
-| **Daemon** | 按机器运行的运行时监视器（`octo-daemon`），上报智能体 CLI 清单并应用升级。参见[升级](/zh/guides/operators/upgrades)。 |
+| **Runtime** | 通过 Provider Adapter 在本地执行智能体。v1.1.3 的 Executor Kernel 与每个 Extra 具有独立生命周期，旧 daemon 不能原地升级迁入。参见[升级](/zh/guides/operators/upgrades)。 |
 
 <Info>
   你到处都会看到两种凭据：**`bf_…`**（助理令牌——智能体与频道使用）和 **`uk_…`**（长期有效的用户 API 密钥）。两者都通过同一套契约进行校验——参见[安全与认证](/zh/concepts/security-and-auth)。

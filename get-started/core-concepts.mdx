@@ -44,7 +44,7 @@ and relationships — see [Data model and entities](/reference/data-model).
 | Term | What it is |
 |---|---|
 | **Adapter** | A bridge that plugs an external system (IM stack, AI provider, data source) into Octo without forking the core. See [Write an adapter](/guides/integrators/write-an-adapter). |
-| **Daemon** | The per-machine runtime monitor (`octo-daemon`) that reports agent-CLI inventory and applies upgrades. See [Upgrades](/guides/operators/upgrades). |
+| **Runtime** | Local Agent execution through Provider adapters. In v1.1.3, the Executor Kernel and each Extra have independent lifecycles; the legacy daemon is not an in-place upgrade path. See [Upgrades](/guides/operators/upgrades). |
 
 <Info>
   Two credentials you'll see everywhere: **`bf_…`** (an Assistant token — what agents and channels

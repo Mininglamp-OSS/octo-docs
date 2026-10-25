@@ -36,7 +36,7 @@ graph LR
   subgraph agentgrp["Agent plane"]
     channels[cc / codex / hermes / claw / openclaw channels]
     cli[octo-cli]
-    daemon[octo-daemon-cli]
+    runtime[octo-runtime]
   end
   subgraph sharedgrp["Shared libraries"]
     lib[octo-lib]
@@ -57,7 +57,7 @@ graph LR
   server --> dhtml
   channels --> server
   cli --> server
-  daemon --> server
+  runtime --> server
   idx --> osx
   osx -.read.-> server
   osx --> exp
@@ -103,7 +103,7 @@ graph LR
 | [`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth) | Credential verifier SDK (Go + TS) | [Read →](/guides/integrators/verify-credentials-with-octo-auth) |
 | [`octo-adapters`](https://github.com/Mininglamp-OSS/octo-adapters) | Third-party IM / AI / data-source bridges | [Read →](/guides/integrators/write-an-adapter) |
 | [`octo-cli`](https://github.com/Mininglamp-OSS/octo-cli) | Single-binary REST client for AI bots | [Read →](/reference/octo-cli) |
-| [`octo-daemon-cli`](https://github.com/Mininglamp-OSS/octo-daemon-cli) | Per-machine runtime monitor & upgrader | [Read →](/guides/operators/upgrades) |
+| [`octo-runtime`](https://github.com/Mininglamp-OSS/octo-runtime) | Local execution SDK + independent Kernel/Extra services; v1.1.3 requires Node 24.x or 26.x | [Read →](/guides/operators/upgrades) |
 
 ## Standards, skills & channels
 
