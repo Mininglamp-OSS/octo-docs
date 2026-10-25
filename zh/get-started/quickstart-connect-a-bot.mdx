@@ -48,7 +48,7 @@ icon: "robot"
     最快的方式是使用预构建的 npm 包:
 
     ```bash
-    npm install -g @mininglamp-oss/cc-channel-octo
+    npm install -g @mininglamp-oss/cc-channel-octo@1.0.3
     ```
 
     这会安装 `cc-channel-octo` 命令——无需编译步骤。
@@ -93,6 +93,12 @@ icon: "robot"
   </Step>
 
   <Step title="启动网关">
+    <Warning>
+      cc-channel-octo v1.0.3 默认使用 SDK 的默认工具集合与 `bypassPermissions`，
+      不会等待人工权限确认。每会话工作目录不会限制文件系统或网络访问。
+      启动前，请核对[执行权限](/zh/guides/bot-developers/claude-code-channel#安全模型)，
+      将网关操作系统账号的访问权限限制在你打算交给它的范围内。
+    </Warning>
     ```bash
     cc-channel-octo
     ```
