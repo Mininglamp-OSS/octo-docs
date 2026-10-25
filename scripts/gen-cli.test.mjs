@@ -26,7 +26,7 @@ function fixture(t) {
   t.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
   const docs = path.join(tmp, 'octo-docs');
   fs.mkdirSync(path.join(docs, 'scripts'), { recursive: true });
-  for (const name of ['gen-cli.mjs', '_lib.mjs', 'reference-sources.mjs']) fs.copyFileSync(path.join(scripts, name), path.join(docs, 'scripts', name));
+  for (const name of ['gen-cli.mjs', '_lib.mjs', 'reference-sources.mjs', 'operation-notes.mjs']) fs.copyFileSync(path.join(scripts, name), path.join(docs, 'scripts', name));
   const specDir = path.join(tmp, 'octo-cli/internal/registry/specs');
   fs.mkdirSync(specDir, { recursive: true });
   const lock = JSON.parse(fs.readFileSync(path.join(scripts, 'reference-sources.json')));

@@ -19,6 +19,7 @@ import {
 } from './_lib.mjs';
 
 import { readLockedSpecs, sourceUrl, sourceDescription, sourceLabel } from './reference-sources.mjs';
+import { operationNote } from './operation-notes.mjs';
 
 const CLI_SPECS_DIR = path.join(WORKSPACE, 'octo-cli/internal/registry/specs');
 
@@ -112,7 +113,7 @@ export function flagsFor(op, root) {
 const pathArgs = (op, root) =>
   (op.parameters || []).map((r) => deref(r, root)).filter((p) => p.in === 'path').map((p) => p.name);
 
-function renderCommand(operationId, op, root, t, riskMap) {
+function renderCommand(operationId, op, root, t, riskMap, lang) {
   const cmd = commandFor(operationId);
   const args = pathArgs(op, root);
   const flags = flagsFor(op, root);
@@ -123,6 +124,8 @@ function renderCommand(operationId, op, root, t, riskMap) {
   if (meta) out.push(meta + '\n');
   out.push('```bash\n' + usage + '\n```\n');
   if (op.description) out.push(mdEscape(op.description) + '\n');
+  const note = operationNote(operationId, lang);
+  if (note) out.push(note);
   if (args.length) {
     out.push(`**${t.args}**\n\n| ${t.thArg} | ${t.thDesc} |\n|---|---|\n` + args.map((a) => `| \`<${a}>\` | ${t.pathParam} |`).join('\n') + '\n');
   }
@@ -154,7 +157,7 @@ function generateDomain(name, spec, lang) {
     '',
     t.domainNote(L.link),
     '',
-    cmds.map(([id, op]) => renderCommand(id, op, spec, t, riskMap)).join('\n---\n\n'),
+    cmds.map(([id, op]) => renderCommand(id, op, spec, t, riskMap, lang)).join('\n---\n\n'),
     '',
   ].join('\n');
   sink.emit(path.join(L.dir, 'reference/cli', `${name}.mdx`), body);
