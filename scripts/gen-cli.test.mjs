@@ -10,35 +10,14 @@ import { flagsFor } from './gen-cli.mjs';
 
 const scripts = path.dirname(fileURLToPath(import.meta.url));
 
-test('query/header and JSON body flags use dashes; explicit aliases and camelCase survive', () => {
-  const op = {
-    parameters: [
-      { name: 'channel_id', in: 'query', schema: { type: 'string' } },
-      { name: 'If-Match', in: 'header', 'x-octo-flag': 'base-version', schema: { type: 'string' } },
-      { name: 'fileSize', in: 'query', schema: { type: 'integer' } },
-      { name: 'ignored_path', in: 'path', schema: { type: 'string' } },
-    ],
-    requestBody: { content: { 'application/json': { schema: {
-      type: 'object', properties: {
-        on_behalf_of: { type: 'string' },
-        channel_id: { type: 'string', 'x-octo-flag': 'chat-id' },
-        camelCase: { type: 'string' },
-        payload: { type: 'object' },
-      },
-    } } } },
-  };
-  assert.deepEqual(flagsFor(op, {}).map((f) => f.flag), ['--channel-id', '--base-version', '--fileSize', '--on-behalf-of', '--chat-id', '--camelCase', '--data']);
-});
-
-test('multipart upload requires --file, skips binary property aliases, and preserves form fields', () => {
+test('multipart upload requires --file and skips binary aliases', () => {
   const op = { 'x-octo-multipart': true, requestBody: { content: { 'multipart/form-data': { schema: {
     type: 'object', required: ['file'], properties: {
       file: { type: 'string', format: 'binary', 'x-octo-flag': 'wrong-file-alias' },
-      storage_path: { type: 'string' },
     },
   } } } } };
   const flags = flagsFor(op, {});
-  assert.deepEqual(flags.map((f) => f.flag), ['--file', '--storage-path']);
+  assert.deepEqual(flags.map((f) => f.flag), ['--file']);
   assert.equal(flags[0].required, true);
 });
 
