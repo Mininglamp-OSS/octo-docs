@@ -25,6 +25,7 @@ import {
 } from './_lib.mjs';
 
 import { readLockedSpecs, verifySource, sourceUrl, sourceDescription, sourceLabel } from './reference-sources.mjs';
+import { operationNote } from './operation-notes.mjs';
 
 const CLI_SPECS_DIR = path.join(WORKSPACE, 'octo-cli/internal/registry/specs');
 const AUTH_CONTRACT_DIR = path.join(WORKSPACE, 'octo-auth/contract');
@@ -126,7 +127,7 @@ function paramsTable(params, root, t) {
   return `| ${t.thName} | ${t.thIn} | ${t.thType} | ${t.thReq} | ${t.thDesc} |\n|---|---|---|---|---|\n` + rows.join('\n');
 }
 
-function renderOperation(route, method, op, root, t, riskMap) {
+function renderOperation(route, method, op, root, t, riskMap, lang) {
   const risk = riskMap[op['x-octo-risk']] || '';
   const title = op.summary || op.operationId || `${method.toUpperCase()} ${route}`;
   const out = [`### ${mdEscape(title)}\n`];
@@ -135,6 +136,8 @@ function renderOperation(route, method, op, root, t, riskMap) {
   if (risk) meta.push(risk);
   out.push(meta.join(' · ') + '\n');
   if (op.description) out.push(mdEscape(op.description) + '\n');
+  const note = operationNote(op.operationId, lang);
+  if (note) out.push(note);
   const params = paramsTable(op.parameters, root, t);
   if (params) out.push(`**${t.params}**\n\n` + params + '\n');
   const body = op.requestBody?.content?.['application/json']?.schema;
@@ -167,7 +170,7 @@ function generateDomainPage(name, spec, lang) {
     '',
     t.domainNote(L.link),
     '',
-    ops.map(([r, m, op]) => renderOperation(r, m, op, spec, t, riskMap)).join('\n---\n\n'),
+    ops.map(([r, m, op]) => renderOperation(r, m, op, spec, t, riskMap, lang)).join('\n---\n\n'),
     '',
   ].join('\n');
   sink.emit(path.join(L.dir, 'reference/api', `${name}.mdx`), body);
