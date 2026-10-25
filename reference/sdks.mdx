@@ -38,7 +38,8 @@ session storage is a host responsibility, not an included SQLite backend.
 </Warning>
 
 Runtime-generated Context framing uses English XML comments in v1.1.3. The literal
-`<guidance>` tag preserves supplied Markdown and newlines; the API field remains `guidance`.
+`<guidence>` tag preserves supplied Markdown and newlines. This spelling intentionally matches
+the published output; the API field remains `guidance`.
 `<data>` wraps JSON in CDATA and splits embedded `]]>` terminators. Supplied business content
 keeps its original language. These markers are formatting, not an authorization or trust boundary. See the [released Context renderer](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-executor-core/src/model-input.ts).
 
