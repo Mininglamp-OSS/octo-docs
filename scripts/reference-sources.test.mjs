@@ -13,7 +13,7 @@ function fixture(t) {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'octo-reference-lock-'));
   t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
   const docs = path.join(workspace, 'octo-docs'); fs.mkdirSync(path.join(docs, 'scripts'), { recursive: true });
-  for (const file of ['_lib.mjs', 'reference-sources.mjs', 'gen-cli.mjs']) fs.copyFileSync(path.join(scripts, file), path.join(docs, 'scripts', file));
+  for (const file of ['_lib.mjs', 'reference-sources.mjs', 'gen-cli.mjs', 'operation-notes.mjs']) fs.copyFileSync(path.join(scripts, file), path.join(docs, 'scripts', file));
   const lock = loadSourceLock(); lock.operations = { message: ['message.send'], thread: ['thread.list'] }; lock.sources.cli.files = {};
   const dir = path.join(workspace, 'octo-cli/internal/registry/specs'); fs.mkdirSync(dir, { recursive: true });
   const specs = { message: { paths: { '/send': { post: { operationId: 'message.send' } }, '/outside': { post: { operationId: 'message.unreviewed' } } } }, thread: { paths: { '/threads': { get: { operationId: 'thread.list' } } } }, future: { paths: { '/new': { get: { operationId: 'future.unreleased' } } } } };
