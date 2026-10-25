@@ -77,7 +77,7 @@ const S = {
 
 const commandFor = (operationId) => operationId.split('.').join(' ');
 
-// Released flags.go converts wire underscores unless an explicit alias is set.
+// Match released cmd/service/flags.go: explicit aliases win; camelCase is retained.
 export const flagName = (name, schema) => schema['x-octo-flag'] || name.replaceAll('_', '-');
 
 export function flagsFor(op, root) {
@@ -87,12 +87,19 @@ export function flagsFor(op, root) {
     if (p.in === 'path') continue;
     flags.push({ flag: `--${flagName(p.name, p)}`, type: typeOf(p.schema), required: !!p.required, desc: p.description || '' });
   }
-  const body = deref(op.requestBody?.content?.['application/json']?.schema, root);
+  const multipart = op['x-octo-multipart'] === true;
+  const contentType = multipart ? 'multipart/form-data' : 'application/json';
+  const body = deref(op.requestBody?.content?.[contentType]?.schema, root);
+  if (multipart && body) {
+    flags.push({ flag: '--file', type: 'string', required: true, desc: 'path to the file to upload' });
+  }
   if (body?.properties) {
     const required = new Set(body.required || []);
     for (const [pn, praw] of Object.entries(body.properties)) {
       const pv = deref(praw, root);
+      if (pv.format === 'binary') continue;
       if (pv.type === 'object' || pv.type === 'array') {
+        if (multipart) continue;
         flags.push({ flag: '--data', type: 'json', required: required.has(pn), desc: `${pn}: ${pv.description || 'JSON payload'}` });
       } else {
         flags.push({ flag: `--${flagName(pn, pv)}`, type: typeOf(pv), required: required.has(pn), desc: pv.description || '' });

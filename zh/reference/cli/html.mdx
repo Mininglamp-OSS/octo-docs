@@ -19,7 +19,7 @@ icon: "terminal"
 Upload a media asset to a document (author-only) · 🟠 写
 
 ```bash
-octo-cli html asset add <doc_id>
+octo-cli html asset add <doc_id> [flags]
 ```
 
 Upload a media asset for a document via multipart/form-data (form field "file"). The asset is content-addressed (sha256); requires the write token / doc author credential.
@@ -29,6 +29,12 @@ Upload a media asset for a document via multipart/form-data (form field "file").
 | 参数 | 说明 |
 |---|---|
 | `<doc_id>` | 路径参数 |
+
+**标志**
+
+| 标志 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `--file` | string | ✓ | path to the file to upload |
 
 ---
 

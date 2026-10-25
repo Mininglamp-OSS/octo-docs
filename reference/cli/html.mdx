@@ -19,7 +19,7 @@ Configure credentials and verify the gateway using the [CLI guide](/guides/bot-d
 Upload a media asset to a document (author-only) · 🟠 write
 
 ```bash
-octo-cli html asset add <doc_id>
+octo-cli html asset add <doc_id> [flags]
 ```
 
 Upload a media asset for a document via multipart/form-data (form field "file"). The asset is content-addressed (sha256); requires the write token / doc author credential.
@@ -29,6 +29,12 @@ Upload a media asset for a document via multipart/form-data (form field "file").
 | Arg | Description |
 |---|---|
 | `<doc_id>` | path parameter |
+
+**Flags**
+
+| Flag | Type | Required | Description |
+|---|---|---|---|
+| `--file` | string | ✓ | path to the file to upload |
 
 ---
 
