@@ -29,3 +29,33 @@ npm run gen:check    # CI: exit 1 if any page is stale (drift detection)
 ## Planned
 
 - SDK reference (`octo-auth` Go/TS) from the auth OpenAPI contract.
+
+## Released CLI argument contracts
+
+The `message` and `file` reference pages use the published `octo-cli v0.18.0`
+contract at `d564a63bbd8ec2dd4305a40a64fe0179ca9c667f`.
+`scripts/cli-reference-sources.json` records the exact SHA-256 of those two specs
+and the existing operation subset retained in this maintenance pass. The generator
+fails before writing if either selected spec differs. It does not treat a release
+preparation commit on `main` as a published release.
+
+```bash
+# In the sibling octo-cli checkout, use the recorded release commit first.
+node scripts/gen-cli.mjs --domains message,file
+node scripts/gen-cli.mjs --domains message,file --check
+npm run test:cli
+```
+
+The targeted command writes only the two domain pages in each language. It leaves
+the index, REST API pages, other CLI domains, SDKs, and server configuration alone.
+The message page intentionally keeps its existing four operations; newly released
+search operations require their own documentation update and version review.
+
+Match `cmd/service/flags.go` when deriving names: replace underscores with dashes,
+preserve `x-octo-flag` aliases and existing camelCase, and document required
+`--file` for `x-octo-multipart` operations. JSON wire property names stay unchanged.
+
+The existing CI workflow still clones upstream default branches for the broader
+generation checks. Until those inputs are separately versioned, `gen:all` is not
+proof of released-product compatibility. Do not refresh unrelated references from
+those branches as part of this argument-contract fix.

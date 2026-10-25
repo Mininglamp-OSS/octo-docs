@@ -84,11 +84,13 @@ OCTO_API_BASE_URL="https://octo-staging.example.com" \
 ```bash
 octo-cli group list
 octo-cli message send --data '{"channel_id":"chat-1","channel_type":1,"payload":{"text":"hi"}}'
-octo-cli thread create --chat-id chat-1 --name "design review"
+octo-cli thread create group-no-example --name "design review"
 octo-cli file upload --file ./report.pdf
 octo-cli docs list --sort updatedAt:desc
 octo-cli file download abc123 --jq '.data.url'
 ```
+
+将 `group-no-example` 替换为你的群组编号；`thread create` 使用位置参数接收它。CLI 标志名可能与 JSON 字段名不同，例如 `--channel-id` 对应 `channel_id`。话题创建、消息发送与文件上传三种参数形式以 [octo-cli v0.18.0](https://github.com/Mininglamp-OSS/octo-cli/releases/tag/v0.18.0) 为准。添加 `--dry-run` 可以在发送前预览请求。
 
 整个命令树——**覆盖所有域的每一个 REST 操作**——是从内嵌在二进制中的 OpenAPI 规范
 自动注册的，因此它与服务器保持步调一致。每个命令都与一个 REST 操作 1:1 对应。

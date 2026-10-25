@@ -7,11 +7,13 @@
  * for each language (en, zh), with translated scaffolding.
  *
  * Emits reference/cli/<domain>.mdx + reference/octo-cli.mdx (zh under zh/).
- * Usage:  node scripts/gen-cli.mjs [--check]
+ * Usage:  node scripts/gen-cli.mjs [--check] [--domains message,file]
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import {
   DOCS_ROOT, WORKSPACE, HTTP_METHODS, banner,
   deref, mdEscape, typeOf, readJson, createSink,
@@ -20,6 +22,13 @@ import {
 const CLI_SPECS_DIR = path.join(WORKSPACE, 'octo-cli/internal/registry/specs');
 
 const check = process.argv.includes('--check');
+const domainsIndex = process.argv.indexOf('--domains');
+const selectedDomains = domainsIndex < 0 ? null : process.argv[domainsIndex + 1]?.split(',');
+const SOURCE_LOCK = readJson(path.join(DOCS_ROOT, 'scripts/cli-reference-sources.json'));
+if (!/^[a-f0-9]{40}$/.test(SOURCE_LOCK.revision)) throw new Error('CLI source lock requires a full release commit SHA');
+if (domainsIndex >= 0 && (!selectedDomains?.length || selectedDomains.some((name) => !name || name.startsWith('--')))) {
+  throw new Error('--domains requires comma-separated domain names');
+}
 const sink = createSink({ check, generator: 'gen-cli' });
 const SRC = { generator: 'gen-cli.mjs' };
 
@@ -40,6 +49,7 @@ const RISK = {
 
 const S = {
   en: {
+    scope: 'This page preserves the existing command subset; it does not enumerate every command in this release.',
     cmds: 'commands', genFrom: 'generated from', envelope: 'Every invocation emits a structured JSON envelope on stdout.',
     domainNote: (link) => `Authenticate by exporting \`OCTO_BOT_TOKEN\` (\`bf_…\`) and \`OCTO_API_BASE_URL\`. See the [CLI overview](${link}/reference/octo-cli) for common flags and the output contract.`,
     domainDesc: (n) => `octo-cli commands in the ${n} domain — generated from the embedded OpenAPI spec.`,
@@ -54,6 +64,7 @@ const S = {
     hDomains: 'Domains', thGroup: 'Command group', thCount: 'Commands', total: 'Total',
   },
   zh: {
+    scope: '本页保留既有命令子集，不枚举此发布版的全部命令。',
     cmds: '条命令', genFrom: '由以下规范生成：', envelope: '每次调用都会在 stdout 输出结构化的 JSON 信封。',
     domainNote: (link) => `鉴权方式：导出 \`OCTO_BOT_TOKEN\`(\`bf_…\`)与 \`OCTO_API_BASE_URL\`。通用标志与输出约定见 [CLI 总览](${link}/reference/octo-cli)。`,
     domainDesc: (n) => `${n} 领域的 octo-cli 命令 —— 由内嵌的 OpenAPI 规范生成。`,
@@ -71,22 +82,32 @@ const S = {
 
 const commandFor = (operationId) => operationId.split('.').join(' ');
 
-function flagsFor(op, root) {
+// Match released cmd/service/flags.go: explicit aliases win; camelCase is retained.
+export const flagName = (name, schema) => schema['x-octo-flag'] || name.replaceAll('_', '-');
+
+export function flagsFor(op, root) {
   const flags = [];
   for (const raw of op.parameters || []) {
     const p = deref(raw, root);
     if (p.in === 'path') continue;
-    flags.push({ flag: `--${p['x-octo-flag'] || p.name}`, type: typeOf(p.schema), required: !!p.required, desc: p.description || '' });
+    flags.push({ flag: `--${flagName(p.name, p)}`, type: typeOf(p.schema), required: !!p.required, desc: p.description || '' });
   }
-  const body = deref(op.requestBody?.content?.['application/json']?.schema, root);
+  const multipart = op['x-octo-multipart'] === true;
+  const contentType = multipart ? 'multipart/form-data' : 'application/json';
+  const body = deref(op.requestBody?.content?.[contentType]?.schema, root);
+  if (multipart && body) {
+    flags.push({ flag: '--file', type: 'string', required: true, desc: 'path to the file to upload' });
+  }
   if (body?.properties) {
     const required = new Set(body.required || []);
     for (const [pn, praw] of Object.entries(body.properties)) {
       const pv = deref(praw, root);
+      if (pv.format === 'binary') continue;
       if (pv.type === 'object' || pv.type === 'array') {
+        if (multipart) continue;
         flags.push({ flag: '--data', type: 'json', required: required.has(pn), desc: `${pn}: ${pv.description || 'JSON payload'}` });
       } else {
-        flags.push({ flag: `--${pv['x-octo-flag'] || pn}`, type: typeOf(pv), required: required.has(pn), desc: pv.description || '' });
+        flags.push({ flag: `--${flagName(pn, pv)}`, type: typeOf(pv), required: required.has(pn), desc: pv.description || '' });
       }
     }
   }
@@ -121,9 +142,16 @@ function renderCommand(operationId, op, root, t, riskMap) {
 function generateDomain(name, spec, lang) {
   const t = S[lang], L = LANGS[lang], riskMap = RISK[lang];
   const specPath = `octo-cli/internal/registry/specs/${name}.json`;
+  const locked = SOURCE_LOCK.specs[name];
+  const sourceRef = locked ? SOURCE_LOCK.revision : 'main';
   const cmds = [];
   for (const [, item] of Object.entries(spec.paths || {})) {
     for (const method of HTTP_METHODS) if (item[method]?.operationId) cmds.push([item[method].operationId, item[method]]);
+  }
+  const included = SOURCE_LOCK.operations?.[name];
+  if (included) {
+    for (let i = cmds.length - 1; i >= 0; i--) if (!included.includes(cmds[i][0])) cmds.splice(i, 1);
+    if (included.some((id) => !cmds.some(([found]) => found === id))) throw new Error(`Pinned operation missing from ${name}.json`);
   }
   cmds.sort((a, b) => a[0].localeCompare(b[0]));
   const body = [
@@ -133,10 +161,11 @@ function generateDomain(name, spec, lang) {
     'icon: "terminal"',
     '---',
     '',
-    banner({ ...SRC, spec: specPath }),
+    banner({ ...SRC, spec: locked ? `${specPath} @ ${SOURCE_LOCK.release} (${SOURCE_LOCK.revision})` : specPath }),
     '',
-    `> ${cmds.length} ${t.cmds}, ${t.genFrom} [\`${specPath}\`](https://github.com/Mininglamp-OSS/octo-cli/blob/main/internal/registry/specs/${name}.json). ${t.envelope}`,
+    `> ${cmds.length} ${t.cmds}, ${t.genFrom} [\`${specPath}\`](https://github.com/Mininglamp-OSS/octo-cli/blob/${sourceRef}/internal/registry/specs/${name}.json)${locked ? ` (${SOURCE_LOCK.release})` : ''}. ${t.envelope}`,
     '',
+    ...(locked ? [t.scope, ''] : []),
     t.domainNote(L.link),
     '',
     cmds.map(([id, op]) => renderCommand(id, op, spec, t, riskMap)).join('\n---\n\n'),
@@ -187,17 +216,26 @@ function main() {
   const names = fs.readdirSync(CLI_SPECS_DIR)
     .filter((f) => f.endsWith('.json')).map((f) => path.basename(f, '.json'))
     .filter((n) => !EXCLUDE.has(n))
+    .filter((n) => !selectedDomains || selectedDomains.includes(n))
     .sort((a, b) => (ORDER[a] ?? 99) - (ORDER[b] ?? 99));
+  if (selectedDomains?.some((name) => !names.includes(name))) throw new Error('Unknown or excluded domain in --domains');
+  for (const name of names) {
+    const expected = SOURCE_LOCK.specs[name];
+    if (!expected) continue;
+    const input = fs.readFileSync(path.join(CLI_SPECS_DIR, `${name}.json`));
+    const actual = createHash('sha256').update(input).digest('hex');
+    if (actual !== expected) throw new Error(`${name}.json differs from released ${SOURCE_LOCK.release} (${SOURCE_LOCK.revision}); check out the pinned release before generating`);
+  }
   const specs = Object.fromEntries(names.map((n) => [n, readJson(path.join(CLI_SPECS_DIR, `${n}.json`))]));
 
   let total = 0;
   for (const lang of Object.keys(LANGS)) {
     const summaries = names.map((name) => generateDomain(name, specs[name], lang));
     total = summaries.reduce((n, s) => n + s.count, 0);
-    generateIndex(summaries, total, lang);
+    if (!selectedDomains) generateIndex(summaries, total, lang);
   }
-  const ok = sink.finish(`[gen-cli] wrote ${names.length} CLI domain pages (${total} commands) + index × ${Object.keys(LANGS).length} langs.`);
+  const ok = sink.finish(`[gen-cli] wrote ${names.length} CLI domain pages (${total} commands)${selectedDomains ? '' : ' + index'} × ${Object.keys(LANGS).length} langs.`);
   if (!ok) process.exit(1);
 }
 
-main();
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) main();
