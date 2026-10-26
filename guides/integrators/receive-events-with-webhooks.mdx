@@ -30,8 +30,10 @@ reveals whether the id or the token was wrong).
 
 ## Create a webhook
 
-Creating a webhook is a management call that requires a normal member of the target group — an Assistant
-token (`bf_…`) or a user credential works. It returns the token and the delivery URLs.
+Creating a webhook is a management call. An Assistant token (`bf_…`) uses the **Bot management
+route** shown below; a user-session credential uses the corresponding `/v1/groups/…` route.
+Both require the caller to be a normal, internal member of the target group (the parent group
+for a thread). The response contains the token and delivery URLs.
 
 <Steps>
   <Step title="Call the create endpoint">
@@ -39,7 +41,7 @@ token (`bf_…`) or a user credential works. It returns the token and the delive
     export OCTO_API_BASE_URL="https://your-octo-instance.com"
     export OCTO_BOT_TOKEN="bf_your_token"
 
-    curl -X POST "$OCTO_API_BASE_URL/v1/groups/$GROUP_NO/incoming-webhooks" \
+    curl -X POST "$OCTO_API_BASE_URL/v1/bot/groups/$GROUP_NO/incoming-webhooks" \
       -H "Authorization: Bearer $OCTO_BOT_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{"name":"CI alerts","allow_mention_bots":true}'
@@ -48,7 +50,7 @@ token (`bf_…`) or a user credential works. It returns the token and the delive
     Fields: `name` (≤ 64 chars; auto-generated if omitted), and mention policy —
     `allow_mention_all`, `allow_mention_bots`, `mention_uids` (see [Mentions](#mentions)).
     `avatar` may only be set by group admins. To target a **thread** instead of the whole group,
-    use `/v1/groups/$GROUP_NO/threads/$SHORT_ID/incoming-webhooks`.
+    use `/v1/bot/groups/$GROUP_NO/threads/$SHORT_ID/incoming-webhooks` with the same Assistant credential.
   </Step>
 
   <Step title="Save the token and URL">
@@ -118,8 +120,16 @@ For `text` messages the server prepends the mention bubbles and emits the wire m
 
 ## Manage webhooks
 
-All management routes live under the group (or thread) scope, and also have a `/v1/bot/groups/…`
-face for Assistant-token callers:
+The table below shows **user-session** management routes. Assistant-token callers use the
+corresponding `/v1/bot/groups/…` routes, including the thread variant above. Keep
+`Authorization: Bearer`; that header does not make a Bot token a user-session credential.
+Group admins can manage webhooks in scope; other normal, internal members can manage only
+webhooks they created. Both authentication routes use these same membership and ownership checks.
+
+Verified against [Server v1.22.0](https://github.com/Mininglamp-OSS/octo-server/releases/tag/v1.22.0),
+commit `8326c67afdcd`: [Bot routes](https://github.com/Mininglamp-OSS/octo-server/blob/8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62/modules/bot_api/incoming_webhook.go#L23-L35),
+[user routes and shared checks](https://github.com/Mininglamp-OSS/octo-server/blob/8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62/modules/incomingwebhook/api.go#L207-L224),
+and [Bearer compatibility](https://github.com/Mininglamp-OSS/octo-server/blob/8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62/pkg/wkhttp/bearer_compat.go#L34-L43).
 
 | Method & path | Purpose |
 |---|---|
