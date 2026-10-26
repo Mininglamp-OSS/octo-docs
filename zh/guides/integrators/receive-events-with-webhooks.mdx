@@ -27,8 +27,9 @@ URL 中的 token 是投递的**唯一凭证**——任何拿到完整 URL 的人
 
 ## 创建一个 webhook
 
-创建 webhook 是一个管理调用,要求调用者是目标群组的正常成员——机器人 token(`bf_…`)或用户凭证都可以。
-它会返回 token 与投递 URL。
+创建 webhook 是一个管理调用。助理 token（`bf_…`）使用下方的**Bot 管理路由**；
+用户会话凭证使用对应的 `/v1/groups/…` 路由。两者都要求调用者是目标群组的正常内部成员；
+话题场景校验其父群成员资格。响应会返回 token 与投递 URL。
 
 <Steps>
   <Step title="调用创建接口">
@@ -36,7 +37,7 @@ URL 中的 token 是投递的**唯一凭证**——任何拿到完整 URL 的人
     export OCTO_API_BASE_URL="https://your-octo-instance.com"
     export OCTO_BOT_TOKEN="bf_your_token"
 
-    curl -X POST "$OCTO_API_BASE_URL/v1/groups/$GROUP_NO/incoming-webhooks" \
+    curl -X POST "$OCTO_API_BASE_URL/v1/bot/groups/$GROUP_NO/incoming-webhooks" \
       -H "Authorization: Bearer $OCTO_BOT_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{"name":"CI alerts","allow_mention_bots":true}'
@@ -44,7 +45,7 @@ URL 中的 token 是投递的**唯一凭证**——任何拿到完整 URL 的人
 
     字段:`name`(≤ 64 字符;省略则自动生成),以及提及策略——`allow_mention_all`、
     `allow_mention_bots`、`mention_uids`(见[提及](#提及))。`avatar` 仅群组管理员可设置。若要将目标
-    定为某个**话题**而非整个群组,改用 `/v1/groups/$GROUP_NO/threads/$SHORT_ID/incoming-webhooks`。
+    定为某个**话题**而非整个群组，使用相同助理凭据调用 `/v1/bot/groups/$GROUP_NO/threads/$SHORT_ID/incoming-webhooks`。
   </Step>
 
   <Step title="保存 token 与 URL">
@@ -111,7 +112,15 @@ https://your-octo-instance.com/v1/incoming-webhooks/iwh_…/…/github
 
 ## 管理 webhook
 
-所有管理路由都位于群组(或话题)作用域下,并且还提供一个供机器人 token 调用的 `/v1/bot/groups/…` 入口:
+下表列出**用户会话**管理路由。助理 token 调用对应的 `/v1/bot/groups/…` 路由，
+包括上文的话题路径。保留 `Authorization: Bearer`；这个请求头不会把 Bot token 变成用户会话凭证。
+群组管理员可管理作用域内的 webhook；其他正常内部成员只能管理自己创建的 webhook。
+两类认证路由共用这些成员与所有权校验。
+
+核实于 [Server v1.22.0](https://github.com/Mininglamp-OSS/octo-server/releases/tag/v1.22.0)，
+提交 `8326c67afdcd`：[Bot 路由](https://github.com/Mininglamp-OSS/octo-server/blob/8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62/modules/bot_api/incoming_webhook.go#L23-L35)、
+[用户路由与共用校验](https://github.com/Mininglamp-OSS/octo-server/blob/8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62/modules/incomingwebhook/api.go#L207-L224)、
+[Bearer 兼容层](https://github.com/Mininglamp-OSS/octo-server/blob/8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62/pkg/wkhttp/bearer_compat.go#L34-L43)。
 
 | 方法与路径 | 用途 |
 |---|---|
