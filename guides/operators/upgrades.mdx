@@ -107,11 +107,22 @@ before restarting custom Extras. These CLI manifests do not configure SDK hosts.
   and ignore log destinations, preventing a usable service. The fix in
   [Runtime #114](https://github.com/Mininglamp-OSS/octo-runtime/pull/114) was merged after this
   release. Repeating `install` with v1.1.3 generates the same defective directives; it does
-  not apply that fix. Wait for a release containing the fix before relying on Linux user
-  service installation. Foreground `run` avoids service registration; keep the Kernel and
+  not apply that fix. For v1.1.3, foreground `run` avoids service registration; keep the Kernel and
   each Extra in separate foreground sessions. See the
   [released renderer](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-cross-service/src/systemd.ts).
 </Warning>
+
+<Note>
+  **Released Linux fix:** [Runtime v1.1.4](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.4),
+  released on 2026-10-26, includes #114's systemd working-directory and log-path rendering fix
+  ([fixed renderer](https://github.com/Mininglamp-OSS/octo-runtime/blob/13f05e0139ae636ae40479d5609d893b3cb3702e/packages/octo-runtime-cross-service/src/systemd.ts#L306-L354)).
+  This page's examples and lifecycle contract remain pinned to v1.1.3, so its limitation above
+  still applies. Updating the npm package alone does not rewrite existing service definitions.
+  Applying the fix to an installed component requires re-registering it with v1.1.4's `install`,
+  using the same Runtime Home; review autostart settings and the possible restart of a running
+  component when its definition changes. See the
+  [released installation behavior](https://github.com/Mininglamp-OSS/octo-runtime/blob/13f05e0139ae636ae40479d5609d893b3cb3702e/packages/octo-runtime-cross-service/src/systemd.ts#L128-L150).
+</Note>
 
 For **Linux v1.1.3**, use separate foreground sessions. Keep the Kernel session running:
 
