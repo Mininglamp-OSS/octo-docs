@@ -12,6 +12,9 @@ icon: "arrows-rotate"
 `octo-runtime` 管理本地执行；[`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)
 是独立的业务 API 客户端。
 
+下文的 v1.1.5 说明单独描述较新的命令与 SDK 契约；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
+仍按各自的版本范围理解。
+
 <Warning>
   旧 `octo-daemon upgrade` / pm2 流程不能迁移到此架构。
   对于旧 daemon 或 Runtime 1.0.1 安装，先用旧版本命令或原生服务管理器停止并移除旧服务，
@@ -164,6 +167,40 @@ Gateway 配置变更后，重启该 Gateway 组件。
 以上合同核实自发行版[CLI 实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/apps/cli/src/main.ts)与
 [CLI 使用指南](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/CLI_USAGE_GUIDE.md)。安装 npm 包、注册服务、本地就绪以及
 Provider / IM 实际可用，需要分别确认。
+
+## v1.1.5 升级兼容性
+
+[Runtime v1.1.5](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.5) 已在 GitHub 和 npm 发布。
+本节核对了 [`ae7835c168e1`](https://github.com/Mininglamp-OSS/octo-runtime/tree/ae7835c168e1e138287c012a6c87517dd2874a5d)
+的发行资产，其完整性与 npm 1.1.5 元数据一致。发布不等于本机已安装该版本或服务健康，
+应另外用 `octo-runtime --version` 确认。
+
+v1.1.5 保留了 v1.1.4 的 Linux 路径渲染修复；已有服务定义仍需由所选修复版本的 `install` 重新生成，
+不能只更新 npm 包。
+
+**v1.1.5** 的 JSON 配置命令位于服务名之下。`extraset` 会替换完整声明，应保留全部所需 Bot 与设置。
+`extraget` 输出**包含凭据**的完整声明，不要把其输出写入共享日志或工单。
+
+```bash
+# Runtime v1.1.5
+octo-runtime channel-gateway extraset < gateway.json
+octo-runtime channel-gateway extraget
+```
+
+根命令形式（`octo-runtime extraset channel-gateway` / `extraget channel-gateway`）仍是隐藏的兼容别名。
+v1.1.5 不提供通用 `config set/get` 命令，也不提供共享的 `configCommands` SDK helper。
+各 Extra 自行提供业务命令，例如内建 Extra 的 `configure`；用 `octo-runtime <extra> --help` 查看。
+通过 `extraset` 保存不会启动或重新加载服务。参见[发行版命令契约](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/docs/zh-CN/guides/extra-commands.md)。
+
+CLI 会发现其自身全局 npm/pnpm 环境中符合命名规则的 Extra 包；内建和 Home 声明优先，
+显式 `--manifest` 则替换三类来源。发现不等于安装、启用或启动 Extra。
+命令扩展在 CLI 进程中执行，不是 JavaScript 沙箱。已移除的外部进程 launcher 及宿主所有权，
+见 [SDK 升级兼容说明](/zh/reference/sdks)。
+
+v1.1.5 已包含 #199 对可恢复 Gateway 连接故障的重试分类，包括 WuKong reason 12；
+明确的认证、配置与协议拒绝仍可能是终止错误。这是连接恢复，不保证任务自动重放，
+也不承诺真实网络或睡眠恢复的时限。参见[发行版分类器](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/transport/connection-error.ts)
+及[重试编排](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/application/im-channel.ts)。
 
 ## 升级平台本身
 

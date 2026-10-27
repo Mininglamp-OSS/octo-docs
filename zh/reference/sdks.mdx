@@ -54,6 +54,21 @@ MCP、图片或其他平台已经实测。认证由宿主 / harness 负责。
 [Context 信任边界](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/zh-CN/reference/contexts.md)。
 CLI 服务生命周期及旧版重新安装见[升级](/zh/guides/operators/upgrades)。
 
+### SDK 升级兼容性
+
+上文示例继续固定 v1.1.3。[v1.1.5](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.5) 的 `#191`
+已移除 `/host` 的 `startNativeComponent`、`ComponentStartError`、`NativeComponentOptions` 与旧 `CleanupResult` 类型。
+官方装配 API 是 `createKernelService` / `createExtraService`：应用在自身进程中构造、初始化并关闭所拥有的服务，
+Kernel 监督其执行 worker。若连接单独管理的 Kernel，使用 `/executor-kernel` 的 `attachKernel({ endpoint })`；
+该 client 不拥有或停止外部 Kernel 进程，其生命周期由对应宿主 / 服务管理器负责。
+
+Extra 命令作者使用 `ExtraCommandExtension` 及宿主提供的 `ctx.readConfig` / `ctx.saveConfig` 接口；
+v1.1.5 不导出 `configCommands`。命令模块与 SDK 服务装配分开。
+升级 SDK 宿主前，请核对固定版本的[公共 host 入口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/public/host.ts)、
+[宿主生命周期](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-host-sdk/README.md)及
+[命令接口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-host-sdk/src/extra-commands.ts)；
+v1.1.5 CLI 语法见[升级说明](/zh/guides/operators/upgrades)。
+
 ## octo-auth——凭据校验器
 
 **[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** 在单一 `Verifier` 接口之后校验 Octo 凭据（会话、`bf_` 机器人令牌、`uk_` 用户密钥），并支持可插拔的缓存与指标。它以 **Go 和 TypeScript** 两种形态发布，以在各服务间保持一致。

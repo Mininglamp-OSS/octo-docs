@@ -12,6 +12,9 @@ authenticated Provider. Runtime does not install Provider software or sign in fo
 `octo-runtime` manages local execution; [`octo-cli`](/guides/bot-developers/drive-octo-with-cli)
 is the separate business API client.
 
+The v1.1.5 notes below cover newer command and SDK contracts; the v1.1.3 examples and
+historical v1.1.4 Linux fix note remain version-specific.
+
 <Warning>
   The legacy `octo-daemon upgrade` / pm2 instructions do not migrate to this architecture.
   For an old daemon or Runtime 1.0.1 installation, first stop and remove its old services using
@@ -190,6 +193,45 @@ These contracts were checked against the released
 [CLI implementation](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/apps/cli/src/main.ts) and
 [CLI usage guide](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/CLI_USAGE_GUIDE.md). Package installation, service registration,
 local readiness, and successful Provider/IM operation are distinct checks.
+
+## Upgrade compatibility in v1.1.5
+
+[Runtime v1.1.5](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.5) is published
+on GitHub and npm. These notes were checked against its release asset at
+[`ae7835c168e1`](https://github.com/Mininglamp-OSS/octo-runtime/tree/ae7835c168e1e138287c012a6c87517dd2874a5d),
+whose integrity matches npm's 1.1.5 metadata. Publication does not establish your installed
+version or service health; check `octo-runtime --version` separately.
+
+v1.1.5 retains the v1.1.4 Linux rendering fix. Existing service definitions still need
+regeneration with the selected fixed version's `install`; a package update alone is insufficient.
+
+In **v1.1.5**, JSON configuration commands sit beneath the service name. `extraset` replaces
+the complete declaration, so retain all required Bots/settings. `extraget` prints the complete
+declaration **including credentials**; keep its output out of shared logs and tickets.
+
+```bash
+# Runtime v1.1.5
+octo-runtime channel-gateway extraset < gateway.json
+octo-runtime channel-gateway extraget
+```
+
+The root forms (`octo-runtime extraset channel-gateway` / `extraget channel-gateway`) remain
+hidden compatibility aliases. v1.1.5 provides neither generic `config set/get` commands nor
+the shared `configCommands` SDK helper. Each Extra supplies its own business commands, such
+as the built-in `configure`; inspect `octo-runtime <extra> --help`. Saving with `extraset` does
+not start or reload a service. See the [released command contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/docs/en/guides/extra-commands.md).
+
+CLI discovery includes suitably named Extra packages in the CLI's own global npm/pnpm
+environment. Built-in and Home declarations take precedence; explicit `--manifest` replaces
+all three sources. Discovery does not install, enable, or start an Extra. Command extensions
+run in the CLI process, not a JavaScript sandbox. See [SDK upgrade compatibility](/reference/sdks#sdk-upgrade-compatibility)
+for the removed external-process launcher and host ownership.
+
+v1.1.5 includes #199's retry classification for recoverable Gateway connection failures,
+including WuKong reason 12. Explicit authentication, configuration, and protocol rejections
+can still be terminal. This is connection recovery, not a guarantee of task replay or a
+real-network/sleep-resume recovery deadline. See the [released classifier](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/transport/connection-error.ts)
+and [retry orchestration](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/application/im-channel.ts).
 
 ## Upgrading the platform itself
 

@@ -63,6 +63,23 @@ Contracts verified at [`fe19d3504315`](https://github.com/Mininglamp-OSS/octo-ru
 [Context trust boundaries](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/en/reference/contexts.md).
 For the CLI service lifecycle and legacy reinstallation, see [Upgrades](/guides/operators/upgrades).
 
+### SDK upgrade compatibility
+
+The examples above stay pinned to v1.1.3. In [v1.1.5](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.5)
+(`#191`), `/host` no longer exports `startNativeComponent`, `ComponentStartError`,
+`NativeComponentOptions`, or its old `CleanupResult` type. The supported composition APIs are
+`createKernelService` / `createExtraService`: the application constructs, initializes, and closes
+its services in its own process; Kernel supervises its execution worker. To use a separately
+managed Kernel, call `attachKernel({ endpoint })` from `/executor-kernel`. That client does not
+own or stop the external Kernel process; its host/service manager owns that lifecycle.
+
+Extra command authors use `ExtraCommandExtension` and the supplied `ctx.readConfig` /
+`ctx.saveConfig` interface; v1.1.5 does not export `configCommands`. These command modules are
+separate from SDK service composition. Check the fixed [public host facade](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/public/host.ts),
+[host lifecycle](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-host-sdk/README.md),
+and [command interface](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-host-sdk/src/extra-commands.ts)
+before upgrading an SDK host. See [Upgrades](/guides/operators/upgrades) for v1.1.5 CLI syntax.
+
 ## octo-auth — credential verifier
 
 **[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** verifies Octo credentials
