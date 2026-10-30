@@ -12,7 +12,7 @@ icon: "arrows-rotate"
 `octo-runtime` 管理本地执行；[`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)
 是独立的业务 API 客户端。
 
-下文的 v1.1.5 说明单独描述较新的命令与 SDK 契约；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
+下文分别说明 v1.1.5 命令与 SDK 变更，以及 v1.1.7 本地文件交付；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
 仍按各自的版本范围理解。
 
 <Warning>
@@ -201,6 +201,34 @@ v1.1.5 已包含 #199 对可恢复 Gateway 连接故障的重试分类，包括 
 明确的认证、配置与协议拒绝仍可能是终止错误。这是连接恢复，不保证任务自动重放，
 也不承诺真实网络或睡眠恢复的时限。参见[发行版分类器](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/transport/connection-error.ts)
 及[重试编排](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/application/im-channel.ts)。
+
+## v1.1.7 本地文件交付
+
+[Runtime v1.1.7](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.7) 已于 2026-10-30 正式发布。
+本节以 [`ed7a4c899e56`](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/README.md) 为准；
+前文示例仍保留各自标明的版本。
+
+<Warning>
+  Gateway 的 `artifact_delivery.mode` 默认为 `channel`。成功 final 中符合规则的本地 Markdown
+  文件链接和图片引用，会使 Gateway 读取**其本机**文件并上传到触发任务的会话。
+  省略 `allowed_roots` **不会**默认将读取限制到工作区。模型生成路径不代表逐文件授权，
+  也不是保密边界。
+</Warning>
+
+升级或连接 Bot 前，在可信 Gateway 宿主上核对该 Bot 实际生效的 `artifact_delivery` 配置。
+显式设置绝对目录列表 `allowed_roots`，会按解析后的路径限制交付范围；`[]` 拒绝全部本地文件。
+文件类型以及大小、数量、超时预算仍会生效。这里陈述发行版默认值与可用控制，
+不代表已经决定采用新的默认策略。
+
+`mode: "tools"` 只关闭这套固定的自动上传，不关闭 Provider 工具、工具的文件访问或工具交付能力。
+Context 指引不能替代这些控制、操作系统权限或宿主的授权判断。
+
+远端 Provider（包括预设 OpenClaw Agent）返回的引用，也按 Gateway 本机路径处理。
+Gateway 不会下载远端 Provider 的文件；路径文本相同不代表两台机器共享该文件。
+文件缺失或不可读会报告交付失败，不会因此让接收者能够使用这些本地路径。
+参见发行版[策略](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifact-policy.ts)、
+[文件处理](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifacts.ts)
+及 [SDK Context 兼容说明](/zh/reference/sdks)。
 
 ## 升级平台本身
 

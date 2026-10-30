@@ -69,6 +69,26 @@ v1.1.5 不导出 `configCommands`。命令模块与 SDK 服务装配分开。
 [命令接口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-host-sdk/src/extra-commands.ts)；
 v1.1.5 CLI 语法见[升级说明](/zh/guides/operators/upgrades)。
 
+### v1.1.7 渠道 Context 兼容性
+
+SDK 宿主使用 Channel Extras 时，整个 `extra.im` 命名空间归这些 Extra 所有。
+Gateway 会忽略宿主静态 Context 和动态 `loadContexts` 中的全部 `extra.im` 项，
+即使本轮没有对应的渠道项也不会透传。宿主业务材料使用其他命名空间，
+不能通过宿主 Context 覆盖渠道规则。
+
+Gateway 在逻辑会话第 1 轮以及默认第 30、60 等轮刷新稳定的 mention、产物交付与历史阅读指引；
+新 Provider session 也会收到这些指引。`stable_context_refresh_interval_turns` 控制间隔，
+reset/new 重新计数。只有交给执行的任务推进计数，准备失败、工具步骤、自动重试和冻结的同代次卡片重试不推进。
+这些内容仍是普通模型 Context，不保证模型记忆或压缩后的保留。
+即使某轮省略交付说明，冻结的产物策略仍然生效。
+
+自定义 session store 必须随既有 binding 数据保留可选的 `ImSessionBinding.stableContext` 状态。
+请核对已发布 v1.1.7 SHA 下的[宿主集成](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/SDK_CHANNEL_GATEWAY_GUIDE.md)、
+[命名空间过滤](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/transport/contexts.ts)、
+[刷新计划](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/application/stable-context.ts)
+及[会话存储接口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/application/session-store.ts)。
+启用交付前，在实际 Gateway 宿主上核对 [v1.1.7 本地文件交付说明](/zh/guides/operators/upgrades)。
+
 ## octo-auth——凭据校验器
 
 **[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** 在单一 `Verifier` 接口之后校验 Octo 凭据（会话、`bf_` 机器人令牌、`uk_` 用户密钥），并支持可插拔的缓存与指标。它以 **Go 和 TypeScript** 两种形态发布，以在各服务间保持一致。

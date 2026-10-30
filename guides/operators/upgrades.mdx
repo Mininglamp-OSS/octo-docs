@@ -12,7 +12,8 @@ authenticated Provider. Runtime does not install Provider software or sign in fo
 `octo-runtime` manages local execution; [`octo-cli`](/guides/bot-developers/drive-octo-with-cli)
 is the separate business API client.
 
-The v1.1.5 notes below cover newer command and SDK contracts; the v1.1.3 examples and
+The notes below cover [v1.1.5 command and SDK changes](#upgrade-compatibility-in-v115) and
+[v1.1.7 local file delivery](#local-file-delivery-in-v117). The v1.1.3 examples and
 historical v1.1.4 Linux fix note remain version-specific.
 
 <Warning>
@@ -232,6 +233,38 @@ including WuKong reason 12. Explicit authentication, configuration, and protocol
 can still be terminal. This is connection recovery, not a guarantee of task replay or a
 real-network/sleep-resume recovery deadline. See the [released classifier](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/transport/connection-error.ts)
 and [retry orchestration](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/application/im-channel.ts).
+
+## Local file delivery in v1.1.7
+
+[Runtime v1.1.7](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.7) was formally
+released on 2026-10-30. This section uses [`ed7a4c899e56`](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/README.md);
+the earlier examples retain their stated versions.
+
+<Warning>
+  Gateway defaults `artifact_delivery.mode` to `channel`. In a successful final reply,
+  eligible local Markdown file links and image references cause Gateway to read files on
+  **its own machine** and upload them to the triggering conversation. Omitting
+  `allowed_roots` does **not** restrict reads to the workspace. A model-generated path is
+  not per-file authorization or a confidentiality boundary.
+</Warning>
+
+Before upgrading or connecting a Bot, review its effective `artifact_delivery` configuration
+on the trusted Gateway host. An explicit list of absolute `allowed_roots` restricts delivery
+to those directories, checked using resolved paths; `[]` denies all local files.
+File-type and size/count/time budgets still apply. This describes the released default and
+available controls, not a decision to adopt a new default policy.
+
+`mode: "tools"` disables this deterministic automatic upload only. It does not disable
+Provider tools, their file access, or tool-based delivery. Context guidance does not replace
+these controls, local OS permissions, or the host's authorization decisions.
+
+References from remote Providers, including preset OpenClaw Agents, are still interpreted
+as paths on the Gateway machine. Gateway does not download a remote Provider's files;
+matching path text does not prove the machines share a file. Missing or unreadable files
+produce delivery failures rather than making those paths usable by recipients.
+See the released [policy](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifact-policy.ts),
+[file handling](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifacts.ts),
+and [SDK Context compatibility](/reference/sdks#channel-context-compatibility-in-v117).
 
 ## Upgrading the platform itself
 
