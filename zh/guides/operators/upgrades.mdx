@@ -1,40 +1,268 @@
 ---
 title: "升级"
-description: "使用 octo-daemon-cli 让 agent 运行时保持最新，并安全地滚动平台升级。"
+description: "安装与运维 Octo Runtime v1.1.3 独立服务，替换旧 daemon，并安全滚动升级平台。"
 icon: "arrows-rotate"
 ---
 
-Octo 通过 **`octo-daemon-cli`** 让每台机器上的本地 agent 运行时（Claude Code、OpenClaw、Codex、Hermes）
-保持最新，并通过固定版本的容器镜像滚动更新让平台服务保持最新。
+## Runtime v1.1.3 兼容范围
 
-## octo-daemon-cli —— 每台机器的监视器
+本页以正式发布的 [Octo Runtime v1.1.3](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.3)
+为准，核实版本为 [`fe19d3504315`](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/README.md)。它要求 **Node.js 24.x 或 26.x**，
+且所选 Provider 已安装并完成认证。Runtime 不替你安装 Provider 或登录。
+`octo-runtime` 管理本地执行；[`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)
+是独立的业务 API 客户端。
 
-**[`octo-daemon-cli`](https://github.com/Mininglamp-OSS/octo-daemon-cli)** 运行在每台承载
-agent CLI 的机器上：
+下文分别说明 v1.1.5 命令与 SDK 变更、v1.1.7 本地文件交付，以及 v1.1.8 Gateway 交付与连接恢复；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
+仍按各自的版本范围理解。
+
+<Warning>
+  旧 `octo-daemon upgrade` / pm2 流程不能迁移到此架构。
+  对于旧 daemon 或 Runtime 1.0.1 安装，先用旧版本命令或原生服务管理器停止并移除旧服务，
+  再卸载旧 npm 包，安装 `@mininglamp-oss/octo-runtime@1.1.3` 并重新配置。
+  仅卸载 npm 包不会停止旧进程或移除服务定义。旧配置、状态和服务定义没有自动迁移流程。
+  请按[发行版重新安装说明](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/DEPLOYMENTS.md#旧版弃用与重新安装)操作。
+</Warning>
+
+全新安装使用：
 
 ```bash
-npm install -g @mininglamp-oss/octo-daemon
-octo-daemon config --server-url <server-url> --api-key uk_xxx
-octo-daemon run        # foreground
-octo-daemon start      # background via pm2
+npm install -g @mininglamp-oss/octo-runtime@1.1.3
+octo-runtime --help
 ```
 
-`config` 会针对服务端校验密钥并解析 `space_id`。守护进程探测已安装的
-agent CLI，将其清单推送给服务端，并支持从 Octo web UI 发起的**一键远程升级**
-（原子化服务端认领 + 版本锁定下载）。节奏：注册 < 5 秒、5 秒
-心跳、60 秒重新扫描；服务端在守护进程静默 45 秒后将其标记为离线，并在 7 天后删除它。
-一个守护进程可服务多个空间。
+## 启动前配置
 
-## 应用运行时升级
+Executor Kernel 与每个 Extra 都是独立组件。Channel Gateway 将 Octo IM Bot 连接到 Kernel；
+WebUI 与 WeCom 是另外的 Extra。按照[发行版 Gateway 配置指南](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-extra-channel-gateway/README.md)，
+用 `octo-runtime extraset channel-gateway < gateway.json` 保存完整声明。
+`extraset` 整份替换声明，必须包含希望保留的全部 Bot；它不会连接 Bot、安装服务或重启运行中的组件。
+
+Runtime Home 在 macOS/Linux 上默认为 `~/.octo-runtime`，Windows 上默认为
+`%LOCALAPPDATA%\OctoRuntime`，缺失时回退到用户目录。选择其他 Home 时，所有命令都使用
+同一个显式 `--home PATH`。CLI 在本地保存 Gateway 声明及配置的 Bot 凭据，POSIX 配置文件权限为
+`0600`。保护这些文件及备份。`extraget` 会输出包含凭据的完整保存声明，不要将其粘贴到工单或日志。
+
+连接 Bot 前请检查权限配置。Gateway 的 `approval_mode` 默认为 `full_access`；支持哪些模式及其效果
+取决于所选 Adapter。本地执行审批不等于取得 Octo 资源权限。
+参见[发行版审批与发送者配置](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-extra-channel-gateway/README.md#插件字段)。
+
+## OpenClaw 审批兼容性
+
+Runtime OpenClaw Adapter 每次按实际 Gateway 握手的 `server.version`、协议、方法与事件
+选择合同；未知版本或缺少必要能力会在创建会话前失败。27 个经源码核对的发行合同，
+不代表 27 个版本都完成真实模型、reviewer 与 IM 投递验收。
+它与 `openclaw-channel-octo` 渠道插件是不同组件。
+
+<Warning>
+  请求 `ask` 不保证保留人工审批。旧版合同无法确认人工 reviewer；新版合同在缺少审批方法 / 事件，
+  或握手明确给出的 scopes 既无 `operator.approvals` 也无 `operator.admin` 时，会选择回退。
+  Adapter 将有效模式设为 `full_access`，发出带 `category: permission_fallback` 的 `run.notice`；
+  审批桥自动回答 `allow-once`，不会等待人工批准。新版合同若在握手中给出 scopes，
+  有效 full 必须具有 `operator.admin`；否则以 `OPENCLAW_PERMISSION_UNAVAILABLE` 失败，
+  需要 full 的回退同样受此限制。`assisted` 不受支持。依赖 `ask` 前请核对目标 Gateway。
+</Warning>
+
+参见发行版[握手与权限选择](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-openclaw/src/compatibility.ts)、
+[执行提示](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-openclaw/src/index.ts)与
+[自动审批桥](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-sdk/src/approval.ts)。
+Gateway 发送者准入属于另一项配置，请核对[发送者与群范围规则](/zh/concepts/the-agent-model#gateway-消息准入)。
+
+## v1.1.3 自定义 Extra 迁移
+
+CLI 合并内置 `manifest.json` 与 `<Runtime Home>/manifest.json`。
+manifest 声明 Adapter 和 Extra 模块；每个 Extra 保存的配置仍负责 `enabled` 和业务设置。
+自定义 Extra 运行前，必须出现在有效 manifest 的 `extras` 数组中。相对模块路径以声明它的
+manifest 所在位置解析，不以当前工作目录解析。Home 扩展不能覆盖同名内置项。
+
+旧 Extra 配置只有在 `module` 文本与有效声明完全一致时才能保留该字段。
+manifest 使用相对模块路径时，应省略配置中的旧字段；保存的 Extra 配置不接受 `./plugins/example.mjs`
+这类相对 `module` 值。
+也可以用 `extraset` 显式保存不含旧字段的完整配置，并保留所需的全部 Bot / 配置项。
+`EXTRA_MANIFEST_DECLARATION_REQUIRED` 表示缺少声明，
+`EXTRA_MODULE_MIGRATION_REQUIRED` 表示模块文本冲突。已有文件、身份和凭据不会自动改写。
+
+`--manifest PATH` 会整份替换内置 / Home 选择，而不是追加；旧的仅 Adapter override 没有 Extra 项。
+模块只为选中且启用的服务加载，不会自动安装或热重载。重启自定义 Extra 前，请核对
+[发行版模块载入及迁移合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/zh-CN/concepts/module-loading.md)。这些 CLI 清单不用于配置 SDK 宿主。
+
+## 启动与管理独立服务
+
+<Warning>
+  **v1.1.3 的 Linux systemd 限制：**发行版将 `WorkingDirectory` 与 `append:` 日志路径按命令参数加引号，
+  systemd 可能拒绝工作目录、忽略日志目标，导致服务不可用。
+  [Runtime #114](https://github.com/Mininglamp-OSS/octo-runtime/pull/114) 的修复在此版本之后才合并。
+  用 v1.1.3 重复 `install` 仍会生成相同的错误指令，不能应用该修复。
+  v1.1.3 可继续使用不注册服务的前台 `run`；
+  Kernel 与各 Extra 需分别保留前台会话。参见[发行版生成实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-cross-service/src/systemd.ts)。
+</Warning>
+
+<Note>
+  **已发布的 Linux 修复：**2026-10-26 发布的 [Runtime v1.1.4](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.4)
+  已包含 #114 的 systemd 工作目录与日志路径渲染修复
+  （[修复后的生成实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/13f05e0139ae636ae40479d5609d893b3cb3702e/packages/octo-runtime-cross-service/src/systemd.ts#L306-L354)）。
+  本页示例与生命周期契约仍固定 v1.1.3，因此上面的版本限制仍然成立。
+  仅升级 npm 包不会重写已有服务定义。要为已安装组件应用该修复，需要使用同一个 Runtime Home，
+  通过 v1.1.4 的 `install` 重新注册对应组件；请复查自启动设置，并留意定义变化时可能重启运行中的组件。
+  参见[发行版安装行为](https://github.com/Mininglamp-OSS/octo-runtime/blob/13f05e0139ae636ae40479d5609d893b3cb3702e/packages/octo-runtime-cross-service/src/systemd.ts#L128-L150)。
+</Note>
+
+**Linux v1.1.3** 使用独立前台会话，先让 Kernel 会话持续运行：
 
 ```bash
-octo-daemon upgrade    # npm install -g @latest, then signals the process to restart
+octo-runtime executor-kernel run
+```
+
+在另一个会话中持续运行 Gateway：
+
+```bash
+octo-runtime channel-gateway run
+```
+
+**macOS 和 Windows** 可启动原生用户服务：
+
+```bash
+octo-runtime executor-kernel start
+octo-runtime channel-gateway start
+```
+
+两条路径均在额外的会话中检查状态：
+
+```bash
+octo-runtime status --json
 ```
 
 <Warning>
-  `upgrade` 会重新安装并向进程发信号——一个 supervisor **必须**重新拉起它。pm2 默认这样做；
-  在 systemd 下请设置 `Restart=always`。
+  `start` 发现组件尚未安装时，会先注册该组件的用户服务并开启自启动，再启动它。
+  普通 `install`（包括重复安装）也会开启自启动。
+  这些命令会修改服务注册，不是只读的就绪检查。
 </Warning>
+
+| 动作 | v1.1.3 行为 |
+|---|---|
+| `install` | 注册本组件并开启自启动；不表示组件已就绪。 |
+| `install --autostart=false` | 注册或更新本组件，关闭自启动。 |
+| `start` | 未安装时自动安装，然后启动并等待本地就绪；已有服务保留原设置。 |
+| `restart` | 重启已安装且启用的组件；不自动安装缺失的组件。 |
+| `stop` | 停止本组件，保留自启动设置。 |
+| `uninstall` | 停止并移除本组件服务，保留用户数据和凭据。 |
+| `run` | 前台运行本组件，不注册用户服务。 |
+
+显式禁用的服务在 start 时返回 `SERVICE_DISABLED`，需用 `install --autostart=true` 重新启用。
+如果要在没有服务自启动的情况下前台执行，使用该组件的 `run`。
+停止或移除一个 Extra 不会停止 Kernel 或其他 Extra。服务无需按固定顺序启动；Kernel 尚不可用时，
+Extra 可以报告 `kernel_available=false`。
+
+原生服务分别使用 macOS LaunchAgent、Linux systemd 用户服务和 Windows 当前用户 Task Scheduler。
+自启动发生在用户登录或用户 manager 激活时，不保证未登录时无人值守运行。
+服务 / IPC 就绪、Provider 认证和 Bot 建联是不同状态。解析 JSON 的脚本需使用 `status --json`；
+默认输出是可读文本。
+
+## 升级已有 v1.1 安装
+
+选择已发布版本并检查其迁移要求。安排在没有活动任务时停止受影响组件，更新固定版本的 npm 包，
+再使用相同 Home 启动。如果 Node 可执行文件或安装路径改变，重新执行受影响组件的 `install`
+以更新服务定义，并复查自启动设置；Linux v1.1.3 仍受上述缺陷限制。Kernel 重启不会恢复或重新 invoke 旧 Run。
+Gateway 配置变更后，重启该 Gateway 组件。
+
+以上合同核实自发行版[CLI 实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/apps/cli/src/main.ts)与
+[CLI 使用指南](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/CLI_USAGE_GUIDE.md)。安装 npm 包、注册服务、本地就绪以及
+Provider / IM 实际可用，需要分别确认。
+
+## v1.1.5 升级兼容性
+
+[Runtime v1.1.5](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.5) 已在 GitHub 和 npm 发布。
+本节核对了 [`ae7835c168e1`](https://github.com/Mininglamp-OSS/octo-runtime/tree/ae7835c168e1e138287c012a6c87517dd2874a5d)
+的发行资产，其完整性与 npm 1.1.5 元数据一致。发布不等于本机已安装该版本或服务健康，
+应另外用 `octo-runtime --version` 确认。
+
+v1.1.5 保留了 v1.1.4 的 Linux 路径渲染修复；已有服务定义仍需由所选修复版本的 `install` 重新生成，
+不能只更新 npm 包。
+
+**v1.1.5** 的 JSON 配置命令位于服务名之下。`extraset` 会替换完整声明，应保留全部所需 Bot 与设置。
+`extraget` 输出**包含凭据**的完整声明，不要把其输出写入共享日志或工单。
+
+```bash
+# Runtime v1.1.5
+octo-runtime channel-gateway extraset < gateway.json
+octo-runtime channel-gateway extraget
+```
+
+根命令形式（`octo-runtime extraset channel-gateway` / `extraget channel-gateway`）仍是隐藏的兼容别名。
+v1.1.5 不提供通用 `config set/get` 命令，也不提供共享的 `configCommands` SDK helper。
+各 Extra 自行提供业务命令，例如内建 Extra 的 `configure`；用 `octo-runtime <extra> --help` 查看。
+通过 `extraset` 保存不会启动或重新加载服务。参见[发行版命令契约](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/docs/zh-CN/guides/extra-commands.md)。
+
+CLI 会发现其自身全局 npm/pnpm 环境中符合命名规则的 Extra 包；内建和 Home 声明优先，
+显式 `--manifest` 则替换三类来源。发现不等于安装、启用或启动 Extra。
+命令扩展在 CLI 进程中执行，不是 JavaScript 沙箱。已移除的外部进程 launcher 及宿主所有权，
+见 [SDK 升级兼容说明](/zh/reference/sdks)。
+
+v1.1.5 已包含 #199 对可恢复 Gateway 连接故障的重试分类，包括 WuKong reason 12；
+明确的认证、配置与协议拒绝仍可能是终止错误。这是连接恢复，不保证任务自动重放，
+也不承诺真实网络或睡眠恢复的时限。参见[发行版分类器](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/transport/connection-error.ts)
+及[重试编排](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/application/im-channel.ts)。
+
+## v1.1.7 本地文件交付
+
+[Runtime v1.1.7](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.7) 已于 2026-10-30 正式发布。
+本节以 [`ed7a4c899e56`](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/README.md) 为准；
+前文示例仍保留各自标明的版本。
+
+<Warning>
+  Gateway 的 `artifact_delivery.mode` 默认为 `channel`。成功 final 中符合规则的本地 Markdown
+  文件链接和图片引用，会使 Gateway 读取**其本机**文件并上传到触发任务的会话。
+  省略 `allowed_roots` **不会**默认将读取限制到工作区。模型生成路径不代表逐文件授权，
+  也不是保密边界。
+</Warning>
+
+升级或连接 Bot 前，在可信 Gateway 宿主上核对该 Bot 实际生效的 `artifact_delivery` 配置。
+显式设置绝对目录列表 `allowed_roots`，会按解析后的路径限制交付范围；`[]` 拒绝全部本地文件。
+文件类型以及大小、数量、超时预算仍会生效。这里陈述发行版默认值与可用控制，
+不代表已经决定采用新的默认策略。
+
+`mode: "tools"` 只关闭这套固定的自动上传，不关闭 Provider 工具、工具的文件访问或工具交付能力。
+Context 指引不能替代这些控制、操作系统权限或宿主的授权判断。
+
+远端 Provider（包括预设 OpenClaw Agent）返回的引用，也按 Gateway 本机路径处理。
+Gateway 不会下载远端 Provider 的文件；路径文本相同不代表两台机器共享该文件。
+文件缺失或不可读会报告交付失败，不会因此让接收者能够使用这些本地路径。
+参见发行版[策略](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifact-policy.ts)、
+[文件处理](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifacts.ts)
+及 [SDK Context 兼容说明](/zh/reference/sdks)。
+
+## v1.1.8 Gateway 交付与连接恢复
+
+[Runtime v1.1.8](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.8) 已于 2026-10-31
+正式发布，源码固定为 [`d0e34377a62f`](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/SDK_CHANNEL_GATEWAY_GUIDE.md)。
+本节补充该版本的行为，不替换前文旧版示例。
+
+任务被 Gateway 受理后，其排队、Context/环境准备与执行不依赖接收 WebSocket。
+普通回复、最终文本、文件卡和进度卡均通过 REST 投递，不等待 WebSocket 恢复。
+REST 连通性、有效凭据、任务取消和身份撤销仍然生效。这不增加第二个任务接收通道，
+也不补收断线期间 Gateway 没有收到的新消息。
+
+最终文本、每张最终文件卡及卡片收尾分别拥有最多四次尝试的暂态失败预算，包含首发；
+取消或明确拒绝可能提前停止。普通过程卡片的每个快照只尝试一次。
+完整与精简终态卡片共享同一次收尾预算，更换展示内容不会重开预算。
+投递失败不会重跑模型、建立持久待发队列，或在 WebSocket 恢复后补投。
+通过 `octo-runtime channel-gateway logs` 检查投递诊断；任务执行完成不等于回复或卡片已送达接收者。
+
+该版本还修复了本地附件回复后的卡片终态：卡片展示副本转换为纯文字，原始 final Markdown
+仍用于独立的产物交付。终态卡片被明确以 HTTP 400 拒绝后，可在剩余收尾预算内尝试精简帧。
+如果卡片已经存在，会沿用其消息 ID 并递增序号。仍然失败时保留失败事实；
+服务端成功回执不证明客户端已渲染。这些修改不改变上文 v1.1.7 的本地文件访问控制。
+
+WebSocket 心跳改为每 10 秒 PING，再等待一个 10 秒周期的 PONG。
+正常调度下约 10–20 秒是静默失联的**检测**区间，不是整体恢复时限；
+睡眠、事件循环阻塞、鉴权和重连尝试都可能增加耗时。
+
+发行 SHA 下的依据：[任务与 REST 传输](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/channel.ts)、
+[投递预算](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/delivery/dispatcher.ts)、
+[终态卡片](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/card-session.ts)、
+[展示副本](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/reasoning-frame.ts)
+及[心跳](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts)。
+发布与源码核对不代表本机安装、部署或真实网络及 Provider 验收通过；
+自定义宿主升级前另查 [SDK 兼容说明](/zh/reference/sdks)。
 
 ## 升级平台本身
 
@@ -48,8 +276,8 @@ helm upgrade octo ...      # Kubernetes
 ```
 
 <Info>
-  在进行大版本升级前，请查阅 [备份与恢复](/zh/guides/operators/backup-and-restore)，并
-  重新生成任何跟踪已变更规范的 [参考文档](/zh/reference/rest-websocket-api)。
+  进行大版本升级前，请查阅[备份与恢复](/zh/guides/operators/backup-and-restore)。
+  维护生成参考时，使用对应的已发布源契约，不将上游 `main` 的变更直接视为已发布。
 </Info>
 
 <Card title="运维搜索、摘要与语音" icon="layer-group" href="/zh/guides/operators/subsystems">

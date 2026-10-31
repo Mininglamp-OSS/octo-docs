@@ -36,7 +36,7 @@ graph LR
   subgraph agents["智能体平面"]
     chan["Channel · cc / codex / hermes / claw / openclaw"]
     cli["octo-cli"]
-    daemon["octo-daemon-cli"]
+    runtime["octo-runtime"]
   end
 
   subgraph pipe["搜索与导出 · 可选"]
@@ -78,7 +78,7 @@ graph LR
   server --> obj
   chan --> server
   cli --> server
-  daemon --> server
+  runtime --> server
   prod -. 读取 .-> my
   prod -->|octo.message.v1| kf
   kf --> esi

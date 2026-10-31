@@ -1,41 +1,314 @@
 ---
 title: "Upgrades"
-description: "Keep agent runtimes current with octo-daemon-cli, and roll platform upgrades safely."
+description: "Install and operate Octo Runtime v1.1.3 services, replace the legacy daemon, and roll platform upgrades safely."
 icon: "arrows-rotate"
 ---
 
-Octo keeps the local agent runtimes on each machine (Claude Code, OpenClaw, Codex, Hermes) current
-through **`octo-daemon-cli`**, and the platform services current through pinned container-image
-rolls.
+## Runtime v1.1.3 compatibility
 
-## octo-daemon-cli — the per-machine monitor
+This guide targets the published [Octo Runtime v1.1.3](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.3),
+verified at [`fe19d3504315`](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/README.md). It requires **Node.js 24.x or 26.x** and an installed,
+authenticated Provider. Runtime does not install Provider software or sign in for you.
+`octo-runtime` manages local execution; [`octo-cli`](/guides/bot-developers/drive-octo-with-cli)
+is the separate business API client.
 
-**[`octo-daemon-cli`](https://github.com/Mininglamp-OSS/octo-daemon-cli)** runs on each box that
-hosts agent CLIs:
+The notes below cover [v1.1.5 command and SDK changes](#upgrade-compatibility-in-v115),
+[v1.1.7 local file delivery](#local-file-delivery-in-v117), and
+[v1.1.8 Gateway delivery and recovery](#gateway-delivery-and-recovery-in-v118). The v1.1.3 examples and
+historical v1.1.4 Linux fix note remain version-specific.
+
+<Warning>
+  The legacy `octo-daemon upgrade` / pm2 instructions do not migrate to this architecture.
+  For an old daemon or Runtime 1.0.1 installation, first stop and remove its old services using
+  that version's commands or service manager. Then uninstall the old npm package and install
+  `@mininglamp-oss/octo-runtime@1.1.3`, and configure it again. Uninstalling an npm package alone
+  does not stop old processes or remove service definitions. There is no automatic migration
+  of old configuration, state, or service definitions. Follow the
+  [release-specific reinstallation instructions](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/DEPLOYMENTS.md#旧版弃用与重新安装).
+</Warning>
+
+For a fresh installation:
 
 ```bash
-npm install -g @mininglamp-oss/octo-daemon
-octo-daemon config --server-url <server-url> --api-key uk_xxx
-octo-daemon run        # foreground
-octo-daemon start      # background via pm2
+npm install -g @mininglamp-oss/octo-runtime@1.1.3
+octo-runtime --help
 ```
 
-`config` verifies the key against the server and resolves the `space_id`. The daemon probes the
-installed agent CLIs, pushes its inventory to the server, and supports **one-click remote
-upgrades** from the Octo web UI (atomic server claim + version-pinned downloads). Cadence:
-register < 5 s, 5 s heartbeat, 60 s rescan; the server marks a daemon offline after 45 s of
-silence and deletes it after 7 days. One daemon can serve multiple spaces.
+## Configure before starting
 
-## Applying a runtime upgrade
+The Executor Kernel and each Extra are independent components. Channel Gateway connects
+Octo IM Bots to the Kernel; WebUI and WeCom are separate Extras. Configure the full Gateway
+declaration with `octo-runtime extraset channel-gateway < gateway.json` using the
+[released Gateway configuration guide](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-extra-channel-gateway/README.md).
+`extraset` replaces the whole declaration, including every Bot you want to retain. It does
+not connect Bots, install services, or restart running components.
+
+Runtime Home defaults to `~/.octo-runtime` on macOS/Linux and `%LOCALAPPDATA%\OctoRuntime`
+on Windows, with a home-directory fallback. Use the same explicit `--home PATH` on every
+command when you choose another Home. The CLI stores the Gateway declaration, including
+configured Bot credentials, locally; its POSIX configuration file mode is `0600`.
+Protect these files and backups. `extraget` prints the full saved declaration, including
+credentials; do not paste its output into tickets or logs.
+
+Review permission settings before connecting Bots. Gateway defaults `approval_mode` to
+`full_access`; supported modes and their effect depend on the selected Adapter. Local
+execution approval does not grant Octo resource permissions. See the
+[release-specific permission and sender settings](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-extra-channel-gateway/README.md#插件字段).
+
+## OpenClaw approval compatibility
+
+The Runtime OpenClaw Adapter selects its contract from each actual Gateway handshake:
+`server.version`, protocol, methods, and events. An unknown version or missing required
+capability fails before session creation. Its 27 audited release contracts do not represent
+27 deployments tested with real models, reviewers, and IM delivery. This is separate from
+the `openclaw-channel-octo` channel plugin.
+
+<Warning>
+  Requesting `ask` does not always retain human approval. Legacy contracts cannot confirm a
+  human reviewer. Modern contracts fall back when the approval methods/events are unavailable,
+  or when advertised scopes include neither `operator.approvals` nor `operator.admin`.
+  The Adapter then selects `full_access` and emits a `run.notice` with
+  `category: permission_fallback`; the approval bridge automatically answers `allow-once`,
+  without waiting for human approval. For modern contracts that advertise scopes, effective
+  full access requires `operator.admin`; without it, execution fails with
+  `OPENCLAW_PERMISSION_UNAVAILABLE`, including when a fallback would require full access.
+  `assisted` is unsupported. Review the target Gateway before relying on `ask`.
+</Warning>
+
+See the released [handshake and permission selection](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-openclaw/src/compatibility.ts),
+[execution notice](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-openclaw/src/index.ts), and
+[automatic approval bridge](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-sdk/src/approval.ts).
+Gateway sender admission is a separate setting; review
+[the sender and group rules](/concepts/the-agent-model#gateway-message-admission).
+
+## Custom Extra migration in v1.1.3
+
+The CLI merges its built-in `manifest.json` with `<Runtime Home>/manifest.json`.
+The manifest declares Adapter and Extra modules; each Extra's saved configuration still owns
+`enabled` and business settings. A custom Extra must appear in the effective manifest's
+`extras` array before it can run. Relative module paths resolve from the manifest that declared
+them, not the current working directory. Built-in names take precedence over Home extensions.
+
+Old Extra configurations may keep `module` only if its text exactly matches the effective
+manifest declaration. For manifest-relative module paths, omit the legacy field: the saved
+Extra configuration does not accept a relative `module` value such as `./plugins/example.mjs`.
+Alternatively, explicitly save a complete configuration without that
+legacy field using `extraset`. Keep all Bot/configuration entries you intend to retain.
+`EXTRA_MANIFEST_DECLARATION_REQUIRED` indicates a missing declaration;
+`EXTRA_MODULE_MIGRATION_REQUIRED` indicates conflicting module text. Existing files,
+identities and credentials are not rewritten automatically.
+
+`--manifest PATH` replaces the whole built-in/Home selection rather than adding to it;
+a legacy Adapter-only override has no Extra entries. Modules are loaded only for the selected,
+enabled service, and are not automatically installed or hot-reloaded. Review the
+[release-specific loading and migration contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/en/concepts/module-loading.md)
+before restarting custom Extras. These CLI manifests do not configure SDK hosts.
+
+## Start and manage independent services
+
+<Warning>
+  **Linux systemd limitation in v1.1.3:** the released renderer quotes `WorkingDirectory`
+  and `append:` log paths as command arguments. systemd can reject the working directory
+  and ignore log destinations, preventing a usable service. The fix in
+  [Runtime #114](https://github.com/Mininglamp-OSS/octo-runtime/pull/114) was merged after this
+  release. Repeating `install` with v1.1.3 generates the same defective directives; it does
+  not apply that fix. For v1.1.3, foreground `run` avoids service registration; keep the Kernel and
+  each Extra in separate foreground sessions. See the
+  [released renderer](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-cross-service/src/systemd.ts).
+</Warning>
+
+<Note>
+  **Released Linux fix:** [Runtime v1.1.4](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.4),
+  released on 2026-10-26, includes #114's systemd working-directory and log-path rendering fix
+  ([fixed renderer](https://github.com/Mininglamp-OSS/octo-runtime/blob/13f05e0139ae636ae40479d5609d893b3cb3702e/packages/octo-runtime-cross-service/src/systemd.ts#L306-L354)).
+  This page's examples and lifecycle contract remain pinned to v1.1.3, so its limitation above
+  still applies. Updating the npm package alone does not rewrite existing service definitions.
+  Applying the fix to an installed component requires re-registering it with v1.1.4's `install`,
+  using the same Runtime Home; review autostart settings and the possible restart of a running
+  component when its definition changes. See the
+  [released installation behavior](https://github.com/Mininglamp-OSS/octo-runtime/blob/13f05e0139ae636ae40479d5609d893b3cb3702e/packages/octo-runtime-cross-service/src/systemd.ts#L128-L150).
+</Note>
+
+For **Linux v1.1.3**, use separate foreground sessions. Keep the Kernel session running:
 
 ```bash
-octo-daemon upgrade    # npm install -g @latest, then signals the process to restart
+octo-runtime executor-kernel run
+```
+
+In another session, keep the Gateway running:
+
+```bash
+octo-runtime channel-gateway run
+```
+
+For **macOS and Windows**, start the native user services:
+
+```bash
+octo-runtime executor-kernel start
+octo-runtime channel-gateway start
+```
+
+On either path, check status from a separate session:
+
+```bash
+octo-runtime status --json
 ```
 
 <Warning>
-  `upgrade` re-installs and signals the process — a supervisor **must** respawn it. pm2 does this
-  by default; under systemd set `Restart=always`.
+  `start` installs a missing component's user service and enables its autostart before
+  starting it. Plain `install`, including a repeated install, also enables autostart.
+  These commands change service registration; they are not read-only readiness checks.
 </Warning>
+
+| Action | Effect in v1.1.3 |
+|---|---|
+| `install` | Register this component and enable autostart; does not itself prove readiness. |
+| `install --autostart=false` | Register or update this component with autostart disabled. |
+| `start` | Install if missing, then start and wait for local readiness; preserve settings of an existing service. |
+| `restart` | Restart an installed, enabled component; does not install a missing one. |
+| `stop` | Stop this component while retaining its autostart setting. |
+| `uninstall` | Stop and remove this component's service; retain user data and credentials. |
+| `run` | Run this component in the foreground without registering a user service. |
+
+An explicitly disabled service returns `SERVICE_DISABLED` on start; use
+`install --autostart=true` to enable it again. For foreground execution without service
+autostart, use the component's `run` command. Stopping or removing one Extra does not stop
+the Kernel or other Extras. Either service may start first; an Extra can report
+`kernel_available=false` until the Kernel is available.
+
+Native services use macOS LaunchAgent, Linux systemd user services, or Windows current-user
+Task Scheduler. Autostart happens at user sign-in or user-manager activation; it does not
+promise unattended operation before login. Service/IPC readiness, Provider authentication,
+and Bot connectivity are separate states. `status --json` is needed for scripts that parse
+JSON; the default output is readable text.
+
+## Upgrade an existing v1.1 installation
+
+Choose a published version and review its migration requirements. Schedule changes when
+there are no active tasks, stop the affected components, update the pinned npm package,
+then start them again using the same Home. If the Node executable or installation path
+changes, run the affected component's `install` again to update its service definition and
+review autostart, subject to the Linux v1.1.3 limitation above. A Kernel restart does not resume or re-invoke old runs. After Gateway
+configuration changes, restart that Gateway component.
+
+These contracts were checked against the released
+[CLI implementation](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/apps/cli/src/main.ts) and
+[CLI usage guide](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/CLI_USAGE_GUIDE.md). Package installation, service registration,
+local readiness, and successful Provider/IM operation are distinct checks.
+
+## Upgrade compatibility in v1.1.5
+
+[Runtime v1.1.5](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.5) is published
+on GitHub and npm. These notes were checked against its release asset at
+[`ae7835c168e1`](https://github.com/Mininglamp-OSS/octo-runtime/tree/ae7835c168e1e138287c012a6c87517dd2874a5d),
+whose integrity matches npm's 1.1.5 metadata. Publication does not establish your installed
+version or service health; check `octo-runtime --version` separately.
+
+v1.1.5 retains the v1.1.4 Linux rendering fix. Existing service definitions still need
+regeneration with the selected fixed version's `install`; a package update alone is insufficient.
+
+In **v1.1.5**, JSON configuration commands sit beneath the service name. `extraset` replaces
+the complete declaration, so retain all required Bots/settings. `extraget` prints the complete
+declaration **including credentials**; keep its output out of shared logs and tickets.
+
+```bash
+# Runtime v1.1.5
+octo-runtime channel-gateway extraset < gateway.json
+octo-runtime channel-gateway extraget
+```
+
+The root forms (`octo-runtime extraset channel-gateway` / `extraget channel-gateway`) remain
+hidden compatibility aliases. v1.1.5 provides neither generic `config set/get` commands nor
+the shared `configCommands` SDK helper. Each Extra supplies its own business commands, such
+as the built-in `configure`; inspect `octo-runtime <extra> --help`. Saving with `extraset` does
+not start or reload a service. See the [released command contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/docs/en/guides/extra-commands.md).
+
+CLI discovery includes suitably named Extra packages in the CLI's own global npm/pnpm
+environment. Built-in and Home declarations take precedence; explicit `--manifest` replaces
+all three sources. Discovery does not install, enable, or start an Extra. Command extensions
+run in the CLI process, not a JavaScript sandbox. See [SDK upgrade compatibility](/reference/sdks#sdk-upgrade-compatibility)
+for the removed external-process launcher and host ownership.
+
+v1.1.5 includes #199's retry classification for recoverable Gateway connection failures,
+including WuKong reason 12. Explicit authentication, configuration, and protocol rejections
+can still be terminal. This is connection recovery, not a guarantee of task replay or a
+real-network/sleep-resume recovery deadline. See the [released classifier](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/transport/connection-error.ts)
+and [retry orchestration](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-extra-channel-gateway/src/application/im-channel.ts).
+
+## Local file delivery in v1.1.7
+
+[Runtime v1.1.7](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.7) was formally
+released on 2026-10-30. This section uses [`ed7a4c899e56`](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/README.md);
+the earlier examples retain their stated versions.
+
+<Warning>
+  Gateway defaults `artifact_delivery.mode` to `channel`. In a successful final reply,
+  eligible local Markdown file links and image references cause Gateway to read files on
+  **its own machine** and upload them to the triggering conversation. Omitting
+  `allowed_roots` does **not** restrict reads to the workspace. A model-generated path is
+  not per-file authorization or a confidentiality boundary.
+</Warning>
+
+Before upgrading or connecting a Bot, review its effective `artifact_delivery` configuration
+on the trusted Gateway host. An explicit list of absolute `allowed_roots` restricts delivery
+to those directories, checked using resolved paths; `[]` denies all local files.
+File-type and size/count/time budgets still apply. This describes the released default and
+available controls, not a decision to adopt a new default policy.
+
+`mode: "tools"` disables this deterministic automatic upload only. It does not disable
+Provider tools, their file access, or tool-based delivery. Context guidance does not replace
+these controls, local OS permissions, or the host's authorization decisions.
+
+References from remote Providers, including preset OpenClaw Agents, are still interpreted
+as paths on the Gateway machine. Gateway does not download a remote Provider's files;
+matching path text does not prove the machines share a file. Missing or unreadable files
+produce delivery failures rather than making those paths usable by recipients.
+See the released [policy](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifact-policy.ts),
+[file handling](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifacts.ts),
+and [SDK Context compatibility](/reference/sdks#channel-context-compatibility-in-v117).
+
+## Gateway delivery and recovery in v1.1.8
+
+[Runtime v1.1.8](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.8) was formally
+released on 2026-10-31 at [`d0e34377a62f`](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/SDK_CHANNEL_GATEWAY_GUIDE.md).
+These version-scoped notes supplement the older examples above.
+
+Once Gateway has accepted a task, its queue, Context/environment preparation, and execution
+are independent of the receiving WebSocket. Replies, final text, file cards, and progress
+cards use REST without waiting for WebSocket recovery. REST connectivity, valid credentials,
+task cancellation, and identity revocation still matter. This does not add a second task
+receiver or recover new messages that Gateway did not receive while disconnected.
+
+Final text, each final file card, and card completion have bounded retry budgets of at most
+four attempts each, including the initial attempt, for transient failures. Cancellation or
+an explicit rejection can stop earlier. Ordinary progress-card snapshots get one attempt.
+The full and simplified terminal card share one completion budget; changing the card payload
+does not open another budget. Failed delivery does not re-run the model, persist a durable
+outbox, or trigger a later replay when WebSocket reconnects. Inspect
+`octo-runtime channel-gateway logs` for delivery diagnostics; task completion alone is not
+proof that a reply or card reached the recipient.
+
+The release also fixes terminal cards after local artifact replies: card display copies use
+plain text, while the original final Markdown remains available for artifact delivery.
+After an explicit HTTP 400 rejection, a terminal card can try a simplified frame within the
+remaining completion budget. When a card already exists, it keeps that message ID and uses
+an increasing sequence. Failure remains observable; a successful server receipt does not
+prove client rendering. This does not change the local-file access controls described in
+the v1.1.7 section.
+
+WebSocket heartbeat probing now uses a 10-second PING interval and one further 10-second
+PONG window. Roughly 10–20 seconds under normal scheduling is a silent-disconnection
+*detection* interval, not an end-to-end recovery deadline; sleep, event-loop delay,
+authentication, and reconnect attempts can add time.
+
+Sources at the published SHA: [task and REST transport](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/channel.ts),
+[delivery budgets](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/delivery/dispatcher.ts),
+[terminal cards](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/card-session.ts),
+[display copies](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/reasoning-frame.ts),
+and [heartbeat](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts).
+Publication and source inspection do not establish installation, deployment, or acceptance
+on your real network and Provider. Review the [SDK compatibility notes](/reference/sdks#gateway-sdk-compatibility-in-v118)
+before upgrading a custom host.
 
 ## Upgrading the platform itself
 
@@ -49,8 +322,9 @@ helm upgrade octo ...      # Kubernetes
 ```
 
 <Info>
-  Review [Backup and restore](/guides/operators/backup-and-restore) before a major upgrade, and
-  regenerate any [reference](/reference/rest-websocket-api) that tracks a changed spec.
+  Review [Backup and restore](/guides/operators/backup-and-restore) before a major upgrade.
+  When maintaining generated references, use the matching released source contract rather
+  than assuming an upstream `main` change has shipped.
 </Info>
 
 <Card title="Operate search, summary, and speech" icon="layer-group" href="/guides/operators/subsystems">

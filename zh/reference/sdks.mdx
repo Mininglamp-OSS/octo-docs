@@ -1,10 +1,115 @@
 ---
 title: "SDK"
-description: "octo-auth 校验器 SDK（Go + TypeScript）与 octo-lib 共享库。"
+description: "Octo Runtime SDK、octo-auth 校验器 SDK 与 octo-lib 共享库。"
 icon: "cubes"
 ---
 
-在基于该平台构建时，你会用到 Octo 提供的两个库。
+按本地智能体执行、凭据校验或服务共享基础能力，选择对应的库。
+
+## Octo Runtime——本地执行 SDK
+
+正式发布的 [Runtime v1.1.3](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.3)
+要求 **Node.js 24.x 或 26.x**。安装固定版本：
+
+```bash
+npm install @mininglamp-oss/octo-runtime@1.1.3
+```
+
+| 公共入口 | v1.1.3 用途 |
+|---|---|
+| `@mininglamp-oss/octo-runtime/host` | 用 `createKernelService` / `createExtraService` 原生构建 Kernel 与 Extra 服务，由宿主拥有生命周期。 |
+| `@mininglamp-oss/octo-runtime/executor-kernel` | 用 `KernelClient.invoke` 在 Kernel 监督的 worker 中执行。 |
+| `@mininglamp-oss/octo-runtime/extras/channel-gateway` | Gateway 配置、类型及宿主注入的 `createSessionStore` 合同。 |
+
+桌面或自研应用应嵌入 SDK。宿主原生 import 所选 Extra 模块并传给 `createExtraService`，
+在调用进程中构造 Kernel 和 Extra 服务；宿主自有 worker 入口 import 所选 Adapter，再调用 `serveWorker`。
+SDK 装配不要求、读取或生成永久 / 临时 manifest，也不通过外部 Node / CLI 代启顶层服务。
+标准 CLI 包的完整模块目录不等于每个 SDK 产品都隐式依赖全部模块。
+参见[发行版原生 SDK 与模块载入合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/zh-CN/concepts/module-loading.md)。智能体执行仍使用隔离 worker。
+Gateway 默认为 `MemoryImSessionStore`；持久会话存储由宿主负责，不提供内建 SQLite 后端。
+
+<Warning>
+  对 `KernelClient.invoke` 的迭代执行 break 或关闭 client，只会停止观察，不会取消执行。
+  通过 `AbortSignal` 或 `cancelInvocation` 请求取消，再读取最终结果；取消请求被接受不代表清理已完成。
+</Warning>
+
+v1.1.3 的 Context 固定标记使用英文 XML 注释；字面标签 `<guidence>` 保留传入 Markdown 与换行。
+此拼写刻意与已发布输出保持一致；API 字段仍为 `guidance`。`<data>` 用 CDATA 包裹 JSON，并拆分内容中的 `]]>` 终止符。
+业务内容保留原文。这些标记只是格式，不构成授权或信任边界。参见[发行版 Context 渲染实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-executor-core/src/model-input.ts)。
+
+Context JSON 校验检查结构，不验证作者身份或权限。可信宿主必须显式解析配置层；
+`KernelClient` 不会自动加载 `defaults` / `mandatory`。使用配置解析时，将会话指令放入可信的
+`mandatory` 配置。本地 IPC 信任同一操作系统账号的客户端；业务调用者认证与资源授权仍由宿主负责。
+
+此版本也包含 `grok-build` Adapter。上游真实 harness 验证仅覆盖 macOS arm64、
+Grok Build 1.0.67、文本流与显式跨 CLI 进程续聊；不能据此认定原生工具、审批 / 追问 / 计划审核、
+MCP、图片或其他平台已经实测。认证由宿主 / harness 负责。
+采用前请核对[固定版 Adapter 合同及验证限制](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/packages/octo-runtime-adapter-grok-build/README.md)；
+源码 / fixture 覆盖不等于生产 Provider 或 IM 实际可用。
+
+以上合同核实于 [`fe19d3504315`](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/README.md)：
+[原生服务入口](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/public/host.ts)、
+[执行与取消](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/zh-CN/reference/output-and-control.md)、
+[宿主会话存储](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/SDK_CHANNEL_GATEWAY_GUIDE.md)与
+[Context 信任边界](https://github.com/Mininglamp-OSS/octo-runtime/blob/fe19d350431534da4ed3a76f3466add4ced86d81/docs/zh-CN/reference/contexts.md)。
+CLI 服务生命周期及旧版重新安装见[升级](/zh/guides/operators/upgrades)。
+
+### SDK 升级兼容性
+
+上文示例继续固定 v1.1.3。[v1.1.5](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.5) 的 `#191`
+已移除 `/host` 的 `startNativeComponent`、`ComponentStartError`、`NativeComponentOptions` 与旧 `CleanupResult` 类型。
+官方装配 API 是 `createKernelService` / `createExtraService`：应用在自身进程中构造、初始化并关闭所拥有的服务，
+Kernel 监督其执行 worker。若连接单独管理的 Kernel，使用 `/executor-kernel` 的 `attachKernel({ endpoint })`；
+该 client 不拥有或停止外部 Kernel 进程，其生命周期由对应宿主 / 服务管理器负责。
+
+Extra 命令作者使用 `ExtraCommandExtension` 及宿主提供的 `ctx.readConfig` / `ctx.saveConfig` 接口；
+v1.1.5 不导出 `configCommands`。命令模块与 SDK 服务装配分开。
+升级 SDK 宿主前，请核对固定版本的[公共 host 入口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/public/host.ts)、
+[宿主生命周期](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-host-sdk/README.md)及
+[命令接口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ae7835c168e1e138287c012a6c87517dd2874a5d/packages/octo-runtime-host-sdk/src/extra-commands.ts)；
+v1.1.5 CLI 语法见[升级说明](/zh/guides/operators/upgrades)。
+
+### v1.1.7 渠道 Context 兼容性
+
+SDK 宿主使用 Channel Extras 时，整个 `extra.im` 命名空间归这些 Extra 所有。
+Gateway 会忽略宿主静态 Context 和动态 `loadContexts` 中的全部 `extra.im` 项，
+即使本轮没有对应的渠道项也不会透传。宿主业务材料使用其他命名空间，
+不能通过宿主 Context 覆盖渠道规则。
+
+Gateway 在逻辑会话第 1 轮以及默认第 30、60 等轮刷新稳定的 mention、产物交付与历史阅读指引；
+新 Provider session 也会收到这些指引。`stable_context_refresh_interval_turns` 控制间隔，
+reset/new 重新计数。只有交给执行的任务推进计数，准备失败、工具步骤、自动重试和冻结的同代次卡片重试不推进。
+这些内容仍是普通模型 Context，不保证模型记忆或压缩后的保留。
+即使某轮省略交付说明，冻结的产物策略仍然生效。
+
+自定义 session store 必须随既有 binding 数据保留可选的 `ImSessionBinding.stableContext` 状态。
+请核对已发布 v1.1.7 SHA 下的[宿主集成](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/SDK_CHANNEL_GATEWAY_GUIDE.md)、
+[命名空间过滤](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/transport/contexts.ts)、
+[刷新计划](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/application/stable-context.ts)
+及[会话存储接口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/application/session-store.ts)。
+启用交付前，在实际 Gateway 宿主上核对 [v1.1.7 本地文件交付说明](/zh/guides/operators/upgrades)。
+
+### v1.1.8 Gateway SDK 兼容性
+
+正式发布的 [v1.1.8](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.8)
+不仅修改交付行为，也改变 Gateway 传输接口。`WukongConnection` 仍被导出，但其
+`sendText`、`sendFile`、`isDelivered` 及构造函数的 `onDelivered` 回调已移除。
+`ImInboundMessage` 不再包含 `replyDeliveryUnknown` 或 `isReplyDelivered`。
+升级前核对自定义宿主对这些接口的依赖，不应假定补丁版本保留旧 WebSocket 发送/ACK 接入。
+参见固定版本的[公共导出](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/index.ts)、
+[传输实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts)
+及[接口合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/contracts.ts)。
+
+内建 Gateway 自行管理已受理任务的 REST 投递，不等待 WebSocket 恢复；
+宿主无需另加重连或任务接收循环。自定义凭据来源返回的新 token，只有在 Bot 身份和空间准入通过后，
+才供既有任务投递使用。明确的身份/空间拒绝会撤销交付 scope；
+普通重连网络故障本身不会撤销已核验凭据。这不提供自动续期，也不授予新的权限。
+核对发行版[宿主集成指南](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/SDK_CHANNEL_GATEWAY_GUIDE.md)
+及[身份/凭据处理](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/channel.ts)。
+
+Gateway 投递失败现在可向服务状态日志 sink 输出错误码及通过格式校验的 `run_id`，
+用于关联诊断。不能再假定该 sink 从不包含 Run 标识；它也不是完整的执行记录。
+投递预算、卡片收尾与真实网络验收边界见[升级说明](/zh/guides/operators/upgrades)。
 
 ## octo-auth——凭据校验器
 
