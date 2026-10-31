@@ -12,7 +12,7 @@ icon: "arrows-rotate"
 `octo-runtime` 管理本地执行；[`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)
 是独立的业务 API 客户端。
 
-下文分别说明 v1.1.5 命令与 SDK 变更，以及 v1.1.7 本地文件交付；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
+下文分别说明 v1.1.5 命令与 SDK 变更、v1.1.7 本地文件交付，以及 v1.1.8 Gateway 交付与连接恢复；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
 仍按各自的版本范围理解。
 
 <Warning>
@@ -229,6 +229,40 @@ Gateway 不会下载远端 Provider 的文件；路径文本相同不代表两�
 参见发行版[策略](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifact-policy.ts)、
 [文件处理](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifacts.ts)
 及 [SDK Context 兼容说明](/zh/reference/sdks)。
+
+## v1.1.8 Gateway 交付与连接恢复
+
+[Runtime v1.1.8](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.8) 已于 2026-10-31
+正式发布，源码固定为 [`d0e34377a62f`](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/SDK_CHANNEL_GATEWAY_GUIDE.md)。
+本节补充该版本的行为，不替换前文旧版示例。
+
+任务被 Gateway 受理后，其排队、Context/环境准备与执行不依赖接收 WebSocket。
+普通回复、最终文本、文件卡和进度卡均通过 REST 投递，不等待 WebSocket 恢复。
+REST 连通性、有效凭据、任务取消和身份撤销仍然生效。这不增加第二个任务接收通道，
+也不补收断线期间 Gateway 没有收到的新消息。
+
+最终文本、每张最终文件卡及卡片收尾分别拥有最多四次尝试的暂态失败预算，包含首发；
+取消或明确拒绝可能提前停止。普通过程卡片的每个快照只尝试一次。
+完整与精简终态卡片共享同一次收尾预算，更换展示内容不会重开预算。
+投递失败不会重跑模型、建立持久待发队列，或在 WebSocket 恢复后补投。
+通过 `octo-runtime channel-gateway logs` 检查投递诊断；任务执行完成不等于回复或卡片已送达接收者。
+
+该版本还修复了本地附件回复后的卡片终态：卡片展示副本转换为纯文字，原始 final Markdown
+仍用于独立的产物交付。终态卡片被明确以 HTTP 400 拒绝后，可在剩余收尾预算内尝试精简帧。
+如果卡片已经存在，会沿用其消息 ID 并递增序号。仍然失败时保留失败事实；
+服务端成功回执不证明客户端已渲染。这些修改不改变上文 v1.1.7 的本地文件访问控制。
+
+WebSocket 心跳改为每 10 秒 PING，再等待一个 10 秒周期的 PONG。
+正常调度下约 10–20 秒是静默失联的**检测**区间，不是整体恢复时限；
+睡眠、事件循环阻塞、鉴权和重连尝试都可能增加耗时。
+
+发行 SHA 下的依据：[任务与 REST 传输](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/channel.ts)、
+[投递预算](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/delivery/dispatcher.ts)、
+[终态卡片](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/card-session.ts)、
+[展示副本](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/reasoning-frame.ts)
+及[心跳](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts)。
+发布与源码核对不代表本机安装、部署或真实网络及 Provider 验收通过；
+自定义宿主升级前另查 [SDK 兼容说明](/zh/reference/sdks)。
 
 ## 升级平台本身
 

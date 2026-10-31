@@ -89,6 +89,28 @@ reset/new 重新计数。只有交给执行的任务推进计数，准备失败�
 及[会话存储接口](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/application/session-store.ts)。
 启用交付前，在实际 Gateway 宿主上核对 [v1.1.7 本地文件交付说明](/zh/guides/operators/upgrades)。
 
+### v1.1.8 Gateway SDK 兼容性
+
+正式发布的 [v1.1.8](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.8)
+不仅修改交付行为，也改变 Gateway 传输接口。`WukongConnection` 仍被导出，但其
+`sendText`、`sendFile`、`isDelivered` 及构造函数的 `onDelivered` 回调已移除。
+`ImInboundMessage` 不再包含 `replyDeliveryUnknown` 或 `isReplyDelivered`。
+升级前核对自定义宿主对这些接口的依赖，不应假定补丁版本保留旧 WebSocket 发送/ACK 接入。
+参见固定版本的[公共导出](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/index.ts)、
+[传输实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts)
+及[接口合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/contracts.ts)。
+
+内建 Gateway 自行管理已受理任务的 REST 投递，不等待 WebSocket 恢复；
+宿主无需另加重连或任务接收循环。自定义凭据来源返回的新 token，只有在 Bot 身份和空间准入通过后，
+才供既有任务投递使用。明确的身份/空间拒绝会撤销交付 scope；
+普通重连网络故障本身不会撤销已核验凭据。这不提供自动续期，也不授予新的权限。
+核对发行版[宿主集成指南](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/SDK_CHANNEL_GATEWAY_GUIDE.md)
+及[身份/凭据处理](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/channel.ts)。
+
+Gateway 投递失败现在可向服务状态日志 sink 输出错误码及通过格式校验的 `run_id`，
+用于关联诊断。不能再假定该 sink 从不包含 Run 标识；它也不是完整的执行记录。
+投递预算、卡片收尾与真实网络验收边界见[升级说明](/zh/guides/operators/upgrades)。
+
 ## octo-auth——凭据校验器
 
 **[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** 在单一 `Verifier` 接口之后校验 Octo 凭据（会话、`bf_` 机器人令牌、`uk_` 用户密钥），并支持可插拔的缓存与指标。它以 **Go 和 TypeScript** 两种形态发布，以在各服务间保持一致。

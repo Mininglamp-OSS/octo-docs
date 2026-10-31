@@ -104,6 +104,32 @@ and [session-store interface](https://github.com/Mininglamp-OSS/octo-runtime/blo
 Review [v1.1.7 local file delivery](/guides/operators/upgrades#local-file-delivery-in-v117)
 on the actual Gateway host before enabling delivery.
 
+### Gateway SDK compatibility in v1.1.8
+
+The published [v1.1.8](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.8)
+changes Gateway transport APIs as well as delivery behavior. `WukongConnection` remains
+exported, but its `sendText`, `sendFile`, `isDelivered`, and constructor `onDelivered`
+callback were removed. `ImInboundMessage` no longer has `replyDeliveryUnknown` or
+`isReplyDelivered`. Audit custom consumers of these interfaces before upgrading; do not
+assume a patch-version update preserves the old WebSocket send/ACK integration.
+See the fixed [public exports](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/index.ts),
+[transport](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts),
+and [contracts](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/contracts.ts).
+
+The built-in Gateway owns REST delivery for accepted tasks independently of WebSocket
+recovery; a host does not need to add another reconnect or task-receiving loop.
+A custom credential source's candidate token is published to existing task delivery only
+after Bot identity and space admission pass. Explicit identity/space rejection revokes the
+delivery scope; ordinary reconnect network failure does not itself revoke already verified
+credentials. This is not automatic credential renewal or a new authorization grant.
+Check the released [host integration guide](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/SDK_CHANNEL_GATEWAY_GUIDE.md)
+and [identity/credential handling](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/channel.ts).
+
+Gateway delivery failures can now reach the service-status log sink with an error code
+and validated `run_id` for correlation. Do not assume that sink never includes a Run
+identifier; it is not a full execution transcript. Delivery budgets, card completion,
+and real-network acceptance boundaries are described in [Upgrades](/guides/operators/upgrades#gateway-delivery-and-recovery-in-v118).
+
 ## octo-auth — credential verifier
 
 **[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** verifies Octo credentials

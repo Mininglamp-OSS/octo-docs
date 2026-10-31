@@ -12,8 +12,9 @@ authenticated Provider. Runtime does not install Provider software or sign in fo
 `octo-runtime` manages local execution; [`octo-cli`](/guides/bot-developers/drive-octo-with-cli)
 is the separate business API client.
 
-The notes below cover [v1.1.5 command and SDK changes](#upgrade-compatibility-in-v115) and
-[v1.1.7 local file delivery](#local-file-delivery-in-v117). The v1.1.3 examples and
+The notes below cover [v1.1.5 command and SDK changes](#upgrade-compatibility-in-v115),
+[v1.1.7 local file delivery](#local-file-delivery-in-v117), and
+[v1.1.8 Gateway delivery and recovery](#gateway-delivery-and-recovery-in-v118). The v1.1.3 examples and
 historical v1.1.4 Linux fix note remain version-specific.
 
 <Warning>
@@ -265,6 +266,49 @@ produce delivery failures rather than making those paths usable by recipients.
 See the released [policy](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifact-policy.ts),
 [file handling](https://github.com/Mininglamp-OSS/octo-runtime/blob/ed7a4c899e5666238bc67e6a8418e3805ac924da/packages/octo-runtime-extra-channel-gateway/src/delivery/artifacts.ts),
 and [SDK Context compatibility](/reference/sdks#channel-context-compatibility-in-v117).
+
+## Gateway delivery and recovery in v1.1.8
+
+[Runtime v1.1.8](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.8) was formally
+released on 2026-10-31 at [`d0e34377a62f`](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/SDK_CHANNEL_GATEWAY_GUIDE.md).
+These version-scoped notes supplement the older examples above.
+
+Once Gateway has accepted a task, its queue, Context/environment preparation, and execution
+are independent of the receiving WebSocket. Replies, final text, file cards, and progress
+cards use REST without waiting for WebSocket recovery. REST connectivity, valid credentials,
+task cancellation, and identity revocation still matter. This does not add a second task
+receiver or recover new messages that Gateway did not receive while disconnected.
+
+Final text, each final file card, and card completion have bounded retry budgets of at most
+four attempts each, including the initial attempt, for transient failures. Cancellation or
+an explicit rejection can stop earlier. Ordinary progress-card snapshots get one attempt.
+The full and simplified terminal card share one completion budget; changing the card payload
+does not open another budget. Failed delivery does not re-run the model, persist a durable
+outbox, or trigger a later replay when WebSocket reconnects. Inspect
+`octo-runtime channel-gateway logs` for delivery diagnostics; task completion alone is not
+proof that a reply or card reached the recipient.
+
+The release also fixes terminal cards after local artifact replies: card display copies use
+plain text, while the original final Markdown remains available for artifact delivery.
+After an explicit HTTP 400 rejection, a terminal card can try a simplified frame within the
+remaining completion budget. When a card already exists, it keeps that message ID and uses
+an increasing sequence. Failure remains observable; a successful server receipt does not
+prove client rendering. This does not change the local-file access controls described in
+the v1.1.7 section.
+
+WebSocket heartbeat probing now uses a 10-second PING interval and one further 10-second
+PONG window. Roughly 10–20 seconds under normal scheduling is a silent-disconnection
+*detection* interval, not an end-to-end recovery deadline; sleep, event-loop delay,
+authentication, and reconnect attempts can add time.
+
+Sources at the published SHA: [task and REST transport](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/channel.ts),
+[delivery budgets](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/delivery/dispatcher.ts),
+[terminal cards](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/card-session.ts),
+[display copies](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/reasoning-frame.ts),
+and [heartbeat](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts).
+Publication and source inspection do not establish installation, deployment, or acceptance
+on your real network and Provider. Review the [SDK compatibility notes](/reference/sdks#gateway-sdk-compatibility-in-v118)
+before upgrading a custom host.
 
 ## Upgrading the platform itself
 
