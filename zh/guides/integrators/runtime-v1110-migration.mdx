@@ -1,0 +1,81 @@
+---
+title: "迁移原生 SDK 宿主到 Runtime v1.1.10"
+description: "把 Adapter 装配迁入宿主，保留 Kernel RPC，并核对被移除的 worker 入口、共享故障域及 ZCode GUI 支持边界。"
+icon: "arrows-rotate"
+---
+
+Runtime v1.1.10 改变的是 **Adapter 执行位置**，不是标准业务调用 API。
+从 [v1.1.9 SDK 导航](/zh/guides/integrators/runtime-sdk-orientation)升级原生宿主时使用本指南；
+该指南和[历史升级说明](/zh/guides/operators/upgrades)仍保留各自版本范围。
+
+本文固定到 2026-11-02 正式发布的 [v1.1.10](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.10)，
+源码为 [`f06546e915b1`](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/README.md)，不包含之后的 `main` 修改。
+
+## 从 worker 装配改为宿主对象注入
+
+| v1.1.9 接入方式 | v1.1.10 迁移方式 |
+|---|---|
+| 编译执行 worker，通过 `serveWorker` 注册 Adapter。 | 宿主 import/构造所选 `HostedAdapter` 对象，向 `createKernelService` 提供 `endpoint` 和 `adapters: readonly HostedAdapter[]`。 |
+| Kernel 启动并监督独立执行 worker。 | Kernel、Core 与 Adapter 对象在服务宿主进程执行；不再有执行 worker、worker 心跳或重启。Adapter 仍可启动并清理 Provider 子进程。 |
+| 服务选项传入 `workerEntrypoint`、`manifest`、`adapterModules` 或子进程 `env`。 | 这些字段会被明确拒绝，旧 JavaScript 调用也不例外。移除旧 worker/bootstrap 装配，没有兼容 shim。 |
+| 使用公开 `serveWorker` 导出。 | 该导出和旧执行 worker 入口已移除，应迁移装配方式而非保留旧 launcher。 |
+| worker/bootstrap 代码 import 或加载所选模块。 | CLI 在传入对象前负责 manifest 解析、import、factory 和产品准备；SDK 宿主自行选择原生 import。不是所有 CLI manifest 功能都被删除。 |
+
+发行包的 factory 可从 `@mininglamp-oss/octo-runtime/host` 或
+`@mininglamp-oss/octo-runtime/executor-kernel` 导入；源码集成来自
+`@mininglamp-oss/octo-runtime-executor-kernel`。逐个核对 Adapter 的实际导入入口：
+根发行包提供 `/adapters/dsh`，不提供通用 `/adapters/<name>` 系列。
+不能根据 workspace 示例编造根包的 `/adapters/codex` 导出。
+
+构造后等待 `initialize()`，再使用 `kernel.client`；原生 SDK 装配无需重复 attach。
+Gateway 的 `ExtraService` 内部管理独立 RPC client，并向插件提供 `ctx.kernel`，
+宿主不替 Extra 调用 attach。参见[服务 factory](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/src/service.ts)、
+[公开 facade](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/public/executor-kernel.ts)、[包导出](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/package.json)
+及[原生 SDK quickstart](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/docs/en/getting-started/sdk.md)。
+
+## 区分 RPC、所有权与隔离
+
+业务仍走 `KernelClient → 本地 RPC → Kernel/HostRunService → AgentExecutor → Adapter`。
+同进程不代表业务可以绕过 RPC 直接调用 Core。
+
+另一个进程中的独立应用仍可用 `attachKernel({ endpoint })` 连接已经运行的服务。
+这不是 CLI 专属 API，也不启动或拥有 Kernel；关闭该 client 不取消已受理 Run，也不关闭共享服务。
+宿主进程负责服务构造与关闭，注册和自启动仍归 CLI/应用部署负责。
+
+<Warning>
+  Kernel 与 Adapter JavaScript 现在共享宿主事件循环、内存和故障域。
+  RPC 不隔离同步阻塞、`process.exit` 或内存耗尽；看门狗截止依赖事件循环仍可调度。
+  被移除的 worker 恢复机制不会自动变成宿主重启或旧 Run 重放。
+</Warning>
+
+保留接纳、原执行身份、取消/交互控制、有界观察恢复和结果未知的真实状态。
+重建 Kernel 会产生新的 `kernel_instance_id`，不能只因宿主重启就重新 invoke 旧任务。
+Adapter 仍负责 Provider 子进程清理。参见
+[Kernel 契约](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/README.md)
+及[原生执行源](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/src/execution-source.ts)。
+
+## 核对旧状态与 ZCode GUI 依赖
+
+旧 worker 格式的恢复记录不会被静默升级，会以 `ORPHAN_RECORD_UNSUPPORTED` 拒绝并保留原文件。
+不要清空 Home、身份、凭据、Provider 数据或资源所有权证据来伪造健康启动。
+由 owner 按发行版恢复流程核对遗留资源，本指南不执行或宣称已经验收该清理。
+
+`zcode-gui` Adapter 包、默认 CLI 注册和 ZCode GUI 专属接入已移除。
+不要假定存在 fallback alias、兼容替代或向其他 Adapter 自动转移会话/账号配置。
+应有意识地选择支持的 Provider，核对能力和权限，单独配置并认证。
+这是 Runtime 移除 ZCode GUI 接入，不代表 Runtime 会卸载 ZCode Desktop 或删除其数据。
+参见固定版本 [Provider 列表](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/docs/en/reference/providers.md)
+和 [CLI 装配](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/apps/cli/src/adapters.ts)。
+
+## 真实宿主升级前复核
+
+1. 保留当前配置和未确认清理的资源证据，确认实际安装版本及宿主构建；发布不代表应用已采用。
+2. 用真实原生 Adapter 对象替换旧 worker/bootstrap import 和被拒绝选项，把依赖纳入宿主打包，
+   使用与本架构匹配的固定 quickstart。
+3. 原生使用 `kernel.client`，独立消费者才 attach；重新评估宿主故障处理和 Provider 清理，
+   不再声称 worker 隔离。
+4. 关闭自己拥有的 Kernel 和共享数据库前，先完成 Extra 的业务存储/投递收尾。
+   等待服务 close，检查 `complete` 和待清理资源；终态或取消 ACK 不是清理/业务交付完成。
+5. 在受控环境验收目标宿主、Provider 和打包。本说明的归档与源码核对没有运行 Runtime、Provider 或 Electron。
+
+本迁移指南不改变既有 `allowed_roots`、审批和 async 交互政策，详见 [SDK 版本契约](/zh/reference/sdks)。
