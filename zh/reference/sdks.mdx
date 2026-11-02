@@ -111,6 +111,28 @@ Gateway 投递失败现在可向服务状态日志 sink 输出错误码及通过
 用于关联诊断。不能再假定该 sink 从不包含 Run 标识；它也不是完整的执行记录。
 投递预算、卡片收尾与真实网络验收边界见[升级说明](/zh/guides/operators/upgrades)。
 
+### v1.1.9 交互兼容性
+
+公共 SDK 默认仍为 `ask`。Playboard one-shot 的默认不同，参见[审批与超时边界](/zh/guides/operators/upgrades)。
+
+Codex 每次调用最多接纳 256 个待人工决定的审批请求；第 257 个会明确拒绝，不挤出已受理请求。
+自动审批不占人工名额；问题与 MCP elicitation 另有 16 个未完成请求的边界。
+共享 stdin writer 具有有界队列和停滞/交付超时。决定的 resolved 只确认本地写回调，
+不证明 Provider 已收到或工具完成；取消不能撤回已写字节。宿主需要处理背压和交付失败。
+参见发行版 [Codex 契约](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-adapter-codex/README.md)
+及[写入器](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-adapter-codex/src/stdin-writer.ts)。
+
+用 `payload.delivery === "async"` 识别可选异步问题，不能用 `responseRequired: false` 判断。
+不答复不会阻塞原运行。公共 `AsyncQuestionReply` 在原运行仍活动时，按原 Provider/session 绑定执行 steer；
+只有已确认正常结束时才允许新 AgentRun，并要求 resume；需要消费返回的 events 流才能提交并观察新运行。
+`provider_accepted` 不证明模型已消费；投递未知时不能盲重试或用新运行兜底。
+
+宿主负责持久化、串行化、待答状态和过期绑定拒绝。内建 `channel-gateway`、`channel-wecom`、
+`webui` 忽略 async controls 并继续展示普通文本，本版不代表它们已经支持异步表单；
+同步交互行为另行保持。实现异步交互界面前，核对[输出/控制契约](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/docs/en/reference/output-and-control.md)
+及[答复控制器](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-kernel/src/async-question-reply.ts)。
+源码契约不代表生产 Provider 或 IM 验收通过。
+
 ## octo-auth——凭据校验器
 
 **[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** 在单一 `Verifier` 接口之后校验 Octo 凭据（会话、`bf_` 机器人令牌、`uk_` 用户密钥），并支持可插拔的缓存与指标。它以 **Go 和 TypeScript** 两种形态发布，以在各服务间保持一致。

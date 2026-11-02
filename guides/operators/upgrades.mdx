@@ -14,7 +14,8 @@ is the separate business API client.
 
 The notes below cover [v1.1.5 command and SDK changes](#upgrade-compatibility-in-v115),
 [v1.1.7 local file delivery](#local-file-delivery-in-v117), and
-[v1.1.8 Gateway delivery and recovery](#gateway-delivery-and-recovery-in-v118). The v1.1.3 examples and
+[v1.1.8 Gateway delivery and recovery](#gateway-delivery-and-recovery-in-v118), and
+[v1.1.9 approval and timeout boundaries](#approval-and-timeout-boundaries-in-v119). The v1.1.3 examples and
 historical v1.1.4 Linux fix note remain version-specific.
 
 <Warning>
@@ -309,6 +310,40 @@ and [heartbeat](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62f
 Publication and source inspection do not establish installation, deployment, or acceptance
 on your real network and Provider. Review the [SDK compatibility notes](/reference/sdks#gateway-sdk-compatibility-in-v118)
 before upgrading a custom host.
+
+## Approval and timeout boundaries in v1.1.9
+
+[Runtime v1.1.9](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.9) was formally
+released on 2026-11-01 at [`58332b3bcf56`](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/apps/cli/src/playboard.ts).
+The earlier examples retain their stated versions.
+
+<Warning>
+  Only Playboard's one-shot input defaults to `full_access` when it has neither a top-level
+  `approvalMode` nor an `octo.security/approval_policy` Context item. The public SDK default
+  remains `ask`; this is not a default for every CLI command or host. Set an explicit
+  `approvalMode: "ask"` or matching Context policy when automatic approval is unintended.
+  Explicit policies still pass shared validation and must agree when both are supplied.
+</Warning>
+
+One-shot stdin has no control-response channel. An interaction requiring a reply fails with
+`PLAYBOARD_INTERACTION_REQUIRED`; choosing `ask` does not add an interactive approval UI.
+Automatic approval notifications with `responseRequired: false` are not proof of resolution
+or task completion. `full_access` can handle supported approvals, but does not answer user
+questions or MCP elicitation, establish OS isolation, or grant business permissions.
+
+In v1.1.9 the whole-invocation timeout defaults to `86400000` ms (24 hours), accepts
+`100..604800000` ms (seven days), and leaves first-frame, model-idle, and tool-stall
+watchdogs independent. `runtimeLimits: { runTimeoutMs: 259200000 }` requests 72 hours;
+it is not evidence of a 72-hour endurance test. A supplied top-level `runtimeLimits` object
+replaces Context limits as a whole. Its omitted fields use watchdog defaults, not Context
+field merging; omitting `runTimeoutMs` still gives 24 hours.
+
+Check the released [input contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/docs/en/reference/invoke-input.md),
+[SDK input preparation](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-core/src/invoke-input.ts),
+and [watchdog](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-core/src/watchdog.ts).
+Review [SDK interaction compatibility](/reference/sdks#interaction-compatibility-in-v119)
+before connecting a custom host. Publication does not mean an existing host has upgraded
+or passed real Provider/network acceptance.
 
 ## Upgrading the platform itself
 

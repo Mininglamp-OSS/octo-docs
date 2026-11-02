@@ -130,6 +130,35 @@ and validated `run_id` for correlation. Do not assume that sink never includes a
 identifier; it is not a full execution transcript. Delivery budgets, card completion,
 and real-network acceptance boundaries are described in [Upgrades](/guides/operators/upgrades#gateway-delivery-and-recovery-in-v118).
 
+### Interaction compatibility in v1.1.9
+
+The public SDK still defaults to `ask`. Playboard's one-shot default differs; see
+[approval and timeout boundaries](/guides/operators/upgrades#approval-and-timeout-boundaries-in-v119).
+
+For Codex, human approval admission is bounded at 256 waiting requests per invocation.
+Request 257 is explicitly rejected without evicting admitted requests. Automatic approvals
+consume no human slots; questions and MCP elicitation have a separate 16-request bound.
+The shared stdin writer has bounded queues and stall/delivery timeouts. A resolved decision
+confirms a local write callback, not Provider receipt or tool completion; cancellation cannot
+recall bytes already written. Handle backpressure and delivery failures in the host.
+See the released [Codex contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-adapter-codex/README.md)
+and [writer](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-adapter-codex/src/stdin-writer.ts).
+
+Identify optional async questions using `payload.delivery === "async"`, not
+`responseRequired: false`. Leaving them unanswered does not block the original run.
+The public `AsyncQuestionReply` steers the active run with the original Provider/session
+binding. Only confirmed normal completion permits a new AgentRun, with required resume;
+consume its returned events stream to submit and observe it. `provider_accepted` does not
+prove model consumption. Unknown delivery must not trigger a blind retry or a new-run fallback.
+
+The host owns persistence, serialization, pending-question state, and stale-binding rejection.
+Built-in `channel-gateway`, `channel-wecom`, and `webui` ignore async controls and continue
+showing ordinary text; this release does not add async forms to them. Their synchronous
+interaction behavior remains separate. Review the [output/control contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/docs/en/reference/output-and-control.md)
+and [reply controller](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-kernel/src/async-question-reply.ts)
+before implementing an async interaction UI. Source contracts do not establish production
+Provider or IM acceptance.
+
 ## octo-auth — credential verifier
 
 **[`octo-auth`](https://github.com/Mininglamp-OSS/octo-auth)** verifies Octo credentials

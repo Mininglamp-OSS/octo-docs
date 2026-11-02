@@ -12,7 +12,7 @@ icon: "arrows-rotate"
 `octo-runtime` 管理本地执行；[`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli)
 是独立的业务 API 客户端。
 
-下文分别说明 v1.1.5 命令与 SDK 变更、v1.1.7 本地文件交付，以及 v1.1.8 Gateway 交付与连接恢复；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
+下文分别说明 v1.1.5 命令与 SDK 变更、v1.1.7 本地文件交付，v1.1.8 Gateway 交付与连接恢复，以及 v1.1.9 审批与超时边界；本页的 v1.1.3 示例和 v1.1.4 Linux 修复历史
 仍按各自的版本范围理解。
 
 <Warning>
@@ -263,6 +263,36 @@ WebSocket 心跳改为每 10 秒 PING，再等待一个 10 秒周期的 PONG。
 及[心跳](https://github.com/Mininglamp-OSS/octo-runtime/blob/d0e34377a62fde503529cb3d2464a7575a5abdb0/packages/octo-runtime-extra-channel-gateway/src/transport/wukong.ts)。
 发布与源码核对不代表本机安装、部署或真实网络及 Provider 验收通过；
 自定义宿主升级前另查 [SDK 兼容说明](/zh/reference/sdks)。
+
+## v1.1.9 审批与超时边界
+
+[Runtime v1.1.9](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.9) 已于 2026-11-01 正式发布，
+源码固定为 [`58332b3bcf56`](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/apps/cli/src/playboard.ts)；前文示例保留各自版本范围。
+
+<Warning>
+  仅 Playboard 的 one-shot 输入在既没有顶层 `approvalMode`、又没有
+  `octo.security/approval_policy` Context 项时默认 `full_access`。
+  公共 SDK 默认仍为 `ask`，不能泛化到所有 CLI 命令或宿主。
+  不希望自动审批时，显式设置 `approvalMode: "ask"` 或对应 Context 策略。
+  显式策略仍交共享入口校验，两处同时提供时必须一致。
+</Warning>
+
+one-shot stdin 没有控制响应通道。需要答复的 interaction 会以 `PLAYBOARD_INTERACTION_REQUIRED` 失败；
+选择 `ask` 不会增加交互式审批界面。`responseRequired: false` 的自动审批通知不证明已经解决
+或任务完成。`full_access` 可处理支持的审批，但不自动回答用户问题或 MCP elicitation，
+不建立操作系统隔离，也不授予业务资源权限。
+
+v1.1.9 整次调用超时默认 `86400000` ms（24 小时），允许 `100..604800000` ms（7 天）；
+首帧、模型空闲和工具停滞看门狗仍独立生效。`runtimeLimits: { runTimeoutMs: 259200000 }`
+可请求 72 小时，但不代表已通过 72 小时耐久测试。顶层 `runtimeLimits` 一旦提供，会整对象替代
+Context limits；省略字段使用看门狗默认值，不与 Context 逐字段合并。
+未提供 `runTimeoutMs` 时仍默认 24 小时。
+
+参见发行版[输入契约](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/docs/en/reference/invoke-input.md)、
+[SDK 输入准备](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-core/src/invoke-input.ts)
+及[看门狗](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-core/src/watchdog.ts)。
+接入自定义宿主前检查 [SDK 交互兼容说明](/zh/reference/sdks)。
+正式发布不代表既有宿主已经升级，或真实 Provider/网络验收已通过。
 
 ## 升级平台本身
 
