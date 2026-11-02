@@ -1,0 +1,94 @@
+---
+title: "Migrate native SDK hosts to Runtime v1.1.10"
+description: "Move Adapter composition into the host while preserving Kernel RPC, and review removed worker entries, shared failure boundaries, and ZCode GUI support."
+icon: "arrows-rotate"
+---
+
+Runtime v1.1.10 changes **where Adapters execute**, not the standard business invocation API.
+Use this guide when upgrading a native SDK host from the [v1.1.9 orientation](/guides/integrators/runtime-sdk-orientation).
+That guide and the [earlier upgrade notes](/guides/operators/upgrades) remain version-specific.
+
+These notes target the [formal v1.1.10 release](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.10),
+published on 2026-11-02 at [`f06546e915b1`](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/README.md).
+They do not include later `main` changes.
+
+## Replace worker assembly with host-owned objects
+
+| v1.1.9 integration | v1.1.10 migration |
+|---|---|
+| Compile an execution worker and register Adapters through `serveWorker`. | The host imports/constructs selected `HostedAdapter` objects and supplies `adapters: readonly HostedAdapter[]` with `endpoint` to `createKernelService`. |
+| Kernel starts and supervises a separate execution worker. | Kernel, Core and Adapter objects run in the service host process; no execution worker, worker heartbeat, or worker restart remains. Provider subprocesses may still be launched and cleaned up by Adapters. |
+| Pass `workerEntrypoint`, `manifest`, `adapterModules` or subprocess `env` in service options. | These fields are explicitly rejected, including old JavaScript callers. Remove the old worker/bootstrap wiring; there is no compatibility shim. |
+| Use the public `serveWorker` export. | That export and the old worker execution entry are removed. Port composition rather than retaining an old launcher. |
+| Worker/bootstrap code imports or loads selected modules. | CLI owns manifest resolution, imports, factories and product preparation before passing objects; SDK hosts choose their own native imports. CLI manifests have not all been removed. |
+
+The factory is available through `@mininglamp-oss/octo-runtime/host` and
+`@mininglamp-oss/octo-runtime/executor-kernel`. In source integration it comes from
+`@mininglamp-oss/octo-runtime-executor-kernel`. Verify each Adapter's own import surface:
+the root package exports `/adapters/dsh`, not a general `/adapters/<name>` family.
+Do not invent a root `/adapters/codex` export from a workspace example.
+
+After construction, await `initialize()` and use `kernel.client`. Native SDK composition
+does not require another attach. Gateway's `ExtraService` manages its own RPC client and
+exposes it to the plugin as `ctx.kernel`; the host does not attach on the Extra's behalf.
+See the released [service factory](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/src/service.ts),
+[public facade](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/public/executor-kernel.ts), [package exports](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/package.json)
+and [native SDK quickstart](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/docs/en/getting-started/sdk.md).
+
+## Keep RPC and ownership separate from isolation
+
+Business calls still follow `KernelClient → local RPC → Kernel/HostRunService → AgentExecutor → Adapter`.
+Sharing a process does not authorize bypassing RPC by directly invoking Core.
+
+An independent application in another process can still call `attachKernel({ endpoint })`
+to an already running service. This is not a CLI-only API and does not start or own Kernel.
+Closing that client does not cancel accepted runs or close the shared service.
+The host process owns service construction and shutdown; registration and autostart remain
+CLI/application deployment responsibilities.
+
+<Warning>
+  Kernel and Adapter JavaScript now share the host's event loop, memory and failure domain.
+  RPC does not isolate synchronous blocking, `process.exit`, or out-of-memory failure.
+  Watchdog deadlines require a schedulable event loop. The removed worker recovery is not
+  replaced by an automatic host restart or old-run replay.
+</Warning>
+
+Preserve admission, original execution identity, cancellation/interaction controls, bounded
+observation recovery and truthful unknown outcomes. Reconstructed Kernel instances have a
+new `kernel_instance_id`; do not re-invoke an old run merely because the host restarted.
+Adapters still own their Provider subprocess cleanup. See the
+[Kernel contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/README.md)
+and [native execution source](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-executor-kernel/src/execution-source.ts).
+
+## Audit old state and ZCode GUI dependencies
+
+Legacy worker-format recovery records are not silently upgraded. They fail with
+`ORPHAN_RECORD_UNSUPPORTED` and remain untouched. Do not clear Home, identities,
+credentials, Provider data or ownership evidence to make startup appear healthy.
+Review remaining resources and the release-specific recovery procedure with the owner;
+this guide does not perform or validate that cleanup.
+
+The `zcode-gui` Adapter package, default CLI registration and ZCode GUI-specific integration
+were removed. Do not assume a fallback alias, compatible replacement, or automatic transfer
+of sessions/account configuration to another Adapter. Select a supported Provider deliberately,
+verify its capabilities and permissions, and configure/authenticate it separately.
+This is removal of Runtime's ZCode GUI integration, not a claim that Runtime uninstalls
+ZCode Desktop or deletes its data. Consult the fixed [Provider list](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/docs/en/reference/providers.md)
+and [CLI composition](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/apps/cli/src/adapters.ts).
+
+## Review before upgrading a real host
+
+1. Preserve your current configuration and unresolved resource evidence; identify the exact
+   installed package and host build. A release does not prove that an application adopted it.
+2. Replace worker/bootstrap imports and rejected options with actual native Adapter objects.
+   Package their dependencies with the host; use the fixed quickstart matching this architecture.
+3. Keep `kernel.client` for native use and attach only for an independent consumer.
+   Reassess host fault handling and Provider cleanup without claiming worker isolation.
+4. Close Extras and their business storage/delivery work before the owned Kernel and shared
+   database. Await service close and inspect `complete`/pending resources; a terminal event
+   or cancellation ACK is not cleanup or business-delivery completion.
+5. Validate your target host, Provider and packaging in a controlled environment. The archive
+   and source checks behind these notes did not run Runtime, Provider or Electron.
+
+Existing `allowed_roots`, approval and async-interaction policies are not changed by this
+migration guide. Review their [version-scoped contracts](/reference/sdks).
