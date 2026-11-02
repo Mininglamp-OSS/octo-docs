@@ -102,7 +102,7 @@ flowchart TD
 退出时停止接纳新任务，需要时使用 client 的 invocation lifecycle。
 取消 ACK、执行终态、调用排空、服务清理与业务投递完成是不同事实。
 关闭自己拥有的 Kernel 和数据库前，先关闭 Extra 并完成其投递/存储收尾。
-检查 `close().complete`；清理不完整时保留并处理待清理资源，不能宣称关闭成功。
+等待 `close()`，检查返回结果的 `complete` 字段；清理不完整时保留并处理待清理资源，不能宣称关闭成功。
 attached client 不因等待 Run 而获得服务所有权。参见
 [关闭合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-kernel/src/types.ts)
 及[服务示例](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/docs/examples/service.mts)。

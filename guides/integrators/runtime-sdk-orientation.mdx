@@ -106,7 +106,8 @@ flowchart TD
 At shutdown, stop admitting work and use the client invocation lifecycle where needed.
 A cancellation ACK, execution terminal event, invocation drain, service cleanup and completed
 business delivery are different facts. Close Extras and finish their delivery/storage work
-before closing the owned Kernel and database. Check `close().complete`; retain and handle
+before closing the owned Kernel and database. Await `close()` and check the returned
+result's `complete` field; retain and handle
 pending resources when cleanup is incomplete rather than declaring shutdown complete.
 An attached client never gains ownership by waiting for a run. See the
 [pinned shutdown contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/58332b3bcf5651f58e674fa236184dc6a0d927ca/packages/octo-runtime-executor-kernel/src/types.ts)
