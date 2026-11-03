@@ -62,6 +62,14 @@ object storage all wired together and verified.
     </Note>
   </Step>
 
+  <Step title="Configure the user API key secret">
+    Before starting, follow [Configure the user API key secret](/guides/operators/deploy-compose)
+    to provision and inject `OCTO_USER_API_KEY_SECRET`. It must be exactly 32 raw text bytes;
+    `.env` alone is insufficient without the server service environment mapping. Keep an
+    existing value when upgrading or restoring, and back it up securely. A healthy container
+    does not prove the secrets manager is configured.
+  </Step>
+
   <Step title="Bring the stack up">
     ```bash
     sudo ./setup.sh --up

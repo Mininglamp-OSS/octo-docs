@@ -31,18 +31,97 @@ ConfigMap，以及 `octo-*-secret.example.yaml` 模板。
   </Step>
 </Steps>
 
-## 方案 B —— Helm（开箱即全）
+## 方案 B —— Helm（先配置再安装）
 
-Helm chart 打包了 MySQL、Redis、MinIO、WuKongIM 和 nginx——一条命令即可拉起完整技术栈：
+Chart 打包了 MySQL、Redis、MinIO、WuKongIM 和 nginx，但默认留空的密钥值不是可安装配置。
+执行安装命令前，先准备并私密保存 values 文件。
+
+### 准备 Chart 0.3.1 的私有 values
+
+本节核对了 `octo-deployment@b286760a482d88bff2f237941cba4db79bb76aa4` 的
+[Chart.yaml](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/Chart.yaml)、
+[values.yaml](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/values.yaml#L60-L105)
+及 [secret.yaml](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/templates/secret.yaml#L13-L30)，描述的是该 Git 修订的
+Chart **0.3.1** 契约。下方 OCI 命令保留原版本 pin；安装前确认仓库提供该版本，且制品与审核过的源码一致。
+本次源码核对不证明 OCI 分发已经验证。
+
+通过既有密钥管理流程，在仓库之外准备私有覆盖文件，例如 `/path/to/private/octo-values.yaml`，
+为以下精确的 `secrets` 键填入已配置的值。不要提交填好值的文件，
+也不要把凭据放进命令参数、日志或审核输出。
+
+| Values 键 | 渲染要求与用途 |
+|---|---|
+| `secrets.mysqlRootPassword` | 必须非空的 MySQL root 密码；文档要求字符为 `[A-Za-z0-9._-]`。 |
+| `secrets.minioRootPassword` | `minio.enabled=true`（默认）时必填；文档要求至少 8 字符。 |
+| `secrets.minioAppPassword` | 必须非空的 MinIO 应用 IAM 密码。 |
+| `secrets.matterDbPassword` | 必填 matter 数据库密码；字符为 `[A-Za-z0-9._-]`，不能为字面值 `matter`。 |
+| `secrets.summaryDbPassword` | 必填 summary 数据库密码；同一字符要求，不能为字面值 `summary`。 |
+| `secrets.summaryReaderPassword` | 必填 summary-reader 数据库密码；同一字符要求，不能为字面值 `summary_reader`。 |
+| `secrets.octoMasterKey` | 必填 OCTO 主密钥，文档要求恰好 32 字节；不是 `OCTO_USER_API_KEY_SECRET`。 |
+| `secrets.notifyInternalToken` | 必须非空的服务间 HMAC token。 |
+| `secrets.wukongimManagerToken` | 必须非空的 WuKongIM 管理 token。 |
+
+该 Secret 模板有八项无条件必填值，即使对应的内置组件被关闭也仍然要求提供；
+`minioRootPassword` 是有条件的第九项。`required` 检查拒绝空值，
+但本身不校验所有密码格式、密钥长度或后端凭据是否正确。
+
+### 明确配置首次管理员密码
+
+`secrets.adminPwd` 默认留空，**不是** Helm `required` 字段。
+values 契约说明：仅在值非空且不存在对应记录时创建初始 `superAdmin`；留空跳过自动初始化。
+新部署如需该初始化，应通过私有 values 文件配置并保留首次密码。
+不要假定存在内置默认密码，也不要把修改此字段当作重置已有账号密码的方法。
+
+内置 Redis 默认无认证，`secrets.redisPassword` 因此可选；
+`secrets.llmApiKey` 和 `secrets.webhookSecretKey` 也不是 Secret 模板渲染的必填项，
+但留空不代表相应功能可用。外部后端仍需对应连接设置及匹配的既有凭据，
+参见固定版本的[连接 helpers](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/templates/_helpers.tpl)。
+
+<Warning>
+  已有部署应复用安全保存的 values 与凭据，不能把重新生成密钥/密码当作安装或升级步骤。
+  上述 Chart secrets 与下文单独注入的 `OCTO_USER_API_KEY_SECRET` 是独立要求，不能相互替代。
+  填好值的私有文件和 Helm release 数据包含密钥，不应作为诊断输出分享。
+</Warning>
+
+### 使用私有 values 文件安装
+
+安装前还需完成下文独立主密钥的注入；`-f` 只提供 Chart values。
+将示例路径替换为已审核、填好值的私有文件：
 
 ```bash
-helm install octo oci://ghcr.io/mininglamp-oss/octo --version 0.3.1
+helm install octo oci://ghcr.io/mininglamp-oss/octo --version 0.3.1 \
+  -f /path/to/private/octo-values.yaml
 ```
 
 要求 Kubernetes 1.24+、Helm 3.10+ 以及一个默认 StorageClass。健康时，所有 pod 均达到
 `1/1 Running`。若要使用**外部**后端服务，设置 `<service>.enabled: false` 并填写
 对应的 `external<Service>` 块（若该块为空则会快速失败）。`values-china.yaml` 会将
 应用镜像切换到腾讯镜像仓库。
+
+## 配置用户 API 密钥主密钥
+
+两种部署路径都必须将 `OCTO_USER_API_KEY_SECRET` 注入每个 `octo-server` 容器。
+使用[配置参考](/zh/reference/configuration)说明的恰好 32 字节文本值。
+通过密钥管理流程配置，安全备份，并在所有副本、升级及恢复中保持稳定。
+设置 `OCTO_MASTER_KEY` / `DMWORK_MASTER_KEY` 不会自动提供此变量。
+
+- **Kustomize：**在你私有的 `octo-server-secret.yaml` 的 `stringData` 中添加
+  `OCTO_USER_API_KEY_SECRET`，填入安全配置流程提供的值。base Deployment 已通过
+  `envFrom.secretRef` 引入 `octo-server-secret`。不要将填好值的文件提交到 Git。
+- **Helm：**核实的 chart 没有暴露此变量的 values 配置项。创建单独管理的 Secret，
+  并在渲染后的服务端 Deployment 中扩展名为 `OCTO_USER_API_KEY_SECRET` 的 `env` 项，
+  通过 `valueFrom.secretKeyRef` 引用它。在 chart 定制或 post-renderer 中保存此修改；
+  仅向 chart Secret 添加键并不会自动将其注入服务端。
+
+更新 Secret 后，重新创建或重启服务端 pod，使其读取新的环境变量。
+验证需要登录的密钥管理器功能流程；就绪探针通过不能证明主密钥配置正确。
+不要把重新生成已有密钥当成部署步骤。
+
+模板注入方式核实于
+[`octo-deployment@d88f5e29b8cd70923464cfef036693ea81c89432`](https://github.com/Mininglamp-OSS/octo-deployment/commit/d88f5e29b8cd70923464cfef036693ea81c89432)：
+[Kustomize Deployment](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/kustomize/base/octo-server.yaml)、
+[Helm 服务端 Deployment](https://github.com/Mininglamp-OSS/octo-deployment/blob/d88f5e29b8cd70923464cfef036693ea81c89432/helm/octo/templates/deployment-octo-server.yaml)。
+应用这些说明前，请检查你的部署版本。
 
 ## 对外暴露
 
