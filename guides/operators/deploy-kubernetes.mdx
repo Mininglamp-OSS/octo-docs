@@ -31,12 +31,74 @@ ConfigMaps, and `octo-*-secret.example.yaml` templates.
   </Step>
 </Steps>
 
-## Option B — Helm (batteries included)
+## Option B — Helm (configure before installing)
 
-The Helm chart bundles MySQL, Redis, MinIO, WuKongIM, and nginx — a one-command full stack:
+The chart bundles MySQL, Redis, MinIO, WuKongIM and nginx, but its empty secret defaults
+are not an installable configuration. Prepare a privately stored values file **before**
+running the install command.
+
+### Prepare private values for Chart 0.3.1
+
+This section was checked against [Chart.yaml](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/Chart.yaml),
+[values.yaml](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/values.yaml#L60-L105) and
+[secret.yaml](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/templates/secret.yaml#L13-L30) at
+`octo-deployment@b286760a482d88bff2f237941cba4db79bb76aa4`.
+It documents that Git revision's Chart **0.3.1** contract. The OCI command below retains
+the existing version pin; confirm the registry provides that version and the artifact
+matches your reviewed source. Source inspection here does not verify OCI distribution.
+
+Use your approved secret-management workflow to prepare a private override file, for example
+`/path/to/private/octo-values.yaml`, outside the repository. Fill the following exact
+`secrets` keys with provisioned values. Do not commit the populated file or put credentials
+in command arguments, logs or review output.
+
+| Values key | Rendering requirement and role |
+|---|---|
+| `secrets.mysqlRootPassword` | Required nonempty MySQL root password; documented characters: `[A-Za-z0-9._-]`. |
+| `secrets.minioRootPassword` | Required when `minio.enabled=true` (the default); documented minimum 8 characters. |
+| `secrets.minioAppPassword` | Required nonempty MinIO application IAM password. |
+| `secrets.matterDbPassword` | Required matter DB password; documented characters: `[A-Za-z0-9._-]`; not the literal `matter`. |
+| `secrets.summaryDbPassword` | Required summary DB password; same character set; not the literal `summary`. |
+| `secrets.summaryReaderPassword` | Required summary-reader DB password; same character set; not the literal `summary_reader`. |
+| `secrets.octoMasterKey` | Required OCTO master key, documented as exactly 32 bytes; not `OCTO_USER_API_KEY_SECRET`. |
+| `secrets.notifyInternalToken` | Required nonempty inter-service HMAC token. |
+| `secrets.wukongimManagerToken` | Required nonempty WuKongIM manager token. |
+
+Eight keys are unconditionally required by this Secret template, even when a corresponding
+bundled component is disabled. `minioRootPassword` is the conditional ninth key.
+The template's `required` checks reject empty values; they do not by themselves validate
+every password format, key length or backing-service credential.
+
+### Choose the first administrator password explicitly
+
+`secrets.adminPwd` defaults to empty and is **not** a Helm `required` field. The values
+contract says a nonempty value creates the initial `superAdmin` only when no such row
+exists; empty skips auto-bootstrap. For a fresh deployment that needs this bootstrap,
+provision and retain the initial password in the private values file. Do not assume a
+built-in default password or treat changing this field as an existing account's password reset.
+
+`secrets.redisPassword` is optional with the bundled unauthenticated Redis default.
+`secrets.llmApiKey` and `secrets.webhookSecretKey` are also not Secret-template rendering
+requirements; omitting them does not prove the corresponding features work.
+External backends still require the relevant connection settings and matching existing
+credentials; see the fixed [connection helpers](https://github.com/Mininglamp-OSS/octo-deployment/blob/b286760a482d88bff2f237941cba4db79bb76aa4/helm/octo/templates/_helpers.tpl).
+
+<Warning>
+  For an existing deployment, reuse its securely retained values and credentials.
+  Do not generate replacement keys/passwords as an install or upgrade step.
+  The Chart secrets above and the separate `OCTO_USER_API_KEY_SECRET` injection below
+  are independent requirements; neither replaces the other. A populated private values
+  file and Helm release data contain secrets and must not be shared as diagnostic output.
+</Warning>
+
+### Install with the private values file
+
+Complete the separate master-key injection below before installing; `-f` only supplies
+Chart values. Replace the example path with your reviewed, populated private file:
 
 ```bash
-helm install octo oci://ghcr.io/mininglamp-oss/octo --version 0.3.1
+helm install octo oci://ghcr.io/mininglamp-oss/octo --version 0.3.1 \
+  -f /path/to/private/octo-values.yaml
 ```
 
 Requires Kubernetes 1.24+, Helm 3.10+, and a default StorageClass. When healthy, all pods reach
