@@ -34,26 +34,55 @@ OpenClaw 插件则让 OpenClaw 直接连接 Octo。WorkBuddy Claw 插件是下�
 
 ### 配置单个 Bot
 
-下列内容都是占位值，不是可用凭据。按私有凭据处理流程操作：token 参数可能进入 shell
-历史或进程列表。不要分享填入凭据的命令、保存的完整声明或 `extraget` 输出。
+用可信编辑器或已有秘密管理流程准备私有 JSON 文件。不要放入仓库或共享/同步目录，
+只允许预期账号读取（POSIX 使用仅所有者可访问的权限，Windows 使用等效 ACL）。
+下面是**首次安装模板**，其中均为占位值，不是可用凭据：
 
-```bash
-octo-runtime channel-gateway configure \
-  --bot_id "<BOT_ID>" \
-  --api_url "https://your-server.example/api" \
-  --adapter_type openclaw \
-  --provider_agent_id main \
-  --bf_token "<BOT_TOKEN>"
+```json
+{
+  "module": "@mininglamp-oss/octo-runtime-extra-channel-gateway",
+  "enabled": true,
+  "config": {
+    "bots": [{
+      "bot_id": "<BOT_ID>",
+      "api_url": "https://your-server.example/api",
+      "bf_token": "<BOT_TOKEN>",
+      "adapter": {
+        "adapter_type": "openclaw",
+        "provider_agent_id": "main"
+      }
+    }]
+  }
+}
 ```
 
-每次调用按 `bot_id` 添加或更新 `config.bots` 中的一项，保留省略字段及其他 Bot。
-声明保存于 `<home>/extras/channel-gateway/config.json`；只有一个 Bot 也必须使用数组。
+已有 Gateway 时，先私下复制并审核当前完整声明，再只修改目标 Bot。
+保留其他 Bot、`enabled`、`module` 和策略设置。
+**不要把此单 Bot 模板覆盖到现有声明上：**`extraset` 替换整份声明，不合并，也不保留省略设置。
+
+在 Bash/Zsh 中，通过 stdin 读取受保护文件：
+
+```bash
+octo-runtime channel-gateway extraset < "/private/path/channel-gateway.json"
+```
+
+命令行只包含文件路径，不包含 token。不要把填好凭据的 JSON 粘贴进 shell here-string，
+不要使用 `--bf_token`，也不要把含 token 的 shell 变量展开为参数；
+这些方式可能让凭据进入历史或进程参数。
+stdin 不会加密私有文件或保存后的配置。不要分享这些文件、`extraget` 输出、
+终端录制或含 token 的备份。发行版的
+[stdin 实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/apps/cli/src/extras.ts)
+只校验声明外层结构；Bot/业务校验在 Extra 加载时发生。
+保存成功不代表认证或启动验收通过。
+
+声明保存于 `<home>/extras/channel-gateway/config.json`；一个 Bot 也使用数组。
+后续修改非秘密字段时，`configure` 按 `bot_id` 更新一项，保留省略的凭据及其他 Bot。
+本版 `configure` 没有 `--credential-stdin` 选项；凭据使用上面的完整声明 stdin 流程。
 `adapter.provider_agent_id` 选择已有 OpenClaw Agent（省略时默认 `main`），不是绑定到
 当前 OpenClaw Session，也不使用插件的 `/status` 和 `--agent` 流程。
 
-OpenClaw Agent 自己管理工作区，不能传 `--workdir`。把已有本地 Adapter 条目改为 OpenClaw 时，
-通过审核后的完整声明移除旧 `adapter.workdir`。`extraset` 会替换整份声明，不按 Bot ID 合并，
-也不保留省略的 Bot 或设置。参见固定版本的
+OpenClaw 自己管理工作区。省略 `adapter.workdir`，也不要向 `configure` 传 `--workdir`；
+切换已有本地 Adapter 条目时，从审核后的完整声明中移除旧 workdir。参见固定版本的
 [Gateway 配置契约](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-extra-channel-gateway/README.zh.md)。
 
 <Warning>
@@ -67,7 +96,7 @@ OpenClaw Agent 自己管理工作区，不能传 `--workdir`。把已有本地 A
 
 ### 首次启动与重新加载
 
-`configure` 仅保存配置。首次使用时，在相同 Runtime Home 下分别启动 Executor Kernel
+`configure` 和 `extraset` 仅保存配置。首次使用时，在相同 Runtime Home 下分别启动 Executor Kernel
 和 Channel Gateway：
 
 ```bash
