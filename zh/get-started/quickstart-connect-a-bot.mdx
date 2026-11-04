@@ -10,12 +10,20 @@ icon: "robot"
 收到来自真实编码 Agent 的流式回复。
 
 <Tip>
-  `cc-channel-octo` 是 Claude Code 版本。同样的流程也适用于它的兄弟项目——
+  本页使用独立 Claude Code 网关。其他接入方式请分别按各自指南配置：
   [Codex](/zh/guides/bot-developers/codex-channel)、
   [OpenClaw / Claw](/zh/guides/bot-developers/openclaw-and-claw-channels) 和
   [Hermes](/zh/guides/bot-developers/hermes-channel)。参见
   [选择频道](/zh/guides/bot-developers/choose-a-channel)进行对比。
 </Tip>
+
+<Note>
+  已使用 Octo Runtime 接入 OpenClaw？请转到
+  [Runtime Channel Gateway 配置](/zh/guides/bot-developers/openclaw-and-claw-channels#runtime-channel-gateway-接入-openclaw)，
+  不要继续执行下文 Claude Code 安装。先准备已有 OpenClaw Gateway/Agent 和 BotFather 的
+  Bot ID/token。BotFather 的插件 Session 绑定说明不会配置 Runtime 的 `config.bots`；
+  独立插件仍是另一条接入路径。
+</Note>
 
 ## 前置条件
 

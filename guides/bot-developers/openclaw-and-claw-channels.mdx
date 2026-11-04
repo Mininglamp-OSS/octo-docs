@@ -4,12 +4,131 @@ description: "Connect OpenClaw-powered agents and the WorkBuddy Claw runtime to 
 icon: "robot"
 ---
 
-Two channels wrap the OpenClaw family. Both connect over WebSocket and let the agent act on Octo.
+Choose the connection path that owns your Bot. Runtime Channel Gateway calls an existing
+OpenClaw Agent; the standalone OpenClaw plugin connects OpenClaw directly to Octo. The
+WorkBuddy Claw plugin is a separate integration described below.
+
+| Your setup | Follow this path |
+|---|---|
+| Octo Runtime manages the Bot | [Runtime Channel Gateway](#runtime-channel-gateway-with-openclaw) with `config.bots` and `adapter.provider_agent_id`. |
+| OpenClaw directly owns the Octo channel | [Standalone OpenClaw plugin](#openclaw-channel-octo) with `channels.octo.accounts`. |
+
+<Note>
+  BotFather's `create-openclaw-octo bind` / “current Session's Agent” instructions belong
+  to the plugin path. They do not configure Runtime Channel Gateway. The plugin remains
+  a separate supported connection option; switching paths does not remove it.
+</Note>
+
+## Runtime Channel Gateway with OpenClaw
+
+This flow is scoped to [Runtime v1.1.10](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.10),
+source [`f06546e915b1`](https://github.com/Mininglamp-OSS/octo-runtime/tree/f06546e915b155224a402703e5dae123daf854a5).
+Before configuring a Bot, prepare:
+
+- An installed Runtime version matching this flow; check `octo-runtime --version` and
+  `octo-runtime channel-gateway configure --help`. Follow the fixed
+  [CLI setup](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/docs/en/getting-started/cli.md) for installation and service prerequisites.
+- An already running, authenticated OpenClaw Gateway with an existing Agent such as `main`.
+  Prepare its connection/authentication for the Runtime host following the fixed
+  [OpenClaw setup](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/docs/en/guides/harnesses/openclaw.md).
+  Runtime does not start that Gateway or create a missing Agent.
+- The exact Bot ID and its `bf_` token from BotFather, plus the matching trusted Octo API
+  URL. Copy only the Bot ID, without a display-name prefix such as `Octo bot`.
+
+### Configure one Bot
+
+Prepare a private JSON file using a trusted editor or your existing secret-management
+workflow. Keep it outside the repository and shared/synced directories, readable only by
+the intended account (owner-only permissions on POSIX, an equivalent Windows ACL).
+The following is a **new-install template** with placeholders, not usable credentials:
+
+```json
+{
+  "module": "@mininglamp-oss/octo-runtime-extra-channel-gateway",
+  "enabled": true,
+  "config": {
+    "bots": [{
+      "bot_id": "<BOT_ID>",
+      "api_url": "https://your-server.example/api",
+      "bf_token": "<BOT_TOKEN>",
+      "adapter": {
+        "adapter_type": "openclaw",
+        "provider_agent_id": "main"
+      }
+    }]
+  }
+}
+```
+
+For an existing Gateway, privately copy and review its complete current declaration first,
+then edit only the intended Bot. Preserve other Bots, `enabled`, `module`, and policy
+settings. **Do not apply this one-Bot template over an existing declaration:** `extraset`
+replaces the whole declaration and does not merge or preserve omitted settings.
+
+In Bash/Zsh, read the protected file through stdin:
+
+```bash
+octo-runtime channel-gateway extraset < "/private/path/channel-gateway.json"
+```
+
+Only the file path enters the command line, not the token. Do not paste populated JSON into
+a shell here-string, use `--bf_token`, or substitute a token-valued shell variable into an
+argument: those approaches can expose credentials in history or process arguments.
+Stdin does not encrypt the private file or saved configuration. Do not share either file,
+`extraget` output, terminal recordings, or backups containing the token. The released
+[stdin implementation](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/apps/cli/src/extras.ts)
+validates the declaration envelope; Bot/business validation happens when the Extra loads.
+Saving successfully is not authentication or startup acceptance.
+
+The declaration is saved at `<home>/extras/channel-gateway/config.json`; even one Bot uses
+an array. For later non-secret changes, `configure` updates one `bot_id` and preserves
+omitted credentials and other Bots. This release has no `--credential-stdin` option for
+`configure`; use the complete-declaration stdin flow above for credentials.
+`adapter.provider_agent_id` selects the existing OpenClaw Agent (default `main` when omitted).
+It does not bind to the current OpenClaw Session or use the plugin's `/status` and `--agent` flow.
+
+OpenClaw owns its workspace. Omit `adapter.workdir` and do not pass `--workdir` to
+`configure`; when switching an existing local-adapter entry, remove its old workdir from
+the reviewed full declaration. See the fixed
+[Gateway configuration contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-extra-channel-gateway/README.md).
+
+<Warning>
+  Review the actual Gateway policy before starting. This version defaults `approval_mode`
+  to `full_access`; OpenClaw `ask` can fall back to native full access when a usable manual
+  approval channel or scopes are absent. Read the effective permission state, not only
+  the requested policy. Check sender admission and local-file delivery settings in the
+  fixed [configuration schema](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-extra-channel-gateway/config-schema.json)
+  and [Adapter limits](https://github.com/Mininglamp-OSS/octo-runtime/blob/f06546e915b155224a402703e5dae123daf854a5/packages/octo-runtime-adapter-openclaw/README.md).
+</Warning>
+
+### Start or reload the correct service
+
+`configure` and `extraset` only save configuration. On first use, start Executor Kernel and Channel
+Gateway independently under the same Runtime Home:
+
+```bash
+octo-runtime executor-kernel start
+octo-runtime channel-gateway start
+```
+
+`start` can install a missing user service and enable its autostart. If you use foreground
+processes instead, follow the fixed CLI setup's `run` lifecycle. After changing an already
+running registered Channel Gateway service, use:
+
+```bash
+octo-runtime channel-gateway restart
+octo-runtime channel-gateway status
+```
+
+`restart` does not install a missing service. For a foreground Gateway, stop the old process
+before running it again. A connected Bot does not prove Kernel/Provider execution or reply
+delivery; send a small request without tools and inspect the actual reply.
 
 ## openclaw-channel-octo
 
 **[`openclaw-channel-octo`](https://github.com/Mininglamp-OSS/openclaw-channel-octo)** is the
-OpenClaw channel plugin, published exclusively on ClawHub.
+standalone OpenClaw channel plugin, published exclusively on ClawHub. Use this path when
+OpenClaw owns the Octo channel directly, rather than configuring a Runtime Bot entry.
 
 ```bash
 openclaw plugins install clawhub:octo
