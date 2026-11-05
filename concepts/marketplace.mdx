@@ -1,95 +1,119 @@
 ---
 title: "Marketplace"
-description: "How Octo discovers and distributes Agent capabilities — Skills and MCP servers — through octo-marketplace and octo-cli."
+description: "How Octo discovers, versions, and distributes Skills, connectors, experts, and expert teams through a unified plugin catalog."
 icon: "store"
 ---
 
-The **Marketplace** is Octo's control plane for discovering and distributing the two things that
-extend an [Agent](/concepts/the-agent-model): **Skills** and **MCP servers**. It's a standalone
-service ([`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace)) reached from the
-web client, `octo-server`, and — the path most Agents use — the [**CLI**](#cli).
+The **Marketplace** is Octo's control plane for discovering and distributing
+[Agent capabilities](/concepts/the-agent-model). The standalone
+[`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace) service
+stores each catalog asset as a **plugin** with one of four types:
+
+| Plugin type | Capability |
+|---|---|
+| `skill` | A packaged `SKILL.md` capability and its supporting files. |
+| `connector` | A connection descriptor, including MCP server connections. |
+| `expert` | An expert definition. |
+| `expert_team` | An expert-team definition and its relationships. |
 
 <Info>
-  Ownership is split: `octo-server` owns identity, users, and space membership; `octo-marketplace`
-  owns the catalog assets and policy; `octo-cli` performs local download, verification, and
-  install. The Marketplace **never executes Skill code or launches MCP servers** — it stores
-  listings, not runtime.
+  This page follows [octo-cli v0.19.5](https://github.com/Mininglamp-OSS/octo-cli/releases/tag/v0.19.5)
+  and [Marketplace v0.8.0](https://github.com/Mininglamp-OSS/octo-marketplace/releases/tag/v0.8.0).
+  The [generated CLI reference](/reference/octo-cli) is a separately pinned v0.18.0
+  subset and does not enumerate Marketplace. A released contract does not establish
+  which version or review policy your deployment runs.
 </Info>
 
 ## Skill
 
-A **Skill** is a packaged, reusable Agent capability — a directory with a `SKILL.md` (and optional
-`references/`) that an Agent loads automatically. See [Build & publish a
-Skill](/guides/bot-developers/publish-a-skill) for authoring.
+A **Skill** is a reusable capability packaged around a root `SKILL.md`, with optional
+supporting files. Your Agent runtime controls how it loads and uses the installed
+capability. See [Build & publish a Skill](/guides/bot-developers/publish-a-skill)
+for authoring.
 
-The Marketplace adds **discovery, versioning, and distribution** on top of the git-native install
-path that works today:
+The unified catalog adds discovery, version snapshots, and distribution:
 
 | Stage | What happens |
 |---|---|
-| **Upload** | Initialize an upload → get a presigned URL → PUT the archive to object storage. |
-| **Parse** | An async task extracts `SKILL.md` metadata (name, description, version, tags, SHA-256). |
-| **Create** | Bind the parsed task into a Skill with a category, tags, icon, and `visibility` (`public` / `private` / `space`). |
-| **Version** | Re-uploads accrue immutable versions with changelogs. |
-| **Download** | Authorize, then return a `download_url` + `file_sha256` (the caller / install workflow verifies the hash). |
+| **Upload and parse** | Initialize an upload, PUT the archive using the returned upload instructions, then parse it and wait for the parse task to succeed. |
+| **Import** | `plugin import` consumes the completed parse task. Creating a plugin saves a draft and a version snapshot; it does not publish it. Tenant writes accept `private` or `space`, not the retired `public` value. |
+| **Publish or review** | An explicit publish follows the plugin's visibility and the Space's review policy. Private publication remains owner-only; Space publication may be immediate or require owner/admin approval. |
+| **Update** | Published Space content must use a frozen review submission. Direct import/upsert edits are rejected; saving an editable plugin is not a substitute for publication. |
+| **Download** | `plugin download` streams a ZIP reconstructed from the attachment tree. Use `--output` to save it; this is not the old `download_url` plus `file_sha256` JSON response. |
 
-Skills are also discoverable by **category** and **tag**, and an Agent owner can **publish** one
-directly (a synchronous parse-then-create path).
+See [Publish to the Marketplace](/guides/integrators/marketplace) for the
+save, publish, and review boundaries.
 
 ## MCP
 
-An **MCP** entry is a **[Model Context Protocol](https://modelcontextprotocol.io) server listing** —
-a connection recipe an Agent runtime adds to gain external tools. Unlike a Skill, an MCP listing has
-**no downloadable archive**; "installing" it means adding its connection block to a runtime's MCP
-config.
+An **MCP** connector describes a
+[Model Context Protocol](https://modelcontextprotocol.io) server that an Agent runtime
+can connect to. Discover it as `plugin_type=connector`; an MCP connection is one
+connector subtype, not a separate catalog.
 
-The catalog stores discovery metadata (`name`, `slug`, `slogan`, `category`, `tags`, `notes`,
-`usage_examples`, `faqs`), the declared `tools`, and a **connection recipe**:
-
-- **`transport`** — `stdio`, `streamable-http`, or `sse`.
-- **`url` / `command` / `args` / `env` / `headers`** — how to reach the server.
-- **`quick_start`** — a ready-to-paste `mcpServers` block, keyed by the listing's `slug`.
+The connector package includes a root `mcp.json` containing its `mcpServers`
+connection entries. Inspect the command or URL, transport, and required environment
+variables or headers before adding an entry to your runtime. MCP connectors do not
+use the Skill ZIP download flow.
 
 <Warning>
-  **Secrets are never stored.** Env/header *names* are catalogued, but values are replaced by a
-  placeholder sentinel on the wire, and quick-start secrets are hidden from peer viewers. Callers
-  supply real secrets locally at install time.
+  Keep consumer-supplied secrets as `${VAR}` placeholders in catalog documents.
+  Do not upload real secrets. Supply real values only through the target runtime's
+  approved secret mechanism.
+  Do not assume catalog publication or a successful probe makes a connection safe
+  to run, and do not rely on the old catalog's secret-redaction behavior.
 </Warning>
 
-A **probe** (`mcp.probe`) validates a remote server's connection *without persisting* it — it
-returns `is_ok`, server info, and the discovered tool list. Probing is for `streamable-http` / `sse`
-only; `stdio` servers are validated locally by the Agent runtime, never spawned by the Marketplace.
+`octo-cli marketplace mcp probe --data @connection.json` remains available for
+`streamable-http` and `sse` connections. It makes a remote connection without
+persisting the supplied configuration and returns connection information and tools.
+Check the response's `is_ok` value; HTTP 200 alone does not establish probe success.
+Do not send real secrets merely to validate a recipe. The Marketplace does not
+launch `stdio` commands; validate those in the intended runtime.
 
 ## CLI
 
-[`octo-cli`](/guides/bot-developers/drive-octo-with-cli) is how Agents work with the Marketplace —
-the `marketplace.json` spec ships embedded in the binary, exposing two command groups:
+Use the unified plugin commands with CLI v0.19.5. Replace `PLUGIN_ID` with an
+actual identifier before running the detail or download command:
 
 ```bash
-octo-cli marketplace skill list         # browse / search Skills
-octo-cli marketplace skill download …   # authorize + return download_url + file_sha256
-octo-cli marketplace mcp list           # browse MCP listings
-octo-cli marketplace mcp probe …        # validate a remote MCP connection
+octo-cli marketplace plugin list --scene-code default --plugin-type skill
+octo-cli marketplace plugin get --plugin-id 'PLUGIN_ID'
+octo-cli marketplace plugin download --plugin-id 'PLUGIN_ID' --output ./skill.zip
+octo-cli marketplace plugin list --scene-code default --plugin-type connector
 ```
 
-The CLI authenticates with an **Assistant** (`bf_…`) profile and Space context. `skill download`
-returns a `download_url` and the expected `file_sha256` for the **caller** to verify — it doesn't
-follow the artifact redirect itself. The install-time protections (exact SHA-256 match, rejecting
-path traversal, never executing archive scripts) are enforced **server-side on ingest** and by the
-**install workflow** the CLI ships (`skills/octo-marketplace`), which the calling agent follows.
+The old `marketplace skill list`, `marketplace skill download`, and
+`marketplace mcp list` commands are retired on this client. Catalog listing needs
+`--scene-code` and normally `--plugin-type`; the owned all-types view can use
+`--scene-code default --mode mine`. Lists are paginated, so one page is not a
+complete catalog or ownership check.
 
-## Status
+The CLI uses its active credential and Space context. For a `bf_` User Bot, the
+service resolves the owner's identity and the Bot's authoritative Space. Supplying
+a different Space header does not grant cross-Space access, and the Bot does not
+inherit its owner's Space administration role.
 
-- **Shipped:** the Skill lifecycle (upload / parse / create / version / download, categories, tags)
-  and the MCP catalog (CRUD, probe, icons, categories) in the current spec and `octo-marketplace` —
-  both Skill and MCP records are MySQL-backed.
-- **Hardening:** catalog discovery UI and publishing/versioning polish are still being refined.
+Downloading does not install or execute the Skill. The installer must inspect the
+archive, reject unsafe paths and links, preserve any existing installation, and use
+the runtime's reload flow. Never execute archive scripts as part of extraction.
+Do not expect the retired download response's hash fields from the ZIP endpoint.
+
+## Versioned sources
+
+- [MCP consumer workflow](https://github.com/Mininglamp-OSS/octo-cli/blob/7ffb7238756dcec639502ddb584b465fa770b6c1/skills/octo-marketplace/mcp.md), including secret placeholders and probe handling.
+
+- [CLI command contract](https://github.com/Mininglamp-OSS/octo-cli/blob/7ffb7238756dcec639502ddb584b465fa770b6c1/internal/registry/specs/marketplace.json)
+  and [consumer workflows](https://github.com/Mininglamp-OSS/octo-cli/blob/7ffb7238756dcec639502ddb584b465fa770b6c1/skills/octo-marketplace/SKILL.md).
+- Marketplace v0.8.0 [import](https://github.com/Mininglamp-OSS/octo-marketplace/blob/99cc26100f83b1218de03ee257572cc3802de733/internal/service/plugin/import.go),
+  [publication](https://github.com/Mininglamp-OSS/octo-marketplace/blob/99cc26100f83b1218de03ee257572cc3802de733/internal/service/plugin/listing.go),
+  and [authentication](https://github.com/Mininglamp-OSS/octo-marketplace/blob/99cc26100f83b1218de03ee257572cc3802de733/internal/middleware/auth.go).
 
 <CardGroup cols={2}>
   <Card title="Build & publish a Skill" icon="puzzle" href="/guides/bot-developers/publish-a-skill">
-    Author a `SKILL.md` capability and install it to an Agent.
+    Author a SKILL.md capability for your Agent runtime.
   </Card>
   <Card title="Publish to the Marketplace" icon="store" href="/guides/integrators/marketplace">
-    Run the service and its API surface.
+    Separate draft saves, publication, review, and local service setup.
   </Card>
 </CardGroup>
