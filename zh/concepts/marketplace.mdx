@@ -1,70 +1,107 @@
 ---
 title: "Marketplace"
-description: "Octo 如何发现与分发智能体能力——Skill 与 MCP 服务器——通过 octo-marketplace 与 octo-cli。"
+description: "Octo 如何通过统一插件目录发现、版本化和分发 Skill、连接器、专家与专家团。"
 icon: "store"
 ---
 
-**Marketplace** 是 Octo 用于发现与分发两类扩展[智能体](/zh/concepts/the-agent-model)之物的控制平面：**Skill** 与 **MCP 服务器**。它是一个独立服务（[`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace)），可从 Web 客户端、`octo-server`，以及大多数智能体所走的路径——[**CLI**](#cli)——访问。
+**Marketplace** 是 Octo 发现与分发[智能体能力](/zh/concepts/the-agent-model)的控制平面。
+独立的 [`octo-marketplace`](https://github.com/Mininglamp-OSS/octo-marketplace)
+服务将目录资产统一存为**插件**，支持四种类型：
+
+| 插件类型 | 能力 |
+|---|---|
+| `skill` | 围绕 `SKILL.md` 打包的能力及其支持文件。 |
+| `connector` | 连接描述，包括 MCP 服务器连接。 |
+| `expert` | 专家定义。 |
+| `expert_team` | 专家团定义及其关联关系。 |
 
 <Info>
-  职责是分开的：`octo-server` 拥有身份、用户与空间成员关系；`octo-marketplace` 拥有目录资产与策略；`octo-cli` 负责本地下载、校验与安装。Marketplace **绝不执行 Skill 代码，也绝不启动 MCP 服务器**——它存储的是清单，而非运行时。
+  本页依据 [octo-cli v0.19.5](https://github.com/Mininglamp-OSS/octo-cli/releases/tag/v0.19.5)
+  与 [Marketplace v0.8.0](https://github.com/Mininglamp-OSS/octo-marketplace/releases/tag/v0.8.0)。
+  [生成式 CLI 参考](/zh/reference/octo-cli)单独固定于 v0.18.0 的已收录子集，不枚举 Marketplace。
+  已发布合同不能证明你的部署实际运行了哪个版本或采用了哪种审核策略。
 </Info>
 
 ## Skill
 
-**Skill** 是一种打包、可复用的智能体能力——一个带有 `SKILL.md`（及可选 `references/`）的目录，智能体会自动加载它。创作方法参见[构建并发布 Skill](/zh/guides/bot-developers/publish-a-skill)。
+**Skill** 是以根目录 `SKILL.md` 和可选支持文件打包的可复用能力。
+由智能体运行时决定如何加载和使用已安装的能力。
+创作方法参见[构建并发布 Skill](/zh/guides/bot-developers/publish-a-skill)。
 
-Marketplace 在当下即可用的 git-native 安装路径之上，增加了**发现、版本化与分发**:
+统一目录增加了发现、版本快照与分发能力：
 
 | 阶段 | 发生了什么 |
 |---|---|
-| **上传（Upload）** | 初始化上传 → 获取一个预签名 URL → 将归档 PUT 到对象存储。 |
-| **解析（Parse）** | 一个异步任务从 `SKILL.md` 中抽取元数据（名称、描述、版本、标签、SHA-256）。 |
-| **创建（Create）** | 把解析任务绑定为一个 Skill，附带分类、标签、图标与 `visibility`（`public` / `private` / `space`）。 |
-| **版本（Version）** | 重新上传会累积为带变更日志的不可变版本。 |
-| **下载（Download）** | 鉴权后返回 `download_url` + `file_sha256`（由调用方 / 安装工作流校验哈希）。 |
+| **上传与解析** | 初始化上传，按返回的上传要求 PUT 归档，再触发解析并等待解析任务成功。 |
+| **导入** | `plugin import` 使用已完成的解析任务。创建插件会保存草稿和版本快照，不会直接发布。租户写入接受 `private` 或 `space`，不再接受已退役的 `public` 值。 |
+| **发布或审核** | 显式发布遵循插件可见性与空间审核策略。私有发布仍仅拥有者可见；空间发布可能立即完成，也可能需要空间拥有者或管理员批准。 |
+| **更新** | 已发布的空间内容必须提交冻结的审核版本。直接 import/upsert 修改会被拒绝；保存可编辑插件不能代替发布。 |
+| **下载** | `plugin download` 流式返回从附件树重建的 ZIP。用 `--output` 保存文件；不再返回旧式 `download_url` 加 `file_sha256` JSON。 |
 
-Skill 还可按**分类**与**标签**发现，智能体的拥有者也可以直接**发布**一个 Skill（一条同步的“解析—创建”路径）。
+保存、发布与审核的边界参见[发布到应用市场](/zh/guides/integrators/marketplace)。
 
 ## MCP
 
-**MCP** 条目是一份 **[Model Context Protocol](https://modelcontextprotocol.io) 服务器清单**——智能体运行时可加入的连接配方，用于获得外部工具。与 Skill 不同，MCP 清单**没有可下载的归档**；“安装”它意味着把它的连接块加入某个运行时的 MCP 配置。
+**MCP** 连接器描述智能体运行时可以连接的
+[Model Context Protocol](https://modelcontextprotocol.io) 服务器。
+使用 `plugin_type=connector` 发现它；MCP 连接是连接器的一种子类型，不是独立目录。
 
-目录会存储发现类元数据（`name`、`slug`、`slogan`、`category`、`tags`、`notes`、`usage_examples`、`faqs`）、声明的 `tools`，以及一份**连接配方**:
-
-- **`transport`**——`stdio`、`streamable-http` 或 `sse`。
-- **`url` / `command` / `args` / `env` / `headers`**——如何抵达该服务器。
-- **`quick_start`**——一段可直接粘贴的 `mcpServers` 块，以清单的 `slug` 作为键。
+连接器包的根目录 `mcp.json` 包含 `mcpServers` 连接条目。
+加入运行时前，先检查命令或 URL、传输方式以及必需的环境变量或请求标头。
+MCP 连接器不使用 Skill ZIP 下载流程。
 
 <Warning>
-  **密钥从不被存储。** 目录只记录 env/header 的*名称*，其值在传输中被替换为占位哨兵，快速开始中的密钥对同侪查看者隐藏。调用方在安装时于本地提供真实密钥。
+  在目录文档中，将消费者提供的密钥保留为 `${VAR}` 占位符。
+  不要上传真实密钥，仅通过目标运行时批准的密钥机制提供真实值。
+  目录发布或探测成功不代表连接可安全运行，也不要依赖旧目录的密钥脱敏行为。
 </Warning>
 
-**探测（`mcp.probe`）**在*不持久化*的前提下校验某个远程服务器的连接——它返回 `is_ok`、服务器信息与发现到的工具列表。探测仅用于 `streamable-http` / `sse`；`stdio` 服务器由智能体运行时在本地校验，Marketplace 绝不启动它们。
+`octo-cli marketplace mcp probe --data @connection.json` 仍用于
+`streamable-http` 与 `sse` 连接。它会发起远程连接，但不持久化提交的配置，
+并返回连接信息和工具列表。请检查响应中的 `is_ok` 值；HTTP 200 本身不代表探测成功。
+不要仅为了验证连接配方而发送真实密钥。
+Marketplace 不启动 `stdio` 命令；请在目标运行时验证这类连接。
 
 ## CLI
 
-[`octo-cli`](/zh/guides/bot-developers/drive-octo-with-cli) 是智能体使用 Marketplace 的方式——`marketplace.json` 规范内嵌于该二进制中，暴露两个命令组：
+CLI v0.19.5 使用统一插件命令。运行详情或下载命令前，将 `PLUGIN_ID`
+替换为实际标识符：
 
 ```bash
-octo-cli marketplace skill list         # 浏览 / 搜索 Skill
-octo-cli marketplace skill download …   # 鉴权 + 返回 download_url 与 file_sha256
-octo-cli marketplace mcp list           # 浏览 MCP 清单
-octo-cli marketplace mcp probe …        # 校验一个远程 MCP 连接
+octo-cli marketplace plugin list --scene-code default --plugin-type skill
+octo-cli marketplace plugin get --plugin-id 'PLUGIN_ID'
+octo-cli marketplace plugin download --plugin-id 'PLUGIN_ID' --output ./skill.zip
+octo-cli marketplace plugin list --scene-code default --plugin-type connector
 ```
 
-CLI 以**助理**（`bf_…`）配置及空间上下文进行认证。`skill download` 返回一个 `download_url` 与预期的 `file_sha256`，供**调用方**自行校验——它本身并不跟随产物重定向。安装时的各项保护（SHA-256 精确匹配、拒绝路径穿越、绝不执行归档脚本）由**服务端在摄取时**以及 CLI 所附带的**安装工作流**（`skills/octo-marketplace`，由调用方智能体遵循）来强制实施。
+旧的 `marketplace skill list`、`marketplace skill download` 和
+`marketplace mcp list` 已在该客户端退役。目录列表需要 `--scene-code`，
+通常还需要 `--plugin-type`；查看自己拥有的所有类型时可使用
+`--scene-code default --mode mine`。列表分页返回，一页不是完整目录或完整拥有权检查。
 
-## 状态
+CLI 使用当前凭据和空间上下文。对于 `bf_` 用户机器人，服务端解析其拥有者身份
+以及机器人所属的权威空间。传入其他空间标头不会获得跨空间访问权限，
+机器人也不会继承其拥有者的空间管理角色。
 
-- **已交付：** 当前规范与 `octo-marketplace` 中的 Skill 生命周期（上传 / 解析 / 创建 / 版本 / 下载、分类、标签）以及 MCP 目录（CRUD、探测、图标、分类）——Skill 与 MCP 记录均由 MySQL 持久化。
-- **打磨中：** 目录发现 UI 与发布/版本化的细节完善仍在继续。
+下载不会安装或执行 Skill。安装方必须检查归档、拒绝不安全路径与链接、
+保留已有安装，并按运行时流程重新加载。解压时不要执行归档脚本。
+不要期待 ZIP 端点返回已退役下载响应中的哈希字段。
+
+## 固定版本来源
+
+- [MCP 消费方工作流](https://github.com/Mininglamp-OSS/octo-cli/blob/7ffb7238756dcec639502ddb584b465fa770b6c1/skills/octo-marketplace/mcp.md)，包括密钥占位符和探测处理。
+
+- [CLI 命令合同](https://github.com/Mininglamp-OSS/octo-cli/blob/7ffb7238756dcec639502ddb584b465fa770b6c1/internal/registry/specs/marketplace.json)
+  与[消费方工作流](https://github.com/Mininglamp-OSS/octo-cli/blob/7ffb7238756dcec639502ddb584b465fa770b6c1/skills/octo-marketplace/SKILL.md)。
+- Marketplace v0.8.0 的[导入](https://github.com/Mininglamp-OSS/octo-marketplace/blob/99cc26100f83b1218de03ee257572cc3802de733/internal/service/plugin/import.go)、
+  [发布](https://github.com/Mininglamp-OSS/octo-marketplace/blob/99cc26100f83b1218de03ee257572cc3802de733/internal/service/plugin/listing.go)
+  与[认证实现](https://github.com/Mininglamp-OSS/octo-marketplace/blob/99cc26100f83b1218de03ee257572cc3802de733/internal/middleware/auth.go)。
 
 <CardGroup cols={2}>
   <Card title="构建并发布 Skill" icon="puzzle" href="/zh/guides/bot-developers/publish-a-skill">
-    创作一个 `SKILL.md` 能力并安装到某个智能体。
+    为智能体运行时编写 SKILL.md 能力。
   </Card>
-  <Card title="发布到 Marketplace" icon="store" href="/zh/guides/integrators/marketplace">
-    运行该服务及其 API 界面。
+  <Card title="发布到应用市场" icon="store" href="/zh/guides/integrators/marketplace">
+    区分草稿保存、发布、审核与本地服务设置。
   </Card>
 </CardGroup>
