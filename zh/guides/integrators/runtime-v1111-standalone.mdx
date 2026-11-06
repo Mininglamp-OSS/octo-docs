@@ -119,7 +119,8 @@ if (process.argv.includes("--check-input")) {
     for await (const event of client.invoke(input)) {
       if (event.type === "message.delta" && typeof event.payload.text === "string")
         process.stdout.write(event.payload.text);
-      if (event.type === "interaction.requested" && event.payload.delivery !== "async" && !cancellationRequested) {
+      if (event.type === "interaction.requested" && event.payload.delivery !== "async" &&
+          event.payload.responseRequired !== false && !cancellationRequested) {
         cancellationRequested = true;
         try {
           await client.cancelInvocation(input.invocationId, "example has no interaction UI");
@@ -162,11 +163,11 @@ node main.mts
 
 只有 `run.completed` 表示执行成功。失败或取消终态会设置非零退出状态；执行失败可能只通过 `run.failed` 事件到达而不抛异常。canonical `invoke` 直接返回 `CanonicalEvent`，不是 `HostFrame.event`。文本输出只是示例展示，不是持久化结果的投递回执。
 
-示例没有交互界面，因此取消首次同步交互，并继续观察。对于标记为 `payload.delivery === "async"` 的可选问题，示例忽略并继续；它们不是阻塞审批请求。示例不会自动回答或批准。真实产品应实现自己的交互和投递合同。
+示例没有交互界面，因此只取消首次需要外部答复的同步交互，并继续观察。省略 `payload.responseRequired` 表示需要答复。示例忽略标记为 `payload.delivery === "async"` 的可选问题，以及标记为 `payload.responseRequired === false`、由 Adapter 负责的自动审批。后一个标记不证明审批已投递、交互已解决或执行已完成。示例本身不会回答或授予批准。真实产品应实现自己的交互和投递合同，具体字段见固定版本的[交互类型合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/780cd7cd5e67e4868df895a2e74a826097f349fd/packages/octo-runtime-protocol/src/generated/protocol-types.ts)。
 
 收到 SIGINT/SIGTERM 或达到 65 秒应用计时器后，示例停止接纳，按五秒绝对截止时间取消并排空本客户端登记的调用，再关闭连接。正常完成也检查排空结果。排空不完整时保留原身份报告，不自动重新提交调用。在长期运行产品中使用此模式前，应把未解决记录保存到自己的持久事件/会话存储；这个控制台示例不提供崩溃恢复或持久存储。
 
-如需静态检查，使用已审核的 TypeScript 编译器及 Node 24 类型，运行参数为 `--strict --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 main.mts`。本指南实际检查使用官方客户端归档、TypeScript 5.9.3、Node 类型 24.13.5 和 Node 24.22.1：严格类型检查及纯 `--check-input` 路径通过。**未执行真实 Kernel/Provider 调用、Windows 运行、Electron/Tauri 打包、认证或部署验收。**
+如需静态检查，使用已审核的 TypeScript 编译器及 Node 24 类型，运行参数为 `--strict --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 main.mts`。交互条件修正前的示例使用官方客户端归档、TypeScript 5.9.3、Node 类型 24.13.5 和 Node 24.22.1，通过了严格类型检查及纯 `--check-input` 路径。本次修正核对了固定版本协议，并从英中示例提取事件处理代码，以合成事件完成回归；本轮未重跑完整类型检查和 `--check-input` 路径。**未执行真实 Kernel/Provider 调用、Windows 运行、Electron/Tauri 打包、认证或部署验收。**
 
 ## 处理结果，只关闭自己拥有的资源
 

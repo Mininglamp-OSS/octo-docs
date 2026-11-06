@@ -119,7 +119,8 @@ if (process.argv.includes("--check-input")) {
     for await (const event of client.invoke(input)) {
       if (event.type === "message.delta" && typeof event.payload.text === "string")
         process.stdout.write(event.payload.text);
-      if (event.type === "interaction.requested" && event.payload.delivery !== "async" && !cancellationRequested) {
+      if (event.type === "interaction.requested" && event.payload.delivery !== "async" &&
+          event.payload.responseRequired !== false && !cancellationRequested) {
         cancellationRequested = true;
         try {
           await client.cancelInvocation(input.invocationId, "example has no interaction UI");
@@ -162,11 +163,11 @@ node main.mts
 
 Only `run.completed` indicates successful execution. A failed or cancelled terminal sets a nonzero exit status; execution failure may arrive as `run.failed` without throwing. Canonical `invoke` yields `CanonicalEvent` directly, not `HostFrame.event`. Text output is demonstration output, not a durable result delivery receipt.
 
-The example cancels the first synchronous interaction because it has no UI, then keeps observing. It ignores optional questions marked `payload.delivery === "async"` and continues; they are not blocking approval requests. It never automatically answers or grants approval. A real product should implement its own interaction and delivery contract.
+The example cancels only the first synchronous interaction that requires an external response because it has no UI, then keeps observing. An omitted `payload.responseRequired` means a response is required. It ignores optional questions marked `payload.delivery === "async"` and Adapter-owned automatic approvals marked `payload.responseRequired === false`. The latter flag does not prove approval delivery, resolution or execution completion. The example never answers or grants approval itself. A real product should implement its own interaction and delivery contract. See the fixed [interaction type contract](https://github.com/Mininglamp-OSS/octo-runtime/blob/780cd7cd5e67e4868df895a2e74a826097f349fd/packages/octo-runtime-protocol/src/generated/protocol-types.ts).
 
 SIGINT/SIGTERM or the 65-second application timer stops admission, requests cancellation/drain of this client's registered calls with a five-second absolute deadline, then closes connections. Normal completion also checks drain. Incomplete drain is reported with the original identities; no invocation is automatically resubmitted. Preserve unresolved records in your own durable incident/session storage before using this pattern in a long-lived product. This console demo provides no crash recovery or durable storage.
 
-For optional static checking, use a reviewed TypeScript compiler and Node 24 types with `--strict --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 main.mts`. The checks behind this guide used the official client archive, TypeScript 5.9.3, Node types 24.13.5 and Node 24.22.1: strict typecheck and the pure `--check-input` path passed. **No real Kernel/Provider invocation, Windows run, Electron/Tauri packaging, authentication or deployment acceptance was performed.**
+For optional static checking, use a reviewed TypeScript compiler and Node 24 types with `--strict --noEmit --module NodeNext --moduleResolution NodeNext --target ES2022 main.mts`. Before the interaction-condition correction, the example passed strict typechecking and the pure `--check-input` path with the official client archive, TypeScript 5.9.3, Node types 24.13.5 and Node 24.22.1. The correction was checked against the fixed protocol, and the observation loops extracted from both language versions were tested with synthetic events; the full typecheck and `--check-input` path were not rerun for this correction. **No real Kernel/Provider invocation, Windows run, Electron/Tauri packaging, authentication or deployment acceptance was performed.**
 
 ## Handle outcomes and close only what you own
 
