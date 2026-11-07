@@ -43,8 +43,15 @@ icon: "wrench"
 
 <AccordionGroup>
   <Accordion title="管理员登录失败">
-    使用 `setup.sh` 运行结束时打印的密码(或从 `docker/.env` 读取 `OCTO_ADMIN_PWD`)。管理员用户
-    是 `superAdmin`。参见[组织上手](/zh/guides/teams/onboard-your-org)。
+    打开已配置的 HTTPS 控制台，使用目标平台管理员账号的**当前密码**。服务端首次创建的账号名为 `superAdmin`，其他管理员账号使用各自的用户名。请遵循[管理控制台登录说明](/zh/guides/teams/admin-console#登录方式与权限边界)，包括部署要求的邮箱 MFA。
+
+    `setup.sh` 打印的密码或 `docker/.env` 中的 `OCTO_ADMIN_PWD` **仅用于首次初始化，不是恢复凭据**。[Compose 将该值传给服务端](https://github.com/Mininglamp-OSS/octo-deployment/blob/afd3747b8d952b3e4fab2fad063d7afdd0cb0756/docker/docker-compose.yaml#L711-L717)，而[账号初始化逻辑](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L2107-L2162)在配置的账号已存在时直接返回。密码变更后，保存的初始化值可能已经过期。修改该值或重启服务端不会重置已有账号的密码。
+
+    如果获授权的运维人员仍持有有效的 **superAdmin 角色会话**，发布版提供的[密码重置接口](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L758-L812)为 `POST /v1/manager/user/resetpassword`。先核对目标账号的 `uid`，再通过受保护的 API 入口，使用该会话提交 `new_password` 及相同的 `new_password_confirmation`。服务端要求 superAdmin 角色，且新密码须满足口令强度策略。这是已认证的管理操作，不能用来找回已丢失的会话或绕过 MFA。
+
+    重置成功后，使用新密码登录并完成要求的 MFA。如果请求失败或超时，先请运维人员核对账号和会话状态，再决定是否重试：[密码更新可能已提交，而会话撤销或设备退出随后失败](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/session_revocation.go#L124-L174)。错误响应不能证明旧密码仍然有效。
+
+    如果没有有效的 superAdmin 会话，已核对的 Server v1.24.0 [管理路由](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L106-L128)没有提供未认证的密码重置入口。请由部署负责人安排适用于实际部署版本的恢复方案。本指南不提供已经验证的离线数据库恢复步骤。不要将带 `--force` 的 setup、删除账号或清除数据当作密码重置捷径。源码核对不代表恢复流程已在你的部署中通过验证。
   </Accordion>
   <Accordion title="文件上传 / 预签名 PUT 返回 403 SignatureDoesNotMatch">
     浏览器直传必须把凭证端点返回的 `contentType`(以及若有的 `contentDisposition`)作为对应的
