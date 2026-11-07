@@ -6,20 +6,57 @@ icon: "shield"
 
 **[`octo-admin`](https://github.com/Mininglamp-OSS/octo-admin)** is the operator console for an
 Octo deployment — tenants, orgs, users, channels, and agent configuration in one pane.
-It's a thin React front-end over `octo-server`'s `/admin/*` REST APIs, with no business logic or
-database of its own.
+It is a React front-end for server administration, with no database of its own. The primary
+manager APIs use `/v1/manager/*`; `/admin/` is the browser UI path.
+
+<Note>
+  This guide follows released [Admin v1.13.0](https://github.com/Mininglamp-OSS/octo-admin/releases/tag/v1.13.0)
+  (`dd0401eaeb40dcc24478ba62a256fe0f117091cf`) and
+  [Server v1.24.0](https://github.com/Mininglamp-OSS/octo-server/releases/tag/v1.24.0)
+  (`adb7c385386c558d78be8b6fbf7881392fab4475`). Check the versions and ingress configuration
+  actually deployed; a published release does not establish your deployment's configuration.
+</Note>
 
 ## Access
 
-With the [Compose deployment](/guides/operators/deploy-compose), the console is served at:
+For any access from another machine, first configure an HTTPS ingress with a valid certificate. Then open your TLS-protected console URL, for example:
 
-```bash
-http://<your-host>:28080/admin/     # log in as superAdmin
+```text
+https://octo.example.com/admin/
 ```
 
-Operator authentication is delegated to `octo-server` (SSO or an admin token), and **every
-mutation passes backend-side RBAC** — the UI is a convenience, not the security boundary. Deploy
-it as a separate, internal/VPN-only, SSO-gated bundle.
+Replace the example hostname with your configured ingress. This is not a default Compose TLS endpoint: changing an HTTP URL to `https://` does not enable TLS.
+
+<Warning>
+  Require HTTPS for the console and its browser-facing APIs before entering administrator credentials from another machine. Never send passwords, MFA codes, or session tokens over plaintext HTTP across the network. Keep administration private or VPN-restricted as an additional access control, not a replacement for HTTPS.
+</Warning>
+
+For local evaluation only, the [Compose HTTP entry point](/guides/operators/deploy-compose) can be opened on the machine running the stack:
+
+```text
+http://127.0.0.1:28080/admin/
+```
+
+Use this HTTP example only after restricting the listener to local access. A loopback URL in your browser does not change the service's bind address or firewall rules. Prevent direct network access to the plaintext port so it cannot bypass the HTTPS ingress.
+
+### Sign in and understand the boundary
+
+The platform-manager form sends a username and password to `POST /v1/manager/login`.
+When the server requires email MFA, complete that challenge before receiving the session token.
+The client sends the issued token in the `token` request header. See the fixed
+[login client](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/src/api/auth.ts)
+and [server login handler](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L316-L480).
+
+**User SSO settings do not disable platform-manager password login**, including the user-login
+`local_off` policy. An SSO-aware reverse proxy is an additional control you configure, not the
+built-in manager sign-in flow. Server authentication and
+[role checks](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/pkg/auth/manager_roles.go)
+enforce administrative access. The UI uses the capabilities returned by `/v1/manager/me` to
+control available views; a visible or hidden button does not grant or revoke server permissions.
+
+<Warning>
+  Protect the console **and the administrative API entry points** at your HTTPS ingress. Restricting only `/admin/` does not apply that restriction to the separately routed APIs. In the released [Docker Nginx template](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/nginx.conf.template), browser requests under `/api/` are forwarded without that prefix to the primary backend, and `/market/api/` goes to the separate Marketplace backend. Review every exposed route and direct backend address; apply any external SSO gate to the relevant APIs as well as the UI. The released Docker proxy itself listens on HTTP. Terminate TLS before it, prevent direct client access to its plaintext listener, and keep proxy-to-backend traffic on a protected network. Use encrypted transport for any segment that crosses an untrusted network.
+</Warning>
 
 ## What you manage
 
@@ -40,25 +77,49 @@ it as a separate, internal/VPN-only, SSO-gated bundle.
     Platform-wide configuration.
   </Card>
   <Card title="Backups & downloads" icon="database">
-    Configure, test, and restore backup strategies; set client download links.
+    Configure, test, and run backups; inspect and download backup history; set client download links.
   </Card>
 </CardGroup>
+
+The released [backup client](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/src/api/backup.ts)
+and [server backup routes](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/backup/api_manager.go#L44-L62)
+provide configuration, connection tests, backup runs, history, deletion, download, and status.
+They do **not** provide a console restore operation. Plan and verify recovery separately using
+[Backup and restore](/guides/operators/backup-and-restore).
 
 A built-in **changelog** view surfaces component release notes for day-2 operations.
 
 ## Self-hosting the console
 
-It's a Vite app:
+The released Vite app uses these settings in `.env.local` for local development:
 
-```bash
-pnpm dev        # dev server; point VITE_ADMIN_API_* at your octo-server
-pnpm build      # static bundle → ./dist
+```dotenv
+VITE_API_BASE=/api
+VITE_PROXY_TARGET=https://your-octo-instance.com
 ```
 
-Retarget the API via `.env.local` (`VITE_ADMIN_API_*`). The console ships EN / 中文 locales.
+- `VITE_API_BASE` is the browser client's API base, defaulting to `/api`.
+- `VITE_PROXY_TARGET` selects the development backend. The Vite proxy strips `/api` before
+  forwarding requests. Set it to your intended backend before starting the dev server.
+- `VITE_ADMIN_API_*` comments in the upstream example/README are not the primary client's
+  configuration contract. Use the actual
+  [API client](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/src/api/index.ts#L82-L95)
+  and [Vite proxy settings](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/vite.config.ts).
+
+```bash
+pnpm dev        # uses the development proxy settings above
+pnpm build      # static bundle → ./dist; production UI base is /admin/
+```
+
+The development proxy does not run inside the production static bundle. For the released Docker
+image, configure `API_BACKEND` on its Nginx proxy. Marketplace is separate: its browser base is
+`VITE_MARKETPLACE_API_BASE` (default `/market/api/v1`), its development target is
+`VITE_MARKETPLACE_TARGET`, and its Docker proxy target is `MARKETPLACE_BACKEND`.
+Never put passwords, service credentials, or pre-issued tokens in `VITE_*` variables: values
+referenced by the frontend are compiled into browser assets. The console ships EN / 中文 locales.
 
 <Info>
-  Because the admin console holds no data and enforces nothing on its own, the security posture
-  is entirely: **serve it privately, gate it behind SSO, and rely on server-side RBAC.** See
-  [Security hardening](/guides/operators/security-hardening).
+  These are released-source checks, not a live login, MFA, ingress, role-enforcement, or recovery
+  acceptance test. Validate those paths in your own deployment before exposing administrative
+  access. See [Security hardening](/guides/operators/security-hardening).
 </Info>

@@ -6,6 +6,7 @@
       "repository": "Mininglamp-OSS/octo-cli",
       "directory": "octo-cli",
       "label": "v0.18.0",
+      "tag": "v0.18.0",
       "revision": "d564a63bbd8ec2dd4305a40a64fe0179ca9c667f",
       "files": {
         "internal/registry/specs/bot.json": "a9320461b5579fc7668df780f286d7df93a78e142a53de6cf91604657c7da949",
@@ -22,6 +23,7 @@
       "repository": "Mininglamp-OSS/octo-auth",
       "directory": "octo-auth",
       "label": "contract snapshot (no release tag claimed)",
+      "tag": null,
       "revision": "94045414467c0a30fb7022dcbba699c7bb333901",
       "files": {
         "contract/auth-v1.yaml": "e3af618c5b62faca222fe3a35b5ae21b8531a5914a37704ba43711870848d388",
@@ -32,6 +34,7 @@
       "repository": "Mininglamp-OSS/octo-server",
       "directory": "octo-server",
       "label": "v1.22.0",
+      "tag": "v1.22.0",
       "revision": "8326c67afdcd0fb8cd3b9f98548e2ed40ed49a62",
       "files": {
         "configs/tsdd.yaml": "6a62ab071e2a32ae61a2ea8306b8b4fc939a46d9b08fb811fdb1adc40aaea311"

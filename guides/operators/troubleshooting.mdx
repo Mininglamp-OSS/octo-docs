@@ -46,8 +46,15 @@ or SigV4 signing mismatched. Look at `octo-server` **and** MinIO together, not a
 
 <AccordionGroup>
   <Accordion title="Admin login fails">
-    Use the password `setup.sh` printed at the end of its run (or read `OCTO_ADMIN_PWD` from
-    `docker/.env`). The admin user is `superAdmin`. See [Onboard your org](/guides/teams/onboard-your-org).
+    Open the configured HTTPS console and use the **current** password for the intended platform-manager account. The account seeded by the server is named `superAdmin`; other manager accounts use their own usernames. Follow the [admin console sign-in guidance](/guides/teams/admin-console#sign-in-and-understand-the-boundary), including any required email MFA.
+
+    The password printed by `setup.sh` or stored as `OCTO_ADMIN_PWD` in `docker/.env` is **bootstrap-only**, not a recovery credential. [Compose passes it to the server](https://github.com/Mininglamp-OSS/octo-deployment/blob/afd3747b8d952b3e4fab2fad063d7afdd0cb0756/docker/docker-compose.yaml#L711-L717), whose [account initializer](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L2107-L2162) returns when the configured account already exists. After a password change, the saved bootstrap value can be stale. Changing that value or restarting the server does not reset an existing account.
+
+    If an authorized operator still has a valid **superAdmin-role session**, the released [password-reset endpoint](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L758-L812) is `POST /v1/manager/user/resetpassword`. Confirm the target account's `uid`, then submit `new_password` and matching `new_password_confirmation` through the protected API entry point using that session. The server requires the superAdmin role and a password that satisfies its strength policy. This is an authenticated administrative operation, not a way to recover a lost session or bypass MFA.
+
+    After a successful reset, sign in with the new password and complete any required MFA. If the request fails or times out, have the operator check the account and session state before retrying: the [password update can commit before session revocation or device logout fails](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/session_revocation.go#L124-L174). An error does not prove that the old password is still valid.
+
+    If no valid superAdmin session is available, the checked Server v1.24.0 [manager routes](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L106-L128) provide no unauthenticated password-reset endpoint. Ask the deployment owner to arrange recovery for the deployed version. This guide does not provide a verified offline database-recovery procedure. Do not rerun setup with `--force`, delete the account, or remove data as a password-reset shortcut. Source checks do not establish that a recovery procedure has been tested in your deployment.
   </Accordion>
   <Accordion title="File upload / presigned PUT returns 403 SignatureDoesNotMatch">
     A browser-direct upload must echo the `contentType` (and `contentDisposition` if set) returned

@@ -11,10 +11,14 @@ in.
 
 ## Prerequisites
 
-- A running Octo instance with an admin login (the `superAdmin` credentials printed by
-  `setup.sh`).
-- Access to the [admin console](/guides/teams/admin-console) at
-  `http://<your-host>:28080/admin/`.
+- A running Octo instance with a platform-manager account configured for your deployment.
+- An HTTPS ingress with a valid certificate for the [admin console](/guides/teams/admin-console), for example `https://octo.example.com/admin/`. Replace this hostname with your configured ingress. Changing the URL to `https://` does not enable TLS in Compose.
+
+<Warning>
+  Before anyone signs in from another machine, require HTTPS for the console, web client, and their browser-facing APIs. Never send passwords, MFA codes, or session tokens over plaintext HTTP across the network. A private network or VPN is an additional access control, not a replacement for HTTPS. Protect administrative API entry points as well as `/admin/`, and prevent direct access to plaintext listeners that bypass the ingress. Follow the [admin console access guidance](/guides/teams/admin-console#access) for API routing and proxy-to-backend protection.
+</Warning>
+
+For local evaluation only, you can use `http://127.0.0.1:28080/admin/` on the machine running the stack after restricting its HTTP listener to local access. A loopback URL does not change the bind address or firewall rules; it must not leave the plaintext port reachable from other machines.
 
 ## Steps
 
@@ -36,9 +40,7 @@ in.
     distinction.
 
     <Note>
-      Members sign in to the **web client** at `http://<your-host>:28080/` (the same host as the
-      admin console, without the `/admin/` path). See [Clients](/guides/teams/clients) for the
-      desktop, mobile, and browser-extension options.
+      Members sign in to the **web client** through its configured HTTPS ingress, for example `https://octo.example.com/` when it shares the console's host. Local evaluation on the stack's machine may use `http://127.0.0.1:28080/` only under the listener restrictions above. See [Clients](/guides/teams/clients) for the desktop, mobile, and browser-extension options.
     </Note>
   </Step>
   <Step title="Set up channels">
@@ -52,9 +54,7 @@ in.
 </Steps>
 
 <Info>
-  Onboarding actions are the admin console's day-2 job. It's a thin front-end over
-  `octo-server`'s `/admin/*` APIs — every mutation is re-checked by backend RBAC, so operator
-  access is enforced server-side, not just in the UI.
+  The console is a front-end for `octo-server` administration. Its primary manager APIs use `/v1/manager/*`; `/admin/` is the browser UI path. Server authentication and role checks enforce administrative access; a visible or hidden button does not grant or revoke server permissions. See the [admin console guide](/guides/teams/admin-console) for the fixed release sources, sign-in flow, and API protection requirements. Verify these controls in your deployment before onboarding members.
 </Info>
 
 ## Next

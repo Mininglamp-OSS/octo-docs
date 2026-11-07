@@ -5,52 +5,136 @@ on:
     branches: [main]
   pull_request:
 
+# PR jobs build untrusted code. Do not inherit broader repository token defaults.
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           path: octo-docs
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
-      - name: Read fixed reference revisions
+      # Read lock files as data, not executable PR scripts, before source checkouts.
+      # Repositories/output names stay fixed here; only validated SHA values vary.
+      - name: Read fixed source revisions
         id: sources
         working-directory: octo-docs
-        run: node scripts/reference-sources.mjs --github-output >> "$GITHUB_OUTPUT"
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const inputs = [
+            ['scripts/reference-sources.json', [
+              ['cli', 'cli', 'octo-cli', 'octo-cli'],
+              ['auth', 'auth', 'octo-auth', 'octo-auth'],
+              ['server', 'server', 'octo-server', 'octo-server'],
+            ]],
+            ['scripts/admin-guide-sources.json', [
+              ['guide_admin', 'admin', 'octo-admin', 'octo-admin-guide'],
+              ['guide_server', 'server', 'octo-server', 'octo-server-guide'],
+            ]],
+          ];
+          const output = [];
+          for (const [file, sources] of inputs) {
+            const lock = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (lock.schema !== 1) throw new Error('Unsupported source lock schema');
+            for (const [name, key, repository, directory] of sources) {
+              const source = lock.sources?.[key];
+              const revision = source?.revision;
+              if (source?.repository !== `Mininglamp-OSS/${repository}` ||
+                  source?.directory !== directory || typeof revision !== 'string' ||
+                  revision.length !== 40 || !/^[0-9a-f]{40}$/.test(revision)) {
+                throw new Error(`Invalid fixed source metadata: ${name}`);
+              }
+              output.push(`${name}=${revision}\n`);
+            }
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, output.join(''));
+          NODE
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: Mininglamp-OSS/octo-cli
           ref: ${{ steps.sources.outputs.cli }}
           path: octo-cli
-      - uses: actions/checkout@v4
+          fetch-depth: 0 # Include release tags for generated-reference provenance.
+          persist-credentials: false
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: Mininglamp-OSS/octo-auth
           ref: ${{ steps.sources.outputs.auth }}
           path: octo-auth
-      - uses: actions/checkout@v4
+          persist-credentials: false
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: Mininglamp-OSS/octo-server
           ref: ${{ steps.sources.outputs.server }}
           path: octo-server
+          fetch-depth: 0 # Separate from the hand-written guide's Server baseline.
+          persist-credentials: false
+
+      # Separate paths preserve the generated reference's Server v1.22.0 baseline.
+      # Full history includes tags so the validator can peel annotated release tags.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: Mininglamp-OSS/octo-admin
+          ref: ${{ steps.sources.outputs.guide_admin }}
+          path: octo-admin-guide
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: Mininglamp-OSS/octo-server
+          ref: ${{ steps.sources.outputs.guide_server }}
+          path: octo-server-guide
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Record and verify input revisions
+        env:
+          CLI_REVISION: ${{ steps.sources.outputs.cli }}
+          AUTH_REVISION: ${{ steps.sources.outputs.auth }}
+          SERVER_REVISION: ${{ steps.sources.outputs.server }}
+          ADMIN_GUIDE_REVISION: ${{ steps.sources.outputs.guide_admin }}
+          SERVER_GUIDE_REVISION: ${{ steps.sources.outputs.guide_server }}
         run: |
-          for repo in cli auth server; do
-            actual=$(git -C "octo-$repo" rev-parse HEAD)
-            case "$repo" in
-              cli) expected='${{ steps.sources.outputs.cli }}' ;;
-              auth) expected='${{ steps.sources.outputs.auth }}' ;;
-              server) expected='${{ steps.sources.outputs.server }}' ;;
-            esac
-            echo "octo-$repo: $actual"
-            test "$actual" = "$expected"
-          done
-          node octo-docs/scripts/reference-sources.mjs
+          node <<'NODE'
+          const { execFileSync } = require('node:child_process');
+          for (const [directory, variable] of [
+            ['octo-cli', 'CLI_REVISION'], ['octo-auth', 'AUTH_REVISION'],
+            ['octo-server', 'SERVER_REVISION'],
+            ['octo-admin-guide', 'ADMIN_GUIDE_REVISION'],
+            ['octo-server-guide', 'SERVER_GUIDE_REVISION'],
+          ]) {
+            const expected = process.env[variable];
+            if (typeof expected !== 'string' || expected.length !== 40 ||
+                !/^[0-9a-f]{40}$/.test(expected)) throw new Error(`Invalid revision: ${variable}`);
+            const actual = execFileSync('git', ['-C', directory, 'rev-parse', 'HEAD'],
+              { encoding: 'utf8' }).trim();
+            if (actual !== expected) throw new Error(`Revision mismatch: ${directory}`);
+            console.log(`${directory}: ${actual}`);
+          }
+          NODE
+
+      # Repository scripts/dependency lifecycle code run only after all checkouts
+      # have removed their temporary credentials. Never pass a token to these steps.
+      - name: Test workflow trust boundaries
+        working-directory: octo-docs
+        run: node --test scripts/docs-workflow.test.mjs
+
+      - name: Verify generated reference sources
+        run: node octo-docs/scripts/reference-sources.mjs
+
+      - name: Verify hand-written guide provenance
+        working-directory: octo-docs
+        run: npm run test:guide-sources && npm run check:guide-sources
 
       - name: Install deps
         working-directory: octo-docs

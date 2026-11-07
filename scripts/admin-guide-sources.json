@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "documents": [
+    "guides/teams/admin-console.mdx",
+    "zh/guides/teams/admin-console.mdx"
+  ],
+  "sources": {
+    "admin": {
+      "repository": "Mininglamp-OSS/octo-admin",
+      "revision": "dd0401eaeb40dcc24478ba62a256fe0f117091cf",
+      "tag": "v1.13.0",
+      "label": "Admin",
+      "directory": "octo-admin-guide",
+      "files": {
+        "src/api/auth.ts": "2d8c1a4ed19ec809f808b03622c32ca09a2e33857c9287237e5614e1e77b4a99",
+        "nginx.conf.template": "03de1bb70627ae67e18b1ef09cae566b13c0c15b1f0c13139e2d7e33cb90d396",
+        "src/api/backup.ts": "2cb055d123505707ac25f236cc5d68321b3f24828df58d4c0750a9dcb68ffb35",
+        "src/api/index.ts": "7897b6aeff0f76b40c5549c94dc196ee64c84dd780162b26114432a74a64f3a6",
+        "vite.config.ts": "dc77a2ad570ce416ca14777d768097df3ec6815fb6705bb4ab3dc4f68f65b90c"
+      }
+    },
+    "server": {
+      "repository": "Mininglamp-OSS/octo-server",
+      "revision": "adb7c385386c558d78be8b6fbf7881392fab4475",
+      "tag": "v1.24.0",
+      "label": "Server",
+      "directory": "octo-server-guide",
+      "files": {
+        "modules/user/api_manager.go": "c47f7a4877a46306c1e380c7aab0cd7c690cb4e1888c06ad85348d33e7ad88e7",
+        "pkg/auth/manager_roles.go": "d4c36020a1e0130e801467659e77bc0c4fa9b78300c9890d9b38d202fa13e3a9",
+        "modules/backup/api_manager.go": "605ff06046f00ab2aa6d439d598052841a218d68cb649a182858cc573f3cb064"
+      }
+    }
+  }
+}

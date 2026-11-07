@@ -6,20 +6,56 @@ icon: "shield"
 
 **[`octo-admin`](https://github.com/Mininglamp-OSS/octo-admin)** 是 Octo 部署的运维控制台——
 在同一个面板中管理租户、组织、用户、频道和智能体配置。
-它是 `octo-server` 的 `/admin/*` REST API 之上的一层轻量 React 前端，自身不含业务逻辑或
-数据库。
+它是服务器管理功能的 React 前端，自身没有数据库。主要管理员 API 使用
+`/v1/manager/*`；`/admin/` 是浏览器界面的路径。
+
+<Note>
+  本指南依据正式发布的 [Admin v1.13.0](https://github.com/Mininglamp-OSS/octo-admin/releases/tag/v1.13.0)
+  （`dd0401eaeb40dcc24478ba62a256fe0f117091cf`）和
+  [Server v1.24.0](https://github.com/Mininglamp-OSS/octo-server/releases/tag/v1.24.0)
+  （`adb7c385386c558d78be8b6fbf7881392fab4475`）。请核对实际部署的版本和入口配置；
+  已发布版本不能证明你的部署采用了相同配置。
+</Note>
 
 ## 访问
 
-在 [Compose 部署](/zh/guides/operators/deploy-compose)中，控制台的服务地址为：
+从其他机器访问前，先配置具有有效证书的 HTTPS 入口，再打开经过 TLS 保护的控制台地址，例如：
 
-```bash
-http://<your-host>:28080/admin/     # log in as superAdmin
+```text
+https://octo.example.com/admin/
 ```
 
-运维认证被委托给 `octo-server`（SSO 或管理员令牌），并且**每一次变更都会经过后端侧的 RBAC**——
-UI 只是一种便利，而不是安全边界。请将它作为一个独立的、仅限内网/VPN 访问、由 SSO 把关的
-捆绑包来部署。
+将示例域名替换为你已配置的入口。这不是 Compose 默认提供的 TLS 地址； 把 HTTP 地址改写成 `https://` 不会自动启用 TLS。
+
+<Warning>
+  从其他机器输入管理员凭据前，必须为控制台及其面向浏览器的 API 启用 HTTPS。 不要通过网络上的明文 HTTP 传输密码、多因素认证验证码或会话令牌。 将管理入口限制在私有网络或 VPN 内是额外的访问控制，不能替代 HTTPS。
+</Warning>
+
+仅在本地评估时，才可以在运行该栈的机器上打开 [Compose HTTP 入口](/zh/guides/operators/deploy-compose)：
+
+```text
+http://127.0.0.1:28080/admin/
+```
+
+使用此 HTTP 示例前，先把监听入口限制为仅本地可访问。浏览器中的回环地址不会改变服务的 绑定地址或防火墙规则。阻止网络直接访问明文端口，避免绕过 HTTPS 入口。
+
+### 登录方式与权限边界
+
+平台管理员表单将用户名和密码提交到 `POST /v1/manager/login`。服务器要求邮箱多因素认证
+（MFA）时，须先完成验证码验证，才会签发会话令牌。客户端随后通过 `token` 请求头发送
+该令牌。参见固定版本的
+[登录客户端](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/src/api/auth.ts)
+和[服务器登录处理](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/user/api_manager.go#L316-L480)。
+
+**用户单点登录（SSO）配置不会禁用平台管理员密码登录**，用户登录的 `local_off` 策略也不例外。
+支持 SSO 的反向代理是需要另外配置的控制措施，不是内置管理员登录流程。服务器认证和
+[角色检查](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/pkg/auth/manager_roles.go)
+负责限制管理访问。界面根据 `/v1/manager/me` 返回的能力控制可用页面；按钮可见或隐藏不会
+授予或撤销服务器权限。
+
+<Warning>
+  在 HTTPS 入口同时保护**控制台和管理 API**。仅限制 `/admin/`，不会把同一限制应用到独立路由的 API。 正式版本的 [Docker Nginx 模板](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/nginx.conf.template) 将浏览器的 `/api/` 请求去掉该前缀后转发到主后端，将 `/market/api/` 转发到独立的 Marketplace 后端。检查所有暴露的路由和后端直连地址；若设置外部 SSO 门禁，应同时覆盖 相关 API 和界面。正式版本的 Docker 代理本身监听 HTTP，应在其前方终止 TLS，并阻止客户端 直接访问它的明文监听端口。代理到后端的流量应限制在受保护的网络内；任何跨越不可信网络的 链路都应使用加密传输。
+</Warning>
 
 ## 你所管理的内容
 
@@ -40,25 +76,46 @@ UI 只是一种便利，而不是安全边界。请将它作为一个独立的�
     平台级配置。
   </Card>
   <Card title="备份与下载" icon="database">
-    配置、测试并恢复备份策略；设置客户端下载链接。
+    配置、测试并执行备份；查看和下载备份历史；设置客户端下载链接。
   </Card>
 </CardGroup>
+
+正式版本的[备份客户端](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/src/api/backup.ts)
+和[服务器备份路由](https://github.com/Mininglamp-OSS/octo-server/blob/adb7c385386c558d78be8b6fbf7881392fab4475/modules/backup/api_manager.go#L44-L62)
+提供配置、连接测试、执行备份、历史、删除、下载和状态功能，**没有控制台恢复操作**。
+请参考[备份与恢复](/zh/guides/operators/backup-and-restore)，单独规划并验证恢复流程。
 
 内置的**更新日志（changelog）**视图会呈现各组件的发布说明，服务于第 2 天运维。
 
 ## 自托管该控制台
 
-它是一个 Vite 应用：
+正式发布的 Vite 应用在本地开发时使用 `.env.local` 中的以下设置：
 
-```bash
-pnpm dev        # dev server; point VITE_ADMIN_API_* at your octo-server
-pnpm build      # static bundle → ./dist
+```dotenv
+VITE_API_BASE=/api
+VITE_PROXY_TARGET=https://your-octo-instance.com
 ```
 
-通过 `.env.local`（`VITE_ADMIN_API_*`）重新指向 API。该控制台随附 EN / 中文 语言包。
+- `VITE_API_BASE` 是浏览器客户端的 API 基础路径，默认为 `/api`。
+- `VITE_PROXY_TARGET` 选择开发后端。Vite 代理转发请求前会去掉 `/api` 前缀。
+  启动开发服务器前，应将其设为你实际要连接的后端。
+- 上游示例或 README 中注释的 `VITE_ADMIN_API_*` 不是主客户端的配置契约。请以实际
+  [API 客户端](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/src/api/index.ts#L82-L95)
+  和 [Vite 代理设置](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/vite.config.ts)为准。
+
+```bash
+pnpm dev        # uses the development proxy settings above
+pnpm build      # static bundle → ./dist; production UI base is /admin/
+```
+
+开发代理不会在生产静态包中运行。使用正式 Docker 镜像时，应在其 Nginx 代理中配置
+`API_BACKEND`。Marketplace 使用独立设置：浏览器基础路径为 `VITE_MARKETPLACE_API_BASE`
+（默认 `/market/api/v1`），开发目标为 `VITE_MARKETPLACE_TARGET`，Docker 代理目标为
+`MARKETPLACE_BACKEND`。不要把密码、服务凭据或预先签发的令牌放入 `VITE_*` 变量：
+前端引用的值会编入浏览器静态资源。控制台随附 EN / 中文语言包。
 
 <Info>
-  由于管理控制台不持有任何数据、自身也不强制执行任何规则，其安全态势完全在于：
-  **私有地提供服务、用 SSO 把关、并依赖服务端的 RBAC。** 参见
+  以上是已发布源码核对，不是实际登录、多因素认证、入口保护、角色权限或恢复验收。
+  暴露管理入口前，请在自己的部署中验证这些路径。参见
   [安全加固](/zh/guides/operators/security-hardening)。
 </Info>
