@@ -64,6 +64,7 @@ jobs:
           repository: Mininglamp-OSS/octo-cli
           ref: ${{ steps.sources.outputs.cli }}
           path: octo-cli
+          fetch-depth: 0 # Include release tags for generated-reference provenance.
           persist-credentials: false
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -76,6 +77,7 @@ jobs:
           repository: Mininglamp-OSS/octo-server
           ref: ${{ steps.sources.outputs.server }}
           path: octo-server
+          fetch-depth: 0 # Separate from the hand-written guide's Server baseline.
           persist-credentials: false
 
       # Separate paths preserve the generated reference's Server v1.22.0 baseline.

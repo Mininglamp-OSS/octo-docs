@@ -3,12 +3,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { loadSourceLock, readLockedSpecs, scopeSpec } from './reference-sources.mjs';
+import { loadSourceLock, readLockedSpecs, scopeSpec, verifySource } from './reference-sources.mjs';
 const scripts = path.dirname(fileURLToPath(import.meta.url));
 const hash = (s) => createHash('sha256').update(s).digest('hex');
+const git = (directory, ...args) => execFileSync('git', ['-C', directory,
+  '-c', 'user.name=Source fixture', '-c', 'user.email=source-fixture@example.invalid',
+  '-c', 'commit.gpgsign=false', '-c', 'tag.gpgsign=false', ...args], { encoding: 'utf8' }).trim();
 function fixture(t) {
   const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'octo-reference-lock-'));
   t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
@@ -21,6 +24,10 @@ function fixture(t) {
     const raw = JSON.stringify(spec); fs.writeFileSync(path.join(dir, name + '.json'), raw);
     if (lock.operations[name]) lock.sources.cli.files[`internal/registry/specs/${name}.json`] = hash(raw);
   }
+  const repository = path.join(workspace, 'octo-cli');
+  git(repository, 'init', '-q'); git(repository, 'add', '.'); git(repository, 'commit', '-qm', 'fixture');
+  lock.sources.cli.revision = git(repository, 'rev-parse', 'HEAD');
+  git(repository, 'tag', '-a', lock.sources.cli.tag, '-m', 'fixture release');
   const save = () => fs.writeFileSync(path.join(docs, 'scripts/reference-sources.json'), JSON.stringify(lock)); save();
   return { workspace, docs, dir, lock, save, run: (...args) => spawnSync(process.execPath, [path.join(docs, 'scripts/gen-cli.mjs'), ...args], { encoding: 'utf8' }) };
 }
@@ -72,4 +79,81 @@ test('GitHub revision output and workflow use exact refs, not default-branch clo
   const workflow = fs.readFileSync(path.join(scripts, '../.github/workflows/docs.yml'), 'utf8');
   for (const id of ['cli', 'auth', 'server']) assert.ok(workflow.includes(`ref: \${{ steps.sources.outputs.${id} }}`));
   assert.doesNotMatch(workflow, /git clone/); assert.match(workflow, /npm ci/);
+});
+
+for (const id of ['cli', 'server']) {
+  for (const tag of [undefined, null, 'main', '../escape', 'v1.2.3\n', 'v1.2.3;echo unsafe', ['v1.2.3']]) {
+    test(`${id} rejects invalid or missing release tag ${JSON.stringify(tag)}`, (t) => {
+      const f = fixture(t); f.lock.sources[id].tag = tag; f.save();
+      assert.throws(() => loadSourceLock(f.docs), /Invalid release tag\/label/);
+    });
+  }
+  test(`${id} rejects a release label that disagrees with its tag`, (t) => {
+    const f = fixture(t); f.lock.sources[id].label = 'v99.0.0'; f.save();
+    assert.throws(() => loadSourceLock(f.docs), /Invalid release tag\/label/);
+  });
+}
+for (const [tag, label] of [[undefined, 'contract snapshot (no release tag claimed)'],
+  ['v1.0.0', 'v1.0.0'], [null, 'v1.0.0']]) {
+  test(`auth rejects a missing tagless marker or release claim ${JSON.stringify([tag, label])}`, (t) => {
+    const f = fixture(t); Object.assign(f.lock.sources.auth, { tag, label }); f.save();
+    assert.throws(() => loadSourceLock(f.docs), /explicitly remain a tagless contract snapshot/);
+  });
+}
+for (const revision of ['a'.repeat(40) + '\n', ['a'.repeat(40)]]) {
+  test(`source revision rejects non-exact SHA ${JSON.stringify(revision)}`, (t) => {
+    const f = fixture(t); f.lock.sources.cli.revision = revision; f.save();
+    assert.throws(() => loadSourceLock(f.docs), /Invalid fixed source metadata/);
+  });
+}
+
+function sourceFixture(t, id, annotated = true) {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'octo-source-tag-'));
+  t.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+  const lock = loadSourceLock(); const source = lock.sources[id];
+  const directory = path.join(workspace, source.directory); fs.mkdirSync(directory);
+  fs.writeFileSync(path.join(directory, 'input.txt'), 'locked input');
+  source.files = { 'input.txt': hash('locked input') };
+  git(directory, 'init', '-q'); git(directory, 'add', '.'); git(directory, 'commit', '-qm', 'locked fixture');
+  source.revision = git(directory, 'rev-parse', 'HEAD');
+  if (source.tag !== null) git(directory, 'tag', ...(annotated ? ['-a', source.tag, '-m', 'release'] : [source.tag]));
+  return { directory, source, check: () => verifySource(id, { lock, workspace }) };
+}
+for (const id of ['cli', 'server']) {
+  for (const annotated of [true, false]) {
+    test(`${id} accepts a real ${annotated ? 'annotated' : 'lightweight'} tag at the pinned HEAD`, (t) => {
+      const f = sourceFixture(t, id, annotated); assert.equal(f.check(), f.source);
+    });
+  }
+  test(`${id} rejects missing release tags, including a same-named branch`, (t) => {
+    const f = sourceFixture(t, id); git(f.directory, 'tag', '-d', f.source.tag);
+    git(f.directory, 'branch', f.source.tag);
+    assert.throws(f.check, /Command failed/);
+  });
+  test(`${id} rejects a release tag at another commit even with matching input bytes`, (t) => {
+    const f = sourceFixture(t, id); const old = f.source.revision;
+    git(f.directory, 'commit', '--allow-empty', '-qm', 'another revision');
+    git(f.directory, 'tag', '-f', f.source.tag);
+    git(f.directory, 'checkout', '-q', '--detach', old);
+    assert.throws(f.check, /release tag peel mismatch/);
+  });
+}
+for (const id of ['cli', 'auth', 'server']) {
+  test(`${id} rejects a different checkout HEAD even with matching input bytes`, (t) => {
+    const f = sourceFixture(t, id); git(f.directory, 'commit', '--allow-empty', '-qm', 'wrong HEAD');
+    assert.throws(f.check, /checkout SHA mismatch/);
+  });
+}
+test('auth accepts a real pinned checkout with no tags and explicitly claims no release', (t) => {
+  const f = sourceFixture(t, 'auth'); assert.equal(git(f.directory, 'tag', '--list'), '');
+  assert.equal(f.source.tag, null); assert.equal(f.check(), f.source);
+});
+test('CLI generation rejects a mismatched release tag before writing either language', (t) => {
+  const f = fixture(t); const directory = path.join(f.workspace, 'octo-cli');
+  const old = f.lock.sources.cli.revision;
+  git(directory, 'commit', '--allow-empty', '-qm', 'different release');
+  git(directory, 'tag', '-f', f.lock.sources.cli.tag); git(directory, 'checkout', '-q', '--detach', old);
+  const result = f.run(); assert.notEqual(result.status, 0); assert.match(result.stderr, /release tag peel mismatch/);
+  assert.equal(fs.existsSync(path.join(f.docs, 'reference')), false);
+  assert.equal(fs.existsSync(path.join(f.docs, 'zh/reference')), false);
 });

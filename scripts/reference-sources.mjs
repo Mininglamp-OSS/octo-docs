@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { DOCS_ROOT, WORKSPACE, HTTP_METHODS, readJson } from './_lib.mjs';
 
@@ -12,8 +13,16 @@ export function loadSourceLock(root = DOCS_ROOT) {
   for (const [id, directory] of Object.entries(REPOSITORIES)) {
     const src = lock.sources?.[id];
     if (src?.repository !== `Mininglamp-OSS/${directory}` || src.directory !== directory ||
+        typeof src.revision !== 'string' || src.revision.length !== 40 ||
         !/^[a-f0-9]{40}$/.test(src.revision) || typeof src.label !== 'string' || !src.label)
       throw new Error(`Invalid fixed source metadata: ${id}`);
+    if (id === 'auth') {
+      if (src.tag !== null || src.label !== 'contract snapshot (no release tag claimed)')
+        throw new Error('Auth source must explicitly remain a tagless contract snapshot');
+    } else if (typeof src.tag !== 'string' || src.tag.trim() !== src.tag ||
+        !/^v\d+\.\d+\.\d+$/.test(src.tag) || src.label !== src.tag) {
+      throw new Error(`Invalid release tag/label: ${id}`);
+    }
     if (!src.files || !Object.keys(src.files).length) throw new Error(`Empty source file set: ${id}`);
     for (const [file, digest] of Object.entries(src.files)) {
       if (path.isAbsolute(file) || file.includes('\\') || file.split('/').some((p) => !p || p === '..') ||
@@ -33,9 +42,19 @@ export function loadSourceLock(root = DOCS_ROOT) {
   return lock;
 }
 
+export function gitCommit(directory, ref) {
+  return execFileSync('git', ['-C', directory, 'rev-parse', '--verify', `${ref}^{commit}`],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+}
+
 export function verifySource(id, { lock = loadSourceLock(), workspace = WORKSPACE } = {}) {
   const source = lock.sources[id];
   if (!source) throw new Error(`Unknown source: ${id}`);
+  const directory = path.join(workspace, source.directory);
+  if (gitCommit(directory, 'HEAD') !== source.revision)
+    throw new Error(`${source.repository}: checkout SHA mismatch`);
+  if (source.tag !== null && gitCommit(directory, `refs/tags/${source.tag}`) !== source.revision)
+    throw new Error(`${source.repository}: release tag peel mismatch`);
   for (const [file, expected] of Object.entries(source.files)) {
     const input = path.join(workspace, source.directory, file);
     if (!fs.existsSync(input)) throw new Error(`Missing locked input: ${id}/${file}`);
@@ -87,6 +106,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     for (const id of Object.keys(REPOSITORIES)) console.log(`${id}=${lock.sources[id].revision}`);
   } else {
     for (const id of Object.keys(REPOSITORIES)) verifySource(id, { lock });
-    console.log('Locked reference inputs verified');
+    console.log('Locked reference inputs, checkout SHAs and release tag commits verified (auth is tagless)');
   }
 }

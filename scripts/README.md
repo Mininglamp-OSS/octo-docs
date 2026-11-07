@@ -33,8 +33,14 @@ npm run gen:check    # CI: exit 1 if any page is stale (drift detection)
 
 `reference-sources.json` is the shared input/coverage lock. CI reads its exact 40-character
 revisions, checks out all three repositories, records their actual SHAs, and checks each
-input file's SHA-256 before generation. Local generators verify the same input bytes;
-they never fetch or choose upstream `main`. Use `node scripts/reference-sources.mjs`
+input file's SHA-256 before generation. Each local generator verifies the checkout HEAD
+and, for a release source, `refs/tags/<tag>^{commit}` against the locked SHA before
+reading input bytes. CLI and Server have an explicit `tag` equal to their release
+label; auth has `tag: null` and the explicit contract-snapshot label. Annotated and
+lightweight tags are supported; a same-named branch is not a substitute for a tag.
+Keep the release tags in the sibling Git checkouts; copied files alone cannot pass
+the full source check. Validators never fetch or choose upstream `main`.
+Use `node scripts/reference-sources.mjs`
 to check local input files, then `npm run gen:all` and `npm run gen:check`.
 
 - CLI v0.18.0: `d564a63bbd8ec2dd4305a40a64fe0179ca9c667f`.
@@ -47,8 +53,11 @@ the reference automatically. A missing/duplicated reviewed operation or changed 
 fails before any output. Expanding coverage requires a deliberate lock/navigation review.
 This baseline keeps argument-rendering changes in the separate CLI argument-contract PR.
 
-输入与覆盖范围由同一份锁文件管理。CI 按完整 SHA 检出并记录实际版本，所有生成器先校验
-输入文件哈希；不会为了检查通过而跟随未发布的 main。这里只保留已有的 8 个领域、84 个
+输入与覆盖范围由同一份锁文件管理。CI 按完整 SHA 检出并记录实际版本，所有生成器先核对
+Git HEAD、发布标签解引用后的提交和输入文件哈希。CLI 与 Server 的 `tag` 必须和版本标签
+一致；auth 显式使用 `tag: null`，只声明合同快照。支持 annotated/lightweight tag，不能以
+同名分支代替。来源目录须保留 Git 检出及发布标签，单独复制文件不能通过完整校验；校验器
+不联网，也不会为了检查通过而跟随未发布的 main。这里只保留已有的 8 个领域、84 个
 操作，既不是完整产品能力清单，也不是取消漂移检查。新增领域/操作须显式审查锁文件与导航；
 缺失操作、重复操作、输入变化或中文输出陈旧仍会使门禁失败。auth 仅为既有合同快照，
 不冒称正式 SDK 发行。更新参考须改源/生成器后重生成，不能手改派生页。

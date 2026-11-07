@@ -98,6 +98,14 @@ test('all six immutable checkouts disable credential persistence', () => {
     assert.match(text, /^          persist-credentials: false$/m);
   }
 });
+test('released reference and guide checkouts include tags while auth stays tagless', () => {
+  for (const directory of ['octo-cli', 'octo-server', 'octo-admin-guide', 'octo-server-guide']) {
+    const checkout = steps.find((text) => text.includes(`          path: ${directory}\n`));
+    assert.match(checkout, /^          fetch-depth: 0(?: #.*)?$/m);
+  }
+  assert.equal(locks[referenceFile].sources.auth.tag, null);
+  assert.equal(locks[referenceFile].sources.auth.label, 'contract snapshot (no release tag claimed)');
+});
 test('expressions never become shell source and repository code follows all checkouts', () => {
   for (const text of steps.filter((text) => text.includes('        run: '))) {
     assert.doesNotMatch(run(text), /\$\{\{/);
