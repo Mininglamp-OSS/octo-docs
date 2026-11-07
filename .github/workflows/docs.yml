@@ -9,11 +9,11 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           path: octo-docs
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
@@ -22,17 +22,17 @@ jobs:
         working-directory: octo-docs
         run: node scripts/reference-sources.mjs --github-output >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: Mininglamp-OSS/octo-cli
           ref: ${{ steps.sources.outputs.cli }}
           path: octo-cli
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: Mininglamp-OSS/octo-auth
           ref: ${{ steps.sources.outputs.auth }}
           path: octo-auth
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: Mininglamp-OSS/octo-server
           ref: ${{ steps.sources.outputs.server }}
@@ -51,6 +51,30 @@ jobs:
             test "$actual" = "$expected"
           done
           node octo-docs/scripts/reference-sources.mjs
+
+      - name: Read hand-written guide revisions
+        id: guide-sources
+        working-directory: octo-docs
+        run: node scripts/admin-guide-sources.mjs --github-output >> "$GITHUB_OUTPUT"
+
+      # Separate paths preserve the generated reference's Server v1.22.0 baseline.
+      # Full history includes tags so the validator can peel annotated release tags.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: Mininglamp-OSS/octo-admin
+          ref: ${{ steps.guide-sources.outputs.admin }}
+          path: octo-admin-guide
+          fetch-depth: 0
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: Mininglamp-OSS/octo-server
+          ref: ${{ steps.guide-sources.outputs.server }}
+          path: octo-server-guide
+          fetch-depth: 0
+
+      - name: Verify hand-written guide provenance
+        working-directory: octo-docs
+        run: npm run test:guide-sources && npm run check:guide-sources
 
       - name: Install deps
         working-directory: octo-docs

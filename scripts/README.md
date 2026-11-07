@@ -52,3 +52,33 @@ This baseline keeps argument-rendering changes in the separate CLI argument-cont
 操作，既不是完整产品能力清单，也不是取消漂移检查。新增领域/操作须显式审查锁文件与导航；
 缺失操作、重复操作、输入变化或中文输出陈旧仍会使门禁失败。auth 仅为既有合同快照，
 不冒称正式 SDK 发行。更新参考须改源/生成器后重生成，不能手改派生页。
+
+
+## Hand-written admin guide provenance / 手写管理指南来源
+
+`admin-guide-sources.json` separately locks Admin v1.13.0 and Server v1.24.0 for
+`guides/teams/admin-console.mdx` and its Chinese counterpart. It does **not** change
+the generated reference's Server v1.22.0 input or regenerate reference pages.
+
+```bash
+npm run test:guide-sources                  # offline tests, including temporary Git tag fixtures
+node scripts/admin-guide-sources.mjs --documents-only # EN/ZH release assertions and source links only
+npm run check:guide-sources                 # documents + checked-out revisions, tags and source bytes
+```
+
+For the full check, use sibling checkouts named `octo-admin-guide` and
+`octo-server-guide`, at the exact manifest revisions, with their release tags
+available locally. The existing Docs workflow uses separate full-history checkouts
+for these sources. The validator never fetches: it checks HEAD and each
+`refs/tags/<tag>^{commit}` against the locked SHA, then verifies SHA-256 hashes of
+all cited source files. It rejects missing, mutable, mismatched or unlocked source
+references in either language and requires each release label/tag/SHA assertion.
+Updating the guide baseline requires reviewing the manifest and both languages.
+
+These checks establish source provenance and drift detection, **not** that the prose
+matches every runtime behavior, that login/MFA/roles work, or that a deployment is
+secure. They do not execute the product or a recovery test.
+
+此门禁独立校验英中手写指南的发布标签、完整提交 SHA、固定源码链接与文件哈希；不会升级
+生成参考的 Server v1.22.0 基线。CI 在独立目录检出来源并核对标签所指提交；脚本本身不联网。
+来源一致性检查不等于语义审查、产品行为验证或真实部署验收。

@@ -15,7 +15,9 @@
     "validate": "mint validate",
     "test:sources": "node --test scripts/reference-sources.test.mjs",
     "test:cli-flags": "node --test scripts/gen-cli-flags.test.mjs",
-    "test:notes": "node --test scripts/operation-notes.test.mjs"
+    "test:notes": "node --test scripts/operation-notes.test.mjs",
+    "test:guide-sources": "node --test scripts/admin-guide-sources.test.mjs",
+    "check:guide-sources": "node scripts/admin-guide-sources.mjs"
   },
   "devDependencies": {
     "js-yaml": "^4.1.0"
