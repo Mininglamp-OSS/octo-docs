@@ -10,8 +10,14 @@ icon: "users"
 
 ## 前置条件
 
-- 一个正在运行的 Octo 实例，以及一个管理员登录账号（由 `setup.sh` 打印出的 `superAdmin` 凭据）。
-- 可访问位于 `http://<your-host>:28080/admin/` 的[管理控制台](/zh/guides/teams/admin-console)。
+- 一个正在运行的 Octo 实例，以及已为该部署配置好的平台管理员账号。
+- 为[管理控制台](/zh/guides/teams/admin-console) 配置带有效证书的 HTTPS 入口，例如 `https://octo.example.com/admin/`。请将示例主机名替换为你已配置的入口；将 URL 改为 `https://` 不会为 Compose 启用 TLS。
+
+<Warning>
+  任何人从其他机器登录前，都必须为控制台、Web 客户端及其面向浏览器的 API 配置 HTTPS。不要通过网络上的明文 HTTP 发送密码、MFA 验证码或会话 token。私网或 VPN 是额外的访问控制，不能替代 HTTPS。除 `/admin/` 外，还须保护管理 API 入口，并阻止绕过入口直连明文监听端口。API 路由及代理到后端的保护要求见[管理控制台访问说明](/zh/guides/teams/admin-console#访问)。
+</Warning>
+
+仅做本机评估时，可先将 HTTP 监听入口限制为本机访问，再在运行技术栈的机器上打开 `http://127.0.0.1:28080/admin/`。回环 URL 不会改变监听绑定或防火墙规则，不能让其他机器仍可访问明文端口。
 
 ## 步骤
 
@@ -32,8 +38,7 @@ icon: "users"
     你之后可以更新成员的角色——邀请本身带有 owner 与 member/admin 的区分。
 
     <Note>
-      成员在 `http://<your-host>:28080/` 登录**Web 客户端**(与管理控制台同一主机,但不带
-      `/admin/` 路径)。桌面端、移动端与浏览器扩展等选项见[客户端](/zh/guides/teams/clients)。
+      成员通过已配置的 HTTPS 入口登录 **Web 客户端**，例如与控制台共用主机时使用 `https://octo.example.com/`。仅在运行技术栈的机器上做本机评估、且满足上述监听限制时，才可使用 `http://127.0.0.1:28080/`。桌面端、移动端与浏览器扩展等选项见[客户端](/zh/guides/teams/clients)。
     </Note>
   </Step>
   <Step title="设置频道">
@@ -47,8 +52,7 @@ icon: "users"
 </Steps>
 
 <Info>
-  初始化配置操作是管理控制台的第 2 天日常工作。它是 `octo-server` 的 `/admin/*` API 之上的一层轻量前端——
-  每一次变更都会被后端 RBAC 重新校验，因此运维访问是在服务端强制执行的，而不仅仅体现在 UI 中。
+  控制台是 `octo-server` 管理功能的前端。主要管理 API 使用 `/v1/manager/*`，而 `/admin/` 是浏览器界面路径。服务端认证与角色检查负责强制执行管理访问权限；按钮的显示或隐藏不会授予或撤销服务端权限。固定发布来源、登录流程及 API 保护要求见[管理控制台指南](/zh/guides/teams/admin-console)。在邀请成员加入前，请验证实际部署中的这些控制。
 </Info>
 
 ## 下一步
