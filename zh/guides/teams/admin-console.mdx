@@ -19,11 +19,25 @@ icon: "shield"
 
 ## 访问
 
-在 [Compose 部署](/zh/guides/operators/deploy-compose)中，控制台的服务地址为：
+从其他机器访问前，先配置具有有效证书的 HTTPS 入口，再打开经过 TLS 保护的控制台地址，例如：
 
 ```text
-http://<your-host>:28080/admin/
+https://octo.example.com/admin/
 ```
+
+将示例域名替换为你已配置的入口。这不是 Compose 默认提供的 TLS 地址； 把 HTTP 地址改写成 `https://` 不会自动启用 TLS。
+
+<Warning>
+  从其他机器输入管理员凭据前，必须为控制台及其面向浏览器的 API 启用 HTTPS。 不要通过网络上的明文 HTTP 传输密码、多因素认证验证码或会话令牌。 将管理入口限制在私有网络或 VPN 内是额外的访问控制，不能替代 HTTPS。
+</Warning>
+
+仅在本地评估时，才可以在运行该栈的机器上打开 [Compose HTTP 入口](/zh/guides/operators/deploy-compose)：
+
+```text
+http://127.0.0.1:28080/admin/
+```
+
+使用此 HTTP 示例前，先把监听入口限制为仅本地可访问。浏览器中的回环地址不会改变服务的 绑定地址或防火墙规则。阻止网络直接访问明文端口，避免绕过 HTTPS 入口。
 
 ### 登录方式与权限边界
 
@@ -40,11 +54,7 @@ http://<your-host>:28080/admin/
 授予或撤销服务器权限。
 
 <Warning>
-  在入口同时保护**控制台和管理 API**。仅限制 `/admin/`，不会把同一限制应用到独立路由的 API。
-  正式版本的 [Docker Nginx 模板](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/nginx.conf.template)
-  将浏览器的 `/api/` 请求去掉该前缀后转发到主后端，将 `/market/api/` 转发到独立的
-  Marketplace 后端。检查所有暴露的路由和后端直连地址；若设置外部 SSO 门禁，应同时覆盖
-  相关 API 和界面。
+  在 HTTPS 入口同时保护**控制台和管理 API**。仅限制 `/admin/`，不会把同一限制应用到独立路由的 API。 正式版本的 [Docker Nginx 模板](https://github.com/Mininglamp-OSS/octo-admin/blob/dd0401eaeb40dcc24478ba62a256fe0f117091cf/nginx.conf.template) 将浏览器的 `/api/` 请求去掉该前缀后转发到主后端，将 `/market/api/` 转发到独立的 Marketplace 后端。检查所有暴露的路由和后端直连地址；若设置外部 SSO 门禁，应同时覆盖 相关 API 和界面。正式版本的 Docker 代理本身监听 HTTP，应在其前方终止 TLS，并阻止客户端 直接访问它的明文监听端口。代理到后端的流量应限制在受保护的网络内；任何跨越不可信网络的 链路都应使用加密传输。
 </Warning>
 
 ## 你所管理的内容
