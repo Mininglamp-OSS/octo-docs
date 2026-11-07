@@ -82,3 +82,31 @@ secure. They do not execute the product or a recovery test.
 此门禁独立校验英中手写指南的发布标签、完整提交 SHA、固定源码链接与文件哈希；不会升级
 生成参考的 Server v1.22.0 基线。CI 在独立目录检出来源并核对标签所指提交；脚本本身不联网。
 来源一致性检查不等于语义审查、产品行为验证或真实部署验收。
+
+## PR workflow boundaries / PR 工作流边界
+
+The Docs workflow keeps the `pull_request` trigger and explicitly limits its token
+to `contents: read`. Every checkout uses `persist-credentials: false`: checkout
+authentication is temporary, not left in Git config for later repository scripts
+or dependency lifecycle code. No token is exported to build/install steps.
+
+Before the sibling checkouts, inline workflow code reads both lock files as JSON
+data without loading repository scripts. Fixed repository/directory names and
+exact 40-character lowercase hexadecimal revisions are checked before writing any
+outputs. Checkout receives these values as action inputs; the revision comparison
+receives them as environment data and uses parameterized Git calls, never expression
+interpolation into shell source. Full source, document and generated-page checks
+still run after all checkouts.
+
+Run `node --test scripts/docs-workflow.test.mjs` for offline contract and negative
+tests of the actual inline workflow code. These tests use mocked filesystem/Git
+calls; CI performs the real checkouts and source validation. The PR's workflow and
+lock files still require review. These checks neither prove a PR safe nor approve a
+changed source baseline. The version-pinned Mintlify registry install is unchanged.
+
+Docs 保持 `pull_request` 触发，显式限制为 `contents: read`，全部检出关闭凭据持久化；
+检出的临时认证不会留给后续仓库脚本或依赖生命周期代码，构建与安装步骤不导出 token。
+检出来源前只以 JSON 数据读取两份清单，验证固定仓库/目录及完整 40 位小写十六进制 SHA，
+全部通过后才输出。SHA 经 action 参数或环境变量传递，使用参数化 Git 调用，
+不将表达式结果插入 shell 源码。离线测试使用模拟文件/Git 调用，真实检出与完整校验由 CI 执行。
+工作流、清单及来源版本变更仍须审核，门禁不代表安全批准；Mintlify 按版本从 registry 安装的方式未改。
