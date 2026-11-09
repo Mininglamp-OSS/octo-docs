@@ -8,6 +8,30 @@ icon: "plug"
 
 本指南适用于 2026-11-05 发布的[正式 Runtime v1.1.11](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.11)，固定提交为 [`780cd7cd5e67`](https://github.com/Mininglamp-OSS/octo-runtime/tree/780cd7cd5e67e4868df895a2e74a826097f349fd)。它不描述草稿版本或实际部署状态。[v1.1.9 接入概览](/zh/guides/integrators/runtime-sdk-orientation)和 [v1.1.10 迁移指南](/zh/guides/integrators/runtime-v1110-migration)保留各自版本的适用范围。
 
+<Warning>
+  **不要只改依赖版本就继续运行本页示例。** [Runtime v1.1.12](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.12) 已于 2026-11-09 正式发布，虽然是补丁版本号，却包含破坏性变更。下方示例和接入方式表保留为 **1.1.11** 的历史指南。
+</Warning>
+
+## 升级到 v1.1.12 之前
+
+v1.1.12 标签对应提交 [`4276f6d33946`](https://github.com/Mininglamp-OSS/octo-runtime/tree/4276f6d339461daa88c3215b8024d548eb313cb1)。使用匹配的 **Runtime 1.1.12 与 client 1.1.12** 发行组合。npm 包版本、IPC v2、Run 7 和 Context v3 是不同合同；IPC v2 **不代表**必须寻找 npm 2.x 包。
+
+| 边界 | 与本页 1.1.11 指南的差异 |
+|---|---|
+| 调用接口 | [公开客户端](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/packages/octo-runtime-client/src/types.ts) 使用 `invoke(inputs, sessionId, providerSession, agentEnv)`。下方旧的单请求对象会被拒绝。按发行版类型重新构造调用，不要把旧对象原样放进第一个参数。 |
+| 执行与控制 | 执行配置放在 `agentEnv`，与业务输入及会话参数分开。对已登记调用使用 `interrupt(invocationId, reason?)`；取消被受理不等于执行已终止。输入结构合法也不代表获得资源权限。 |
+| 传输 | [客户端在提交前检查 IPC v2](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/packages/octo-runtime-client/src/client.ts)，拒绝不支持的版本。只升级一端不属于支持的迁移组合；不存在自动降级或自动重放执行。 |
+| 渠道接入 | [Runtime 不再加载 Extra 插件](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/README.md)。Extra、内置 WebUI 和 WeCom 已从此发行包移除。渠道职责转到独立 Gateway；下方 Extra 接入行不适用于 1.1.12。 |
+| CLI 与已安装服务 | `octo-runtime executor-kernel <command>` 已移除，没有兼容别名。使用 `octo-runtime start` 等顶层生命周期命令。已有服务定义也需要刷新，不能只替换可执行文件。 |
+
+修改已安装服务前，先完成或明确核对未结束的工作，并保留 Home 与配置。按固定的 [v1.1.12 CLI 迁移说明](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/docs/zh-CN/getting-started/cli.md)，使用相同 `--home`，以及原先显式使用的 `--profile`/`--manifest`，依次 stop、install、start。`install` 默认开启自启；需要保持禁用时传 `--autostart=false`。安装包成功不证明部署成功。
+
+新客户端请从[发行版客户端参考](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/packages/octo-runtime-client/README.md)及其公开类型开始，不要零散修补下方历史示例。在自己的环境中核验版本配对、输入构造、交互、取消、重连和退出行为。本地 IPC 仍沿用现有操作系统账号的信任边界。
+
+**Gateway 有独立的发布边界。** 截至 2026-11-09，[Gateway #17](https://github.com/Mininglamp-OSS/octo-channel-gateway/pull/17) 已合并并消费 Runtime/client 1.1.12，但 Gateway 仓库尚无 [GitHub release](https://github.com/Mininglamp-OSS/octo-channel-gateway/releases)。新配置及源码检查不证明 Gateway 包已发布或已部署，也不能假定旧 Extra 配置可原样复制。
+
+本提示依据固定发行源码和包元数据，不宣称本次文档修订执行过真实 Provider、IM、Windows 服务或部署迁移。
+
 ## 按所有权选择接入方式
 
 以下包入口全部适用于 **1.1.11**。表中的短子路径属于 `@mininglamp-oss/octo-runtime`。

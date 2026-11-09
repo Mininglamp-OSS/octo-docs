@@ -8,6 +8,30 @@ Your Node.js application can invoke an existing local Executor Kernel **without 
 
 This guide targets the [formal Runtime v1.1.11 release](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.11), published on 2026-11-05, at commit [`780cd7cd5e67`](https://github.com/Mininglamp-OSS/octo-runtime/tree/780cd7cd5e67e4868df895a2e74a826097f349fd). It does not describe draft releases or deployment status. Keep the [v1.1.9 orientation](/guides/integrators/runtime-sdk-orientation) and [v1.1.10 migration](/guides/integrators/runtime-v1110-migration) for those versions.
 
+<Warning>
+  **Do not upgrade this example by changing only the package version.** [Runtime v1.1.12](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.12) was formally released on 2026-11-09 and contains breaking changes despite the patch version. The examples and integration table below remain historical **1.1.11** guidance.
+</Warning>
+
+## Before moving to v1.1.12
+
+The v1.1.12 tag resolves to [`4276f6d33946`](https://github.com/Mininglamp-OSS/octo-runtime/tree/4276f6d339461daa88c3215b8024d548eb313cb1). Use the matching **Runtime 1.1.12 and client 1.1.12** release pair. npm package versions, IPC v2, Run 7 and Context v3 are separate contracts; IPC v2 does **not** mean you must find an npm 2.x package.
+
+| Boundary | What changes from this 1.1.11 guide |
+|---|---|
+| Invocation | The [public client](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/packages/octo-runtime-client/src/types.ts) uses `invoke(inputs, sessionId, providerSession, agentEnv)`. The old single request object used below is rejected. Rebuild the call against the released types; do not move the old object unchanged into the first argument. |
+| Execution and control | Execution configuration belongs in `agentEnv`, separate from business input and session arguments. Use `interrupt(invocationId, reason?)` for a registered invocation; cancellation acceptance is not terminal completion. A valid input structure does not grant resource permission. |
+| Transport | The [client checks IPC v2](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/packages/octo-runtime-client/src/client.ts) before submission and rejects unsupported versions. Upgrading only one side is not a supported migration; there is no automatic downgrade or execution replay. |
+| Channel integration | [Runtime no longer loads Extra plugins](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/README.md). Extra, built-in WebUI and WeCom are removed from this distribution. Channel ownership moves to the independent Gateway; the Extra rows below do not describe 1.1.12. |
+| CLI and installed services | `octo-runtime executor-kernel <command>` is removed, without a compatibility alias. Use top-level lifecycle commands such as `octo-runtime start`. Existing installed service definitions also need refresh, not just a new executable. |
+
+Before changing an installed service, finish or explicitly reconcile outstanding work and preserve your Home/configuration. Follow the fixed [v1.1.12 CLI migration](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/docs/en/getting-started/cli.md): stop, install, then start using the same `--home` and explicit `--profile`/`--manifest` when applicable. `install` enables autostart unless you pass `--autostart=false`. Do not infer deployment success from a successful package installation.
+
+For a new client implementation, start from the [released client reference](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/packages/octo-runtime-client/README.md) and its public types rather than modifying the historical example piecemeal. Verify version matching, input construction, interactions, interruption, reconnect behavior and shutdown in your own environment. Local IPC still relies on the existing OS-account trust boundary.
+
+**Gateway has its own release boundary.** As checked on 2026-11-09, [Gateway #17](https://github.com/Mininglamp-OSS/octo-channel-gateway/pull/17) is merged and consumes Runtime/client 1.1.12, but the Gateway repository has no [GitHub release](https://github.com/Mininglamp-OSS/octo-channel-gateway/releases). Its new configuration and source checks are not proof of a published Gateway package or deployment. Do not assume the old Extra configuration can be copied unchanged.
+
+This notice is based on the fixed release source and package metadata. It does not claim that this documentation change ran a real Provider, IM, Windows service or deployment migration.
+
 ## Choose by ownership
 
 All package entries below are for **1.1.11**. Short subpaths in the table belong to `@mininglamp-oss/octo-runtime`.
