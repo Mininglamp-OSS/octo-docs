@@ -70,6 +70,7 @@
                 "pages": [
                   "guides/integrators/runtime-sdk-orientation",
                   "guides/integrators/runtime-v1110-migration",
+                  "guides/integrators/runtime-v1111-standalone",
                   "guides/integrators/call-the-rest-api",
                   "guides/integrators/verify-credentials-with-octo-auth",
                   "guides/integrators/write-an-adapter",
@@ -230,6 +231,7 @@
                 "pages": [
                   "zh/guides/integrators/runtime-sdk-orientation",
                   "zh/guides/integrators/runtime-v1110-migration",
+                  "zh/guides/integrators/runtime-v1111-standalone",
                   "zh/guides/integrators/call-the-rest-api",
                   "zh/guides/integrators/verify-credentials-with-octo-auth",
                   "zh/guides/integrators/write-an-adapter",
