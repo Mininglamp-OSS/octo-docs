@@ -12,19 +12,30 @@ icon: "plug"
   **不要只改依赖版本就继续运行本页示例。** 已正式发布的 Runtime v1.1.12、v1.1.13 和 v1.1.14 虽然是补丁版本号，却包含破坏性变更。先核对下方对应版本的迁移说明。下方示例和接入方式表保留为 **1.1.11** 的历史指南。
 </Warning>
 
-## 升级到 v1.1.13 或 v1.1.14 之前
+## 升级到 v1.1.13 之前
 
-[v1.1.13](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.13) 和 [v1.1.14](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.14) 均于 2026-11-10 正式发布，标签分别对应 [`7892ebdf2ed9`](https://github.com/Mininglamp-OSS/octo-runtime/tree/7892ebdf2ed9b1fa859bd51f15da6d7f03c247e2) 和 [`c9d3bb6a642a`](https://github.com/Mininglamp-OSS/octo-runtime/tree/c9d3bb6a642abce3177ac28cf9f26993909c3d32)。使用 v1.1.14 时，配对 **Runtime 1.1.14 与 client 1.1.14**，同时迁移应用。IPC v2 / Run 7 / Context v3 编号未变，不代表旧字段或事件校验器仍然兼容。
-
-下文四参数调用与服务迁移要求仍然适用。采用 v1.1.14 前，还需按发行版的[输入合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/c9d3bb6a642abce3177ac28cf9f26993909c3d32/docs/en/reference/invoke-input.md)、[执行信封](https://github.com/Mininglamp-OSS/octo-runtime/blob/c9d3bb6a642abce3177ac28cf9f26993909c3d32/docs/en/reference/contexts.md)和[原生 SDK](https://github.com/Mininglamp-OSS/octo-runtime/blob/c9d3bb6a642abce3177ac28cf9f26993909c3d32/docs/en/getting-started/sdk.md)检查以下变更：
+[v1.1.13](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.13) 于 2026-11-10 正式发布，标签对应 [`7892ebdf2ed9`](https://github.com/Mininglamp-OSS/octo-runtime/tree/7892ebdf2ed9b1fa859bd51f15da6d7f03c247e2)。使用 **Runtime 1.1.13 与 client 1.1.13** 发行组合。下文 1.1.12 的四参数调用与服务迁移要求仍然适用。以下变更在 **1.1.13** 已生效，依据该版[输入合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/7892ebdf2ed9b1fa859bd51f15da6d7f03c247e2/docs/en/reference/invoke-input.md)、[执行信封](https://github.com/Mininglamp-OSS/octo-runtime/blob/7892ebdf2ed9b1fa859bd51f15da6d7f03c247e2/docs/en/reference/contexts.md)、[原生 SDK](https://github.com/Mininglamp-OSS/octo-runtime/blob/7892ebdf2ed9b1fa859bd51f15da6d7f03c247e2/docs/en/getting-started/sdk.md)与 [Codex 所有权合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/7892ebdf2ed9b1fa859bd51f15da6d7f03c247e2/packages/octo-runtime-adapter-codex/README.md)：
 
 | 边界 | 必需迁移 |
 | --- | --- |
 | 本地工作目录 | 自行准备已获授权、存在的绝对目录。`octo.execution/workspace` 只使用 `payload: { path: "/absolute/prepared/project" }`。移除 `mode`，包括 `fixed`、`random` 和 `none`；带旧 mode 的 payload 会被拒绝。Runtime 不选择、创建或补建目录。声明 `metadata.workspace: false` 的 Adapter 可以省略本地覆盖。路径校验不是沙箱或资源授权。 |
 | 应用提示词 | 移除 `octo.control/instructions` 和 `controlInstructions`，即使为空也会被拒绝。将提示词准备成普通输入 parts，续接或显式恢复时也由调用方提供完整内容。没有替代的 system/developer/trusted 提示词字段。 |
 | 原生宿主装配 | 构造命令型 Adapter 时绑定明确的绝对可执行文件路径。Codex 可通过 `createManagedCodexEngine` 和绝对 `codexHome` 创建 managed owner，也可注入既有 `CodexEngineProvider`。宿主负责最终清理，Adapter 借用 Engine provider。仅关闭借用它的 Core/Kernel 不会自动关闭 owner。原生嵌入使用选定的源码 workspace 包；完整 npm 包不再导出 `/adapters/codex` 或 `/adapters/dsh`。独立客户端应用仍只需 client 包。 |
-| 信封与模型字段 | `agentEnv` 只保留 `schema` / `items`，每个 item 只保留 `namespace` / `name` / `payload`。移除 item 的 `guidance` / `data_format`。移除 `use_provider_default` 和空的 model/selection/reasoning 对象，不需要的覆盖项应省略。省略不会清除已组合的默认值，也不会重置续接中的 Provider 会话。 |
-| 已移除控制项 | 公共 source 分类、actmode、`execution.update` 与 Runtime 设备选择已移除。旧 source/actmode item 可能通过通用不透明信封校验，但不生效，也不会兼容转换。attach 前先选定设备；原生模式只使用所选 Adapter 文档中的私有选项，与审批策略分开。移除 `limits.enforcement`，Adapter 读取 limits 时会拒绝它。使用有限预算，不再全局关闭 watchdog。 |
+
+`agentEnv` 在 1.1.13 已只允许 `schema` 和 `items`；移除旧的顶层执行字段，使用该版共享或 Adapter 自有条目。
+
+1.1.13 仍定义 `octo.execution/actmode`，尚无下节的 `model_output_idle` 通知。不要把 1.1.14 的控制项移除或新通知要求套用到 1.1.13。
+
+## 升级到 v1.1.14 之前
+
+[v1.1.14](https://github.com/Mininglamp-OSS/octo-runtime/releases/tag/v1.1.14) 于 2026-11-10 正式发布，标签对应 [`c9d3bb6a642a`](https://github.com/Mininglamp-OSS/octo-runtime/tree/c9d3bb6a642abce3177ac28cf9f26993909c3d32)。配对 **Runtime 1.1.14 与 client 1.1.14**，同时迁移应用。IPC v2 / Run 7 / Context v3 编号未变，不代表旧字段或事件校验器仍然兼容。
+
+除上文 1.1.13 的准备要求外，**1.1.14** 还需按该版[执行信封](https://github.com/Mininglamp-OSS/octo-runtime/blob/c9d3bb6a642abce3177ac28cf9f26993909c3d32/docs/en/reference/contexts.md)与[输入合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/c9d3bb6a642abce3177ac28cf9f26993909c3d32/docs/en/reference/invoke-input.md)检查以下边界：
+
+| 边界 | 必需迁移 |
+| --- | --- |
+| 信封与模型字段 | `agentEnv` 继续只允许 `schema` / `items`。1.1.14 移除 item 的 `guidance` / `data_format`，每个 item 只保留 `namespace` / `name` / `payload`，并移除 `use_provider_default`。空的 model/selection/reasoning 对象在 1.1.13 已不合法；继续省略不需要的覆盖项。省略不会清除已组合的默认值，也不会重置续接中的 Provider 会话。 |
+| 已移除控制项 | 公共 source 分类、actmode、`execution.update` 与 Runtime 设备选择的公共协议定义已移除。旧 source/actmode item 可能通过通用不透明信封校验，但不生效，也不会兼容转换。attach 前先选定设备；原生模式只使用所选 Adapter 文档中的私有选项，与审批策略分开。移除 `limits.enforcement`，Adapter 读取 limits 时会拒绝它。使用有限预算，不再全局关闭 watchdog。 |
 
 **升级服务时同步事件消费者。** v1.1.14 在 canonical 模式下增加信息性 `run.notice`，当连续 60 秒没有新增公开模型文本时发出 `code: "model_output_idle"`。排队、工具执行、同步输入/审批等待会暂停观察，新增公开文本开启下一段计时。它不是终态、取消请求或周期性保活；默认首帧超时可能先失败。`model_idle_policy: "observe"` 只关闭模型空闲终止，不关闭其他预算。即使 IPC 仍为 v2，旧严格校验器也会拒绝新 notice code。以固定[输出/控制合同](https://github.com/Mininglamp-OSS/octo-runtime/blob/c9d3bb6a642abce3177ac28cf9f26993909c3d32/docs/en/reference/output-and-control.md)和[通知实现](https://github.com/Mininglamp-OSS/octo-runtime/blob/c9d3bb6a642abce3177ac28cf9f26993909c3d32/packages/octo-runtime-executor-core/src/model-output-silence.ts)为准，不凭协议编号相同推断投递成功或兼容性。
 
@@ -46,9 +57,15 @@ v1.1.12 标签对应提交 [`4276f6d33946`](https://github.com/Mininglamp-OSS/oc
 
 新客户端请从[发行版客户端参考](https://github.com/Mininglamp-OSS/octo-runtime/blob/4276f6d339461daa88c3215b8024d548eb313cb1/packages/octo-runtime-client/README.md)及其公开类型开始，不要零散修补下方历史示例。在自己的环境中核验版本配对、输入构造、交互、取消、重连和退出行为。本地 IPC 仍沿用现有操作系统账号的信任边界。
 
-**Gateway 有独立的发布与迁移边界。** 截至 2026-11-11，[Gateway #33](https://github.com/Mininglamp-OSS/octo-channel-gateway/pull/33) 已合并，提交为 [`08711719e843`](https://github.com/Mininglamp-OSS/octo-channel-gateway/tree/08711719e843617a8bdad11f8dee1637b84f7239)，[client 依赖为 `^1.1.13`](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/08711719e843617a8bdad11f8dee1637b84f7239/package.json)。仓库仍无 [GitHub release](https://github.com/Mininglamp-OSS/octo-channel-gateway/releases)。这些源码状态不能证明包已发布或部署已验证。[Gateway #34](https://github.com/Mininglamp-OSS/octo-channel-gateway/issues/34) 仍开放：消费 Runtime 静默通知并移除 Gateway 自有静默计时/取消逻辑仍是待完成迁移。不要把计划写成已交付能力，也不要凭依赖范围推断端到端兼容或原样复制旧 Extra 配置。
+## 采用 Gateway v1.0.1 之前
 
-本提示依据固定发行源码和包元数据，不宣称本次文档修订执行过真实 Provider、IM、Windows 服务或部署迁移。
+**Gateway 有独立的发布与迁移边界。** [Gateway v1.0.1](https://github.com/Mininglamp-OSS/octo-channel-gateway/releases/tag/v1.0.1) 已于 2026-11-11 正式发布，固定提交为 [`7af029872a6f`](https://github.com/Mininglamp-OSS/octo-channel-gateway/tree/7af029872a6fa8914033a6f2138e3d4b10a5ecc3)，包含已合并的 [PR #35](https://github.com/Mininglamp-OSS/octo-channel-gateway/pull/35)。其[生产客户端与开发 Runtime 依赖](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/7af029872a6fa8914033a6f2138e3d4b10a5ecc3/package.json#L44-L52)均为 `^1.1.14`。按上文对应的 Runtime/client 合同迁移；1.1.12 发行组合和下方历史 Extra 配置都不是 Gateway 1.0.1 接入配方。
+
+- **迁移注册接口。** 使用 `gateway.register(bot, agent, hooks)`，显式提供 `botId`；Hook 数组可选。启用的绑定必须匹配认证后的 Bot 身份。已移除的 `materials` / `loadMaterials` 注册字段会被拒绝，没有兼容层。参见[注册校验](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/7af029872a6fa8914033a6f2138e3d4b10a5ecc3/packages/gateway/src/gateway.ts#L78-L170)。
+- **自行管理应用策略。** `pre_dispatch` 和 `pre_invoke` Hook 按序执行，返回完整的 `{ inputs, agentEnv }` 替换值；身份/路由变更和冻结重试内容的变更会被拒绝。[首轮指令注入与完整请求调试日志](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/7af029872a6fa8914033a6f2138e3d4b10a5ecc3/apps/cli/src/hooks.ts#L5-L43)由 CLI 安装的 Hook 提供，不是 SDK 自动执行的策略。SDK/Electron 宿主需自行提供策略。调试日志包含实际输入、图片数据和执行设置，启用前应检查敏感内容及日志访问范围。参见[Hook 合同](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/7af029872a6fa8914033a6f2138e3d4b10a5ecc3/packages/gateway/src/hooks.ts#L6-L79)。
+- **单独核对超时迁移。** 截至 2026-11-12，[Gateway issue #34](https://github.com/Mininglamp-OSS/octo-channel-gateway/issues/34) 仍开放。v1.0.1 保留[每 30 秒更新的本地静默计时和本地观察到模型连续静默 300 秒后的超时](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/7af029872a6fa8914033a6f2138e3d4b10a5ecc3/packages/gateway/src/execution/model-wait.ts#L165-L185)，并接到[请求取消逻辑](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/7af029872a6fa8914033a6f2138e3d4b10a5ecc3/packages/gateway/src/execution/task.ts#L93-L99)。它还默认设置 [310 秒首帧预算和 `model_idle_policy: "observe"`](https://github.com/Mininglamp-OSS/octo-channel-gateway/blob/7af029872a6fa8914033a6f2138e3d4b10a5ecc3/packages/gateway/src/execution/dispatcher.ts#L118-L127)。Runtime 的信息性 `model_output_idle` 通知不表示 Gateway 已完成改用上游静默事实的迁移。请求取消不等于执行终止。
+
+不要原样复制旧 Extra 配置，也不要凭正式发布或依赖范围推断部署已就绪。本次更新核对了发行元数据与固定源码合同，未核验 npm 发布、未检查或运行 Gateway 发行归档，也未执行真实 Provider/IM、Windows 服务或部署迁移测试。
 
 ## 按所有权选择接入方式
 
