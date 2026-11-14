@@ -83,7 +83,7 @@ octo-runtime channel-gateway status
 
 ## openclaw-channel-octo
 
-[**`openclaw-channel-octo`**](https://github.com/Mininglamp-OSS/openclaw-channel-octo) is the standalone OpenClaw channel plugin, published exclusively on ClawHub. Use this path when OpenClaw owns the Octo channel directly, rather than configuring a Runtime Bot entry. This section covers [v1.5.3](https://github.com/Mininglamp-OSS/openclaw-channel-octo/releases/tag/v1.5.3), source [`b6d6fdf83e6f`](https://github.com/Mininglamp-OSS/openclaw-channel-octo/tree/b6d6fdf83e6f186a61044eb5bba7d727ea762b21). It requires Node ≥ 22 and OpenClaw ≥ 2026.6.9; also satisfy your installed OpenClaw version's own Node requirement. Check the installed plugin version after installation: the ClawHub command below does not pin it to this documented release.
+[**`openclaw-channel-octo`**](https://github.com/Mininglamp-OSS/openclaw-channel-octo) is the standalone OpenClaw channel plugin, published exclusively on ClawHub. Use this path when OpenClaw owns the Octo channel directly, rather than configuring a Runtime Bot entry. This section covers [v1.5.3](https://github.com/Mininglamp-OSS/openclaw-channel-octo/releases/tag/v1.5.3), source [`b6d6fdf83e6f`](https://github.com/Mininglamp-OSS/openclaw-channel-octo/tree/b6d6fdf83e6f186a61044eb5bba7d727ea762b21). It requires Node ≥ 22 and OpenClaw ≥ 2026.6.9; also satisfy your installed OpenClaw version's own Node requirement. This version-specific procedure supports only a verified Octo plugin v1.5.3 installation. An unpinned installation alone is not supported by this procedure; the version and policy checks below are mandatory before account setup or Gateway startup.
 
 <Warning>
   Review data visibility before installing or upgrading. `docTaskProgress` defaults to true and uploads document-task receipts and filtered tool input/output previews to `docsApiUrl`. **All readers of the target document can view them**, not just the requester. Previews may contain file contents, command output, and data from other systems. Credential filtering does not classify business secrets or guarantee removal of every secret. See the fixed [content policy](https://github.com/Mininglamp-OSS/openclaw-channel-octo/blob/b6d6fdf83e6f186a61044eb5bba7d727ea762b21/docs/doc-task-content-policy.md).
@@ -95,10 +95,19 @@ octo-runtime channel-gateway status
 
 A running OpenClaw Gateway watches `channels.octo` and reconnects on configuration changes. Stop it using its existing lifecycle before installing/upgrading or changing accounts, so auto-reload cannot activate defaults before you review them.
 
-Install the plugin, then use the interactive flow to select Octo and enter the account's token and trusted API URL without putting the token in shell arguments:
+With the Gateway still stopped, the release documents this command to install a candidate. It performs installation, not a download-only operation, and does not select a fixed plugin version or guarantee v1.5.3:
 
 ```bash
 openclaw plugins install clawhub:octo
+```
+
+**Stop here before adding an account.** Confirm which installed Octo plugin directory this host will load. Read that directory's `package.json` and require `name: "octo"` and `version: "1.5.3"`, matching the [release metadata](https://github.com/Mininglamp-OSS/openclaw-channel-octo/blob/b6d6fdf83e6f186a61044eb5bba7d727ea762b21/package.json). The OpenClaw host version is not the Octo plugin version. Review the installed package's `openclaw.plugin.json` and `docs/doc-task-content-policy.md` against this release's task defaults, receipt visibility, and tool policy. Confirm package provenance through your trusted release process; a matching version string alone is not an integrity check.
+
+If the loaded directory or provenance is uncertain, the plugin is not v1.5.3, or its contract differs, **keep the Gateway stopped and do not run `channels add` or start/resume it using this procedure**. Follow the documentation for the actual release or obtain the reviewed version through a verified upstream installation procedure. Do not assume a later version has the same defaults. This guide does not assert an unverified ClawHub version-selection flag or install path.
+
+Only after those checks pass, use the interactive flow to select Octo and enter the account's token and trusted API URL without putting the token in shell arguments:
+
+```bash
 openclaw channels add
 ```
 
@@ -130,7 +139,7 @@ Before enabling document tasks or receipt uploads, deploy the companion Docs rec
   The plugin registers three agent tools: `octo_management`, `octo_send_display_card`, and `octo_send_card`. Restrictive profiles such as `coding` exclude plugin tools by default. Add only the intended tools through `tools.alsoAllow` rather than switching to `full` just to expose them. See the released [tool configuration](https://github.com/Mininglamp-OSS/openclaw-channel-octo/blob/b6d6fdf83e6f186a61044eb5bba7d727ea762b21/README.md#agent-tools).
 </Info>
 
-After reviewing the settings, start a new foreground Gateway with:
+Start or resume the Gateway only after confirming that the plugin to be loaded is still v1.5.3 and each account's effective task, receipt, endpoint, and tool settings match your reviewed policy. If the installed plugin changes, repeat the release and policy review before proceeding. For a new foreground Gateway:
 
 ```bash
 openclaw gateway run --force

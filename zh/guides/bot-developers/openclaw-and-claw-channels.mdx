@@ -83,7 +83,7 @@ octo-runtime channel-gateway status
 
 ## openclaw-channel-octo
 
-[**`openclaw-channel-octo`**](https://github.com/Mininglamp-OSS/openclaw-channel-octo) 是 独立 OpenClaw 频道插件，仅在 ClawHub 发布。OpenClaw 直接管理 Octo 频道时使用此路径， 而不是配置 Runtime Bot 条目。 本节对应 [v1.5.3](https://github.com/Mininglamp-OSS/openclaw-channel-octo/releases/tag/v1.5.3)， 源码 [`b6d6fdf83e6f`](https://github.com/Mininglamp-OSS/openclaw-channel-octo/tree/b6d6fdf83e6f186a61044eb5bba7d727ea762b21)。 需要 Node ≥ 22 和 OpenClaw ≥ 2026.6.9；还须满足所装 OpenClaw 版本自身的 Node 要求。 安装后核对实际插件版本：下面的 ClawHub 命令不会锁定到本文对应的发行版。
+[**`openclaw-channel-octo`**](https://github.com/Mininglamp-OSS/openclaw-channel-octo) 是 独立 OpenClaw 频道插件，仅在 ClawHub 发布。OpenClaw 直接管理 Octo 频道时使用此路径， 而不是配置 Runtime Bot 条目。 本节对应 [v1.5.3](https://github.com/Mininglamp-OSS/openclaw-channel-octo/releases/tag/v1.5.3)， 源码 [`b6d6fdf83e6f`](https://github.com/Mininglamp-OSS/openclaw-channel-octo/tree/b6d6fdf83e6f186a61044eb5bba7d727ea762b21)。 需要 Node ≥ 22 和 OpenClaw ≥ 2026.6.9；还须满足所装 OpenClaw 版本自身的 Node 要求。 本版本限定流程只适用于已核验的 Octo 插件 v1.5.3 安装。仅完成未锁版本的安装不属于本流程支持的状态；账号配置和 Gateway 启动前，必须通过下述版本与策略检查。
 
 <Warning>
   安装或升级前先检查数据可见范围。`docTaskProgress` 默认开启，会向 `docsApiUrl` 上传文档任务回执及经过过滤的工具输入输出预览。**目标文档的全部读者都能查看**，不只是请求者。 预览可能包含文件正文、命令输出及其他系统的数据。凭据过滤不识别业务机密， 也不保证移除所有秘密。参见固定版本的 [内容政策](https://github.com/Mininglamp-OSS/openclaw-channel-octo/blob/b6d6fdf83e6f186a61044eb5bba7d727ea762b21/docs/doc-task-content-policy.md)。
@@ -95,10 +95,19 @@ octo-runtime channel-gateway status
 
 运行中的 OpenClaw Gateway 会监听 `channels.octo`，配置变化时重新连接。 安装、升级或修改账号前，先按原有生命周期停止 Gateway，避免自动重载在审核前启用默认设置。
 
-安装插件，再使用交互流程选择 Octo，输入账号 token 和可信 API URL，避免把 token 放入 shell 参数：
+保持 Gateway 停机，发行版提供下列命令安装候选版本。它会执行安装，不是仅下载；它不选择固定插件版本，不能保证取得 v1.5.3：
 
 ```bash
 openclaw plugins install clawhub:octo
+```
+
+**先停在这里，不要添加账号。** 确认该宿主实际会加载的 Octo 插件目录，读取其中的 `package.json`，要求 `name: "octo"` 且 `version: "1.5.3"`，与 [发行元数据](https://github.com/Mininglamp-OSS/openclaw-channel-octo/blob/b6d6fdf83e6f186a61044eb5bba7d727ea762b21/package.json) 一致。OpenClaw 宿主版本不是 Octo 插件版本。对照该发行版的任务默认值、回执可见范围及工具策略，审核安装包内的 `openclaw.plugin.json` 和 `docs/doc-task-content-policy.md`。通过可信发行流程确认包来源；版本字符串相同本身不构成完整性校验。
+
+若实际加载目录或来源不明确、插件不是 v1.5.3，或契约不同，**保持 Gateway 停机，不要按本流程执行 `channels add` 或启动/恢复 Gateway**。改用实际发行版的文档，或通过已核实的上游安装流程取得本文审核的版本。不要假设后续版本的默认行为相同。本指南不声称存在未经核实的 ClawHub 版本选择参数或安装目录。
+
+只有上述检查通过后，才使用交互流程选择 Octo，输入账号 token 和可信 API URL，避免把 token 放入 shell 参数：
+
+```bash
 openclaw channels add
 ```
 
@@ -130,7 +139,7 @@ openclaw channels add
   插件注册三个智能体工具：`octo_management`、`octo_send_display_card` 和 `octo_send_card`。`coding` 等受限配置默认排除插件工具。 通过 `tools.alsoAllow` 只添加需要的工具，不要仅为开放它们就切换到 `full`。 参见发行版的 [工具配置](https://github.com/Mininglamp-OSS/openclaw-channel-octo/blob/b6d6fdf83e6f186a61044eb5bba7d727ea762b21/README.md#agent-tools)。
 </Info>
 
-审核设置后，首次启动前台 Gateway：
+只有确认将加载的插件仍为 v1.5.3，且每个账号实际生效的任务、回执、端点及工具设置符合已审核策略后，才能启动或恢复 Gateway。若安装的插件发生变化，先重新审核发行版与策略。首次启动前台 Gateway：
 
 ```bash
 openclaw gateway run --force
