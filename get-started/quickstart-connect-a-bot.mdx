@@ -11,12 +11,20 @@ that bridges **Claude Code** into Octo IM. When you're done, you can DM the Assi
 in a group) and get streamed replies from a real coding agent.
 
 <Tip>
-  `cc-channel-octo` is the Claude Code edition. The same flow works for its siblings —
+  This page uses the independent Claude Code gateway. Follow the dedicated setup for
   [Codex](/guides/bot-developers/codex-channel),
   [OpenClaw / Claw](/guides/bot-developers/openclaw-and-claw-channels), and
   [Hermes](/guides/bot-developers/hermes-channel). See
   [Choose a channel](/guides/bot-developers/choose-a-channel) to compare them.
 </Tip>
+
+<Note>
+  Already using Octo Runtime with OpenClaw? Follow
+  [Runtime Channel Gateway setup](/guides/bot-developers/openclaw-and-claw-channels#runtime-channel-gateway-with-openclaw)
+  instead of the Claude Code installation below. Prepare an existing OpenClaw Gateway/Agent
+  and the BotFather Bot ID/token. BotFather's plugin session-binding instructions do not
+  configure Runtime's `config.bots`; the independent plugin remains a separate path.
+</Note>
 
 ## Prerequisites
 
